@@ -13,6 +13,7 @@ import {
   Phone, ArrowLeft, MoreHorizontal, Minus, Square,
   Compass, Wand2, PenSquare, Lightbulb,
   Cloud, Mail, Briefcase, Layers, LifeBuoy, GitBranch, Hash as HashIcon,
+  Pin, PinOff,
 } from 'lucide-react'
 
 // ─── Sound engine ─────────────────────────────────────────────────────────────
@@ -157,53 +158,56 @@ input, textarea, select { font-family: inherit; }
 ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.25); border-radius: 2px; }
 ::selection { background: rgba(92,46,145,0.15); }
 .card-action-tip:hover .tip-label { opacity: 1; }
+.conv-row:hover .conv-pin { opacity: 1; }
 `
 
 
 // ─── Static data ──────────────────────────────────────────────────────────────
+// Intents aligned with JTBDs in docs/Employee Personal AI Assistant Draft.md:
+// Start-day brief · Routine admin · Proactive help · Life events · HR+IT joined · Meeting prep
 const INTENTS = [
   { id:'hero', tier:'L3', cat:'Most important right now', isHero:true,
-    headline:'Legal approval is blocking your analytics pipeline',
-    why:'DPA with CloudMetrics was filed 5 days ago. Amy Torres (reviewer) returns Wednesday — but pipeline go-live is Friday. SLA already breached.',
-    action:'Draft escalation to General Counsel',
-    source:'Salesforce · Case #DPA-8821',
-    evidence:'SLA breached +2 days · Amy Torres OOO until May 4',
-    chatScenario:'p1' },
+    headline:'Your parental leave plan needs sign-off before Friday',
+    why:'You booked leave for Jun 2 – Sep 1. I drafted the full handoff plan across HR, IT, and your manager — backfill request, benefits update, calendar holds, and access handover. One sign-off triggers the sequence.',
+    action:'Review leave handoff plan',
+    source:'Workday · Life event',
+    evidence:'Leave starts Jun 2 · Backfill lead time 3 weeks',
+    chatScenario:'leave' },
   { id:'y1', tier:'L2', cat:'Yesterday',
-    headline:'Q2 planning left 3 unowned actions',
-    why:'Email thread has 3 unread replies. Confluence page not updated in 4 days.',
-    action:'Review & assign owners', source:'Outlook · Q2 Planning',
-    evidence:'3 unread replies · Confluence page stale 4 days', chatScenario:null },
+    headline:'PTO request pending with your manager — 3 days',
+    why:'Submitted Apr 29 for May 14–16. Manager SLA is 2 business days. I can draft a light nudge on your behalf.',
+    action:'Nudge manager', source:'Workday · PTO',
+    evidence:'Manager SLA +1 day · No calendar conflicts detected', chatScenario:null },
   { id:'y2', tier:'L1', cat:'Yesterday',
-    headline:'Security cert expires in 3 days',
-    why:'Annual compliance training incomplete. Deadline: Apr 30.',
+    headline:'Annual compliance training expires in 3 days',
+    why:'Security + data-handling refresher incomplete. Deadline May 9. ~45 min to complete.',
     action:'Open LMS portal', source:'Workday · Compliance',
-    evidence:'Deadline Apr 30 · ~45 min to complete', chatScenario:null },
+    evidence:'Deadline May 9 · ~45 min to complete', chatScenario:null },
   { id:'f1', tier:'L3', cat:'Follow-up needed',
-    headline:'Acme SOW needs your revision by EOD Thursday',
-    why:'Legal approved redlines at 09:14. Sections 3.2 and 4.1 need update before sending to Maria Chen.',
-    action:'Open SOW draft', source:'Outlook · Acme SOW v3',
-    evidence:'Due May 1 to Maria Chen · Legal redlines approved 09:14', chatScenario:null },
+    headline:'Benefits enrolment window closes Thursday',
+    why:'Open enrolment ends May 8. Your dependents coverage still reflects last year — I can pre-fill based on your earlier selections.',
+    action:'Review benefits selections', source:'Workday · Benefits',
+    evidence:'Closes May 8 EOD · 2 dependents affected', chatScenario:null },
   { id:'f2', tier:'L1', cat:'Follow-up needed',
-    headline:'Jordan Parker scorecard due in 18 hours',
-    why:'Hiring panel debrief Wednesday 11 AM. Scorecard needed before then.',
-    action:'Submit scorecard', source:'Greenhouse · Jordan Parker',
-    evidence:'Debrief Wed 11 AM · Staff Engineer role', chatScenario:null },
+    headline:'Emergency contact on file is outdated',
+    why:'Last updated Oct 2023. HR flagged it during the annual audit. One-field update.',
+    action:'Update contact', source:'Workday · Profile',
+    evidence:'Last updated Oct 2023 · Single-field edit', chatScenario:null },
   { id:'e1', tier:'L2', cat:'In 90 minutes',
     headline:'QBR with SVP — prep bundle ready',
     why:'Deck found, 3 open actions surfaced, SVP context compiled.',
     action:'Open prep bundle', source:'Outlook · 10:00 AM', prepReady:true,
     evidence:'SVP meeting at 10 AM · 3 open actions from Apr 14', chatScenario:'prep' },
   { id:'e2', tier:'L4', cat:'Today 2:00 PM',
-    headline:'Prod deploy v3.8.2 — gate required',
-    why:'CR-4471 approved. Blue/Green traffic shift needs your explicit confirmation.',
-    action:'Review & arm', source:'Jira · CR-4471',
-    evidence:'Gate at 2 PM · Raj Mehta on-call, rollback ready', chatScenario:null },
+    headline:'Expense policy exception needs your sign-off',
+    why:'$4,200 travel reimbursement is over your single-approver limit. Finance needs your explicit confirmation before it routes to the VP.',
+    action:'Review & arm', source:'Workday · Expense',
+    evidence:'Gate at 2 PM · Over-limit by $1,200', chatScenario:null },
   { id:'p2', tier:'L2', cat:'Pending with you',
-    headline:'Datadog license stuck in IT security — day 10',
-    why:'Finance approved. IT security SLA is 5 days; currently at 10. Jarvis can draft a follow-up.',
-    action:'Chase IT security', source:'ServiceNow · INC0038912',
-    evidence:'IT Security SLA +5 days · Finance already approved', chatScenario:'diskspace' },
+    headline:'Laptop refresh ticket stuck in IT — day 10',
+    why:'Asset request filed Apr 26. IT service SLA is 5 days; currently at 10. I can draft a follow-up.',
+    action:'Chase IT', source:'ServiceNow · RITM0038912',
+    evidence:'IT SLA +5 days · Finance already approved', chatScenario:null },
 ]
 
 const MANAGER_INTENTS = [
@@ -217,6 +221,11 @@ const MANAGER_INTENTS = [
     why:'Expense $340, PTO (no conflicts), laptop — all within policy.',
     action:'Batch approve', source:'Workday · Queue',
     evidence:'All 3 within policy · Salary +11% flagged separately', chatScenario:'approvals' },
+  { id:'m4', tier:'L2', cat:'Onboarding',
+    headline:'New hire Priya starts Monday — plan 62% ready',
+    why:'Laptop ordered, accounts provisioned, orientation booked. Missing: 1:1 schedule and team intro post.',
+    action:'Complete onboarding plan', source:'Workday + ServiceNow',
+    evidence:'Start date May 11 · 2 gaps remaining', chatScenario:null },
   { id:'m2', tier:'L2', cat:'Team readiness',
     headline:'React 19 gap causing 15% velocity drop',
     why:'4 engineers identified. Masterclass Friday 2–4 PM, no calendar conflicts.',
@@ -380,9 +389,38 @@ const CHAT_SCENARIOS = {
       ]
     },
     actions:[
-      { label:'Approve all 3', key:'approve_all' },
-      { label:'Review individually', key:'review' },
-      { label:'Reject all', key:'reject' },
+      { label:'Approve all 3', key:'approve_all', tier:'L4' },
+      { label:'Review individually', key:'review', tier:'L2' },
+      { label:'Reject all', key:'reject', tier:'L4' },
+    ]
+  }],
+  // Parental-leave orchestration — spans Workday + Outlook + ServiceNow + Slack.
+  // Actions are deliberately tiered (L1 autonomous, L2 review, L4 gated).
+  leave:[{
+    role:'j',
+    text:"**Parental-leave plan — Jun 2 to Sep 1**\n\nI pulled the handoff picture across HR, Calendar, IT, and your team.\n\n**What's ready:** PTO draft in Workday · OOO template · IT access handover · draft note to Priya · proposed backup approver.\n\nI need one decision from you per track. Pick what Jarvis handles autonomously vs. what you want to review.",
+    trace:{
+      summary:'Orchestrated 4 systems to prepare a leave handoff',
+      steps:[
+        { label:'Read Parental leave policy v3 from SharePoint', plugin:'WorkdayPlugin',
+          bullets:['Policy allows 12 weeks paid (Jun 2 – Aug 25)','Additional 1 week unpaid to Sep 1 within policy','Notify window: 30 days before start date'] },
+        { label:'Composed OOO auto-reply and booked calendar block', plugin:'OutlookPlugin',
+          bullets:['Block: Jun 2 00:00 – Sep 1 23:59','Auto-reply: "I\'m on leave until Sep 1 — Priya Nair is covering"','Delegated calendar to Priya (view only, accept on your behalf off)'] },
+        { label:'Prepared IT access handover ticket', plugin:'ServiceNowPlugin',
+          bullets:['Draft RITM-0043001: suspend non-shared tokens','Keep shared inboxes active','Template based on Backfill request template v2'] },
+        { label:'Drafted handover note and backup approver proposal', plugin:'SlackPlugin',
+          bullets:['Warm tone note to Priya · 3 short sections','Backup approver candidate: Liam (based on overlap + seniority)','Sentiment signal: team has capacity Jun-Aug'] },
+      ]
+    },
+    actions:[
+      { label:'File PTO Jun 2 – Sep 1 in Workday',      key:'leave_pto',    tier:'L1' },
+      { label:'Block calendar with OOO + auto-reply',   key:'leave_ooo',    tier:'L1' },
+      { label:'Draft handover note to Priya',            key:'leave_note',   tier:'L2' },
+      { label:'Nominate Liam as backup approver',        key:'leave_backup', tier:'L4' },
+    ],
+    sources:[
+      { name:'Parental leave policy v3', updated:'Updated Mar 12 · Workday', icon:FileText, color:'#0B5CAB' },
+      { name:'Backfill request template', updated:'OrgFarm HR · v2', icon:FileText, color:'#2E844A' },
     ]
   }],
 }
@@ -394,14 +432,143 @@ const BEHAVIOURS = [
   {id:'b4',name:'Email Management',desc:'Triage and draft replies.',schedule:'Weekdays · 5:00 PM',enabled:false},
 ]
 
+// Connections — vendor logos live in /web/public/logos/. Fall back to a Lucide
+// glyph for vendors we don't have a real logo file for (OneDrive/SharePoint).
 const CONNECTIONS = [
-  {id:'c1',name:'Microsoft Teams',logo:'🟣',connected:true},
-  {id:'c2',name:'Outlook Calendar',logo:'🔵',connected:true},
-  {id:'c3',name:'OneDrive / SharePoint',logo:'🔷',connected:true},
-  {id:'c4',name:'Workday',logo:'🟠',connected:true},
-  {id:'c5',name:'Salesforce',logo:'☁️',connected:false},
-  {id:'c6',name:'Jira',logo:'🔹',connected:false},
+  { id:'c1', name:'Microsoft Teams',       img:'/teams-logo.svg',         connected:true,  logo:'🟣' },
+  { id:'c2', name:'Outlook Calendar',      img:'/logos/Outlook.png',      connected:true,  logo:'🔵' },
+  { id:'c3', name:'OneDrive / SharePoint', Icon:Cloud, iconColor:'#0078D4', connected:true,  logo:'🔷' },
+  { id:'c4', name:'Workday',               img:'/logos/Workday.png',      connected:true,  logo:'🟠' },
+  { id:'c5', name:'Salesforce',            img:'/logos/Salesforce.webp',  connected:false, logo:'☁️' },
+  { id:'c6', name:'Jira',                  img:'/logos/Jira.png',         connected:false, logo:'🔹' },
 ]
+
+// Render helper — shows the real logo image if we have one, otherwise the
+// fallback Lucide icon. `size` is the box edge in px.
+function ConnectionLogo({ conn, size = 32 }) {
+  if (conn.img) {
+    return (
+      <img src={conn.img} alt={conn.name}
+        style={{ width:size, height:size, objectFit:'contain', display:'block' }} />
+    )
+  }
+  if (conn.Icon) {
+    const Icon = conn.Icon
+    return <Icon size={Math.round(size * 0.7)} color={conn.iconColor || '#6B7280'} />
+  }
+  return <span style={{ fontSize:size * 0.85 }}>{conn.logo}</span>
+}
+
+// ─── Setup / Permissions model ───────────────────────────────────────────────
+// Extended system catalog used in Setup Step 1 (Watch). Each entry maps to a
+// "what it lets Jarvis see" sentence and is the source for the USE_CASE → system
+// pre-toggle mapping.
+const SETUP_SYSTEMS = [
+  { id:'outlook',     name:'Outlook',              desc:'See email subjects, flags, and calendar metadata.' },
+  { id:'calendar',    name:'Calendar',             desc:'Read your meetings, free/busy, and prep windows.' },
+  { id:'onedrive',    name:'OneDrive / SharePoint',desc:'Find docs you own, no body reads without you asking.' },
+  { id:'workday',     name:'Workday',              desc:'See PTO, benefits, compliance, profile data.' },
+  { id:'salesforce',  name:'Salesforce',           desc:'Read cases, accounts, approvals assigned to you.' },
+  { id:'jira',        name:'Jira',                 desc:'See tickets, sprint status, and velocity trends.' },
+  { id:'slack',       name:'Slack',                desc:'Aggregated sentiment signals only — never raw DMs.' },
+  { id:'servicenow',  name:'ServiceNow',           desc:'Track IT + HR service tickets you opened.' },
+]
+
+// L1 actions shown in Setup Step 2 ("Act — write without asking").
+const L1_ACTIONS = [
+  { id:'setReminders',  label:'Set reminders.' },
+  { id:'draftReplies',  label:'Draft replies in your voice (you Send).' },
+  { id:'bookFocus',     label:'Book focus blocks on free time.' },
+  { id:'fileRoutinePto',label:'File routine PTO if there are no calendar conflicts.' },
+  { id:'updateProfile', label:'Update profile fields (emergency contact, address).' },
+  { id:'ackNonPolicy',  label:'Acknowledge non-policy notifications.' },
+]
+
+// L4 actions shown in Setup Step 3 ("Gate — always ask first").
+const L4_ACTIONS = [
+  { id:'sendExternal',   label:'Send to external customers.' },
+  { id:'expenseLarge',   label:'Expense or purchase requests over $1,000.' },
+  { id:'changeManager',  label:'Change manager / direct reports.' },
+  { id:'changeBenefits', label:'Change benefits or compensation.' },
+  { id:'prodDeploy',     label:'Production deploy gates.' },
+  { id:'hireFire',       label:'Hire / promote / terminate.' },
+]
+
+// Use cases presented in welcome + Setup Step 0. Same 4 cards.
+const USE_CASES = [
+  { id:'legal',     emoji:'⚖️', tag:'Legal & Compliance', color:'#835B00',
+    title:'DPA stuck? SLA breached?',
+    body:"Jarvis detects when a review is overdue, identifies who's OOO, finds the backup, and drafts the escalation.",
+    chips:['SalesforcePlugin','WorkdayPlugin','OutlookPlugin'],
+    systems:['salesforce','workday','outlook'] },
+  { id:'meetings',  emoji:'📊', tag:'Meetings & Prep', color:'#0F6CBD',
+    title:'Walk into every meeting ready.',
+    body:'Jarvis assembles the deck, surfaces open actions from last time, writes a 3-point opener.',
+    chips:['OutlookPlugin','SharePointPlugin','SalesforcePlugin'],
+    systems:['outlook','calendar','onedrive'] },
+  { id:'incidents', emoji:'🚨', tag:'Incidents & Ops', color:'#BC2F32',
+    title:"P1 fires while you're in a meeting?",
+    body:'Jarvis detects it, assigns ownership, and sends the Teams message — under 90 seconds.',
+    chips:['DatadogPlugin','SalesforcePlugin','TeamsPlugin'],
+    systems:['salesforce','servicenow','jira'] },
+  { id:'people',    emoji:'👥', tag:'People & Teams', color:'#107C41',
+    title:'Burnout before it becomes a problem.',
+    body:'Jarvis spots overwork patterns in Jira, finds coverage, drafts the welfare check-in.',
+    chips:['JiraPlugin','SlackPlugin','WorkdayPlugin'],
+    systems:['jira','slack','workday'] },
+]
+
+// Capabilities shown in the "What I can do" drawer. Keyed by USE_CASES id.
+// Each row: { system, tier, action, example }
+const CAPABILITIES = {
+  legal: [
+    { system:'Salesforce',  tier:'L1', action:'Flag SLA breaches on cases assigned to you',        example:'DPA-8821 is SLA+2 — surfaced in your brief.' },
+    { system:'Workday',     tier:'L1', action:'Check reviewer availability',                        example:'Amy Torres OOO until May 4 — no action needed.' },
+    { system:'Outlook',     tier:'L2', action:'Draft escalation to General Counsel for review',     example:'Draft ready — you click Send.' },
+    { system:'Salesforce',  tier:'L3', action:'Choose between escalation vs waiting for reviewer',  example:'Shows trade-offs, you decide.' },
+    { system:'Salesforce',  tier:'L4', action:'File a legal escalation on your behalf',             example:'Requires your explicit confirmation.' },
+  ],
+  meetings: [
+    { system:'Outlook',     tier:'L1', action:'Assemble prep bundle 30 min before each meeting',    example:'QBR deck, notes, SVP context — ready at 9:30.' },
+    { system:'SharePoint',  tier:'L1', action:'Surface related docs shared in the past 30 days',    example:'QBR-H2-2026.pptx · edited yesterday by Priya.' },
+    { system:'Outlook',     tier:'L1', action:'Book focus blocks in free calendar windows',         example:'Blocked 2-hour focus after your QBR.' },
+    { system:'Outlook',     tier:'L2', action:'Draft a meeting follow-up email for your review',    example:'Summary + 3 action items — you click Send.' },
+    { system:'Outlook',     tier:'L3', action:'Propose rescheduling conflicts within preferences',  example:'Moves a 1:1, asks before it hits the invite.' },
+  ],
+  incidents: [
+    { system:'Salesforce',  tier:'L1', action:'Detect P1/P2 incidents across owned services',       example:'INC-9942 Auth 503 spike — caught in 4 min.' },
+    { system:'Workday',     tier:'L1', action:'Identify current on-call engineer',                  example:'Raj Mehta — available, last responded 14 days ago.' },
+    { system:'Salesforce',  tier:'L2', action:'Draft Teams message to on-call with incident context',example:'Preview before sending — keeps you in the loop.' },
+    { system:'Salesforce',  tier:'L3', action:'Open a war-room channel + invite stakeholders',      example:'Proposes members, you confirm.' },
+    { system:'Salesforce',  tier:'L4', action:'Assign incident owner officially in Salesforce',     example:'Explicit "Run" required — audited.' },
+  ],
+  people: [
+    { system:'Jira',        tier:'L1', action:'Track sprint hours and velocity per engineer',       example:'Liam at 57h/wk vs 38h team avg for 3 sprints.' },
+    { system:'Slack',       tier:'L1', action:'Aggregate sentiment markers (never raw DMs)',        example:'+20% fatigue markers vs baseline — flagged.' },
+    { system:'Workday',     tier:'L2', action:'Draft a wellness check-in message for your review',  example:'Warm tone, 3 sentences — you edit then Send.' },
+    { system:'Workday',     tier:'L3', action:'Propose coverage from your team',                    example:'Sloane · no Friday conflicts — you confirm.' },
+    { system:'Workday',     tier:'L4', action:'Authorise a Wellness Day on behalf of your report',  example:'Requires "I confirm" before anything moves.' },
+  ],
+}
+
+// Default Setup preferences — used when the user picks "Use defaults · skip".
+const DEFAULT_PREFS = {
+  version: 1,
+  useCases: [],
+  systems: { outlook:true, calendar:true, onedrive:true, workday:false, salesforce:false, jira:false, slack:false, servicenow:false },
+  l1: { setReminders:true, draftReplies:true, bookFocus:true, fileRoutinePto:true, updateProfile:true, ackNonPolicy:true },
+  l4: { sendExternal:true, expenseLarge:true, changeManager:true, changeBenefits:true, prodDeploy:true, hireFire:true },
+  notify: { p1:true, deadlines:true, approvals:true, teamRisk:true, weekly:true, channel:'teams' },
+  quiet: { start:'19:00', end:'08:00', weekend:true },
+}
+
+const PREFS_KEY = 'jarvis.prefs.v1'
+function loadPrefs() {
+  try { const raw = localStorage.getItem(PREFS_KEY); if (!raw) return null; const p = JSON.parse(raw); return p && p.version === 1 ? p : null } catch { return null }
+}
+function savePrefs(p) {
+  try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)) } catch {}
+}
 
 // ─── Conversations (Chat tab data) ───────────────────────────────────────────
 const CONVERSATION_CATEGORIES = ['All', 'Decisions', 'Follow-ups', 'Incidents', 'Meetings', 'Analysis']
@@ -784,7 +951,10 @@ function HeroCard({ intent, onAct, onDone, onDismiss, onRemind, isDone }) {
   const signals = intent.evidence.split('·').map(s => s.trim()).filter(Boolean).slice(0, 2)
   const [hover, setHover] = useState(false)
   return (
-    <div className="enter" data-clickable onClick={() => { SFX.tap(); HX.tap(); onAct(intent) }}
+    <div className="enter" data-clickable role="button" tabIndex={0}
+      aria-label={intent.headline}
+      onClick={() => { SFX.tap(); HX.tap(); onAct(intent) }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); SFX.tap(); HX.tap(); onAct(intent) } }}
       onMouseEnter={e => { setHover(true); e.currentTarget.style.boxShadow=T.shadowMd }}
       onMouseLeave={e => { setHover(false); e.currentTarget.style.boxShadow=T.shadowSm }}
       style={{ marginBottom:12, borderRadius:8, overflow:'hidden', position:'relative', cursor:'pointer',
@@ -795,25 +965,32 @@ function HeroCard({ intent, onAct, onDone, onDismiss, onRemind, isDone }) {
         onRemind={() => { SFX.tap(); HX.tap(); onRemind?.(intent.id) }}
         onRemove={() => { SFX.tap(); onDismiss(intent.id) }} />
       <div style={{ padding:'16px 18px' }}>
-        {/* Source — identifies where this came from */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+        {/* Source — identifies where this came from · priority label */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8, flexWrap:'wrap' }}>
           {(() => {
             const { vendors } = parseSource(intent.source)
-            return (
-              <>
-                <span style={{ display:'inline-flex', alignItems:'center' }}>
-                  {vendors.map((v, i) => (
-                    <span key={i} style={{ marginLeft: i === 0 ? 0 : -4 }}>
-                      <SourceIcon src={v} size={14} />
-                    </span>
-                  ))}
+            return vendors.map((v, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <span style={{ fontSize:12, color:T.textXsoft }}>·</span>}
+                <span style={{ display:'inline-flex', alignItems:'center', gap:5 }}>
+                  <SourceIcon src={v} size={14} />
+                  <span style={{ fontSize:12, fontWeight:600, color:T.textSoft }}>{v.name}</span>
                 </span>
-                <span style={{ fontSize:12, fontWeight:600, color:T.textSoft }}>
-                  {vendors.map(v => v.name).join(' · ')}
-                </span>
-              </>
-            )
+              </React.Fragment>
+            ))
           })()}
+          {intent.cat && (
+            <>
+              <span style={{ fontSize:12, color:T.textXsoft }}>·</span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:4,
+                padding:'2px 8px', borderRadius:99,
+                background:m.bg, color:m.color,
+                fontSize:11, fontWeight:700 }}>
+                <span style={{ width:5, height:5, borderRadius:'50%', background:m.dot }} />
+                {intent.cat}
+              </span>
+            </>
+          )}
         </div>
         <h2 style={{ fontSize:15, fontWeight:700, lineHeight:1.35, color:T.text, marginBottom:7, paddingRight:68 }}>{intent.headline}</h2>
         <p style={{ fontSize:14, lineHeight:1.6, color:T.textMid, marginBottom:14 }}>{intent.why}</p>
@@ -846,7 +1023,10 @@ function IntentCard({ intent, idx, onAct, onDone, onDismiss, onRemind, isDone })
   const signals = intent.evidence.split('·').map(s => s.trim()).filter(Boolean).slice(0, 2)
   const [hover, setHover] = useState(false)
   return (
-    <div className="enter" data-clickable onClick={() => { SFX.tap(); HX.tap(); onAct(intent) }}
+    <div className="enter" data-clickable role="button" tabIndex={0}
+      aria-label={intent.headline}
+      onClick={() => { SFX.tap(); HX.tap(); onAct(intent) }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); SFX.tap(); HX.tap(); onAct(intent) } }}
       onMouseEnter={e => { setHover(true); e.currentTarget.style.boxShadow=T.shadowMd }}
       onMouseLeave={e => { setHover(false); e.currentTarget.style.boxShadow=T.shadowSm }}
       style={{ marginBottom:8, borderRadius:8, overflow:'hidden', animationDelay:`${idx*.05}s`, cursor:'pointer',
@@ -857,25 +1037,32 @@ function IntentCard({ intent, idx, onAct, onDone, onDismiss, onRemind, isDone })
           onDone={() => { SFX.done(); HX.done(); onDone(intent.id) }}
           onRemind={() => { SFX.tap(); HX.tap(); onRemind?.(intent.id) }}
           onRemove={() => { SFX.tap(); onDismiss(intent.id) }} />
-        {/* Source — identifies where this came from (+ optional prep flag) */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5 }}>
+        {/* Source — identifies where this came from · priority label (+ optional prep flag) */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:5, flexWrap:'wrap' }}>
           {(() => {
             const { vendors } = parseSource(intent.source)
-            return (
-              <>
-                <span style={{ display:'inline-flex', alignItems:'center' }}>
-                  {vendors.map((v, i) => (
-                    <span key={i} style={{ marginLeft: i === 0 ? 0 : -4 }}>
-                      <SourceIcon src={v} size={14} />
-                    </span>
-                  ))}
+            return vendors.map((v, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <span style={{ fontSize:12, color:T.textXsoft }}>·</span>}
+                <span style={{ display:'inline-flex', alignItems:'center', gap:5 }}>
+                  <SourceIcon src={v} size={14} />
+                  <span style={{ fontSize:12, fontWeight:600, color:T.textSoft }}>{v.name}</span>
                 </span>
-                <span style={{ fontSize:12, fontWeight:600, color:T.textSoft }}>
-                  {vendors.map(v => v.name).join(' · ')}
-                </span>
-              </>
-            )
+              </React.Fragment>
+            ))
           })()}
+          {intent.cat && (
+            <>
+              <span style={{ fontSize:12, color:T.textXsoft }}>·</span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:4,
+                padding:'1px 7px', borderRadius:99,
+                background:m.bg, color:m.color,
+                fontSize:10, fontWeight:700 }}>
+                <span style={{ width:4, height:4, borderRadius:'50%', background:m.dot }} />
+                {intent.cat}
+              </span>
+            </>
+          )}
           {intent.prepReady && (
             <span style={{ fontSize:11, fontWeight:600, color:T.blue, marginLeft:4 }}>· Prep ready</span>
           )}
@@ -1193,21 +1380,192 @@ function renderMsgText(text, T) {
 }
 
 // ─── ActionChips ─────────────────────────────────────────────────────────────
-function ActionChips({ actions, onChipClick }) {
+function ActionChips({ actions, onChipClick, onTieredClick }) {
   const T = window.__T
+  // Tier drives behaviour silently. The chip itself is a plain pill — no L-label.
   return (
     <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:10 }}>
-      {actions.map(a => (
-        <button key={a.key} type="button"
-          onClick={() => { SFX.tap(); HX.tap(); onChipClick(a.label) }}
-          style={{ fontSize:13, fontWeight:600, padding:'5px 12px', borderRadius:4, cursor:'pointer',
-            background:T.surface, color:T.text, border:`1px solid ${T.border}`,
-            transition:'all .15s', fontFamily:T.font }}
-          onMouseEnter={e => { e.currentTarget.style.background=T.coreSoft; e.currentTarget.style.borderColor=T.core; e.currentTarget.style.color=T.core }}
-          onMouseLeave={e => { e.currentTarget.style.background=T.surface; e.currentTarget.style.borderColor=T.borderMid; e.currentTarget.style.color=T.text }}>
-          {a.label}
+      {actions.map(a => {
+        const hasTier = !!a.tier
+        return (
+          <button key={a.key} type="button"
+            onClick={() => {
+              SFX.tap(); HX.tap()
+              if (hasTier && onTieredClick) onTieredClick(a)
+              else onChipClick(a.label)
+            }}
+            style={{ display:'inline-flex', alignItems:'center', gap:6,
+              fontSize:13, fontWeight:600, padding:'6px 12px', borderRadius:99, cursor:'pointer',
+              background:T.surface, color:T.text, border:`1px solid ${T.border}`,
+              transition:'all .15s', fontFamily:T.font }}
+            onMouseEnter={e => { e.currentTarget.style.background=T.coreSoft; e.currentTarget.style.borderColor=T.core; e.currentTarget.style.color=T.core }}
+            onMouseLeave={e => { e.currentTarget.style.background=T.surface; e.currentTarget.style.borderColor=T.borderMid; e.currentTarget.style.color=T.text }}>
+            {a.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Tier-aware in-thread blocks (preview, confirm, modal, Done-with-Undo) ─
+// Each block is rendered as a plain chat message with role='block'.
+// Done confirmation rendered as a regular Jarvis chat bubble (not a banner/alert).
+function DoneWithUndo({ msg, rule, onUndo }) {
+  const T = window.__T
+  const [visible, setVisible] = useState(true)
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(false), 8000)
+    return () => clearTimeout(t)
+  }, [])
+  const now = new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })
+  return (
+    <div className="enter" style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
+      <div style={{ width:26, height:26, borderRadius:6, flexShrink:0, marginTop:2,
+        display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
+        <Sparkles size={12} color="#fff" />
+      </div>
+      <div style={{ maxWidth:'84%', padding:'10px 13px', background:T.surfaceMid,
+        border:`1px solid ${T.border}`, borderRadius:8, borderBottomLeftRadius:2, fontSize:14 }}>
+        <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:4 }}>
+          <span style={{ fontSize:12, fontWeight:800, color:T.text }}>Jarvis</span>
+          <span style={{ fontSize:11, color:T.textSoft }}>{now}</span>
+        </div>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ width:20, height:20, borderRadius:'50%', flexShrink:0,
+            background:T.greenSoft, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Check size={11} color={T.green} />
+          </div>
+          <p style={{ fontSize:14, color:T.text, margin:0, lineHeight:1.45 }}>
+            Done. <span style={{ color:T.textSoft }}>{msg}</span>
+          </p>
+          {visible && onUndo && (
+            <button type="button" onClick={onUndo}
+              style={{ marginLeft:'auto', padding:'3px 10px', borderRadius:4, cursor:'pointer',
+                background:T.surface, border:`1px solid ${T.border}`, color:T.core,
+                fontSize:12, fontWeight:700, fontFamily:T.font, flexShrink:0 }}>
+              Undo
+            </button>
+          )}
+        </div>
+        {rule && (
+          <p style={{ fontSize:11, color:T.textSoft, margin:'6px 0 0 28px' }}>
+            I kept within what you asked of me in Setup.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PreviewBlock({ draft, onSend, onEdit }) {
+  const T = window.__T
+  return (
+    <div className="enter" style={{ marginTop:6, padding:'12px',
+      background:T.surface, border:`1px solid ${T.core}40`, borderRadius:6, boxShadow:T.shadowSm }}>
+      <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:T.core, margin:'0 0 6px' }}>
+        Draft · review before send
+      </p>
+      {draft.subject && (
+        <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:'0 0 6px' }}>
+          Subject: {draft.subject}
+        </p>
+      )}
+      <div style={{ fontSize:13, color:T.textMid, lineHeight:1.55, whiteSpace:'pre-wrap',
+        padding:'8px 10px', borderRadius:4, background:T.surfaceMid, border:`1px solid ${T.border}` }}>
+        {draft.body}
+      </div>
+      <div style={{ display:'flex', gap:6, marginTop:10 }}>
+        <button type="button" onClick={onSend}
+          style={{ padding:'6px 12px', borderRadius:4, cursor:'pointer',
+            background:T.core, border:'none', color:'#fff',
+            fontSize:12, fontWeight:700, fontFamily:T.font }}>
+          Send
         </button>
-      ))}
+        <button type="button" onClick={onEdit}
+          style={{ padding:'6px 12px', borderRadius:4, cursor:'pointer',
+            background:'none', border:`1px solid ${T.border}`, color:T.text,
+            fontSize:12, fontWeight:700, fontFamily:T.font }}>
+          Edit
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ConfirmRow({ label, onConfirm, onCancel }) {
+  const T = window.__T
+  return (
+    <div className="enter" style={{ display:'flex', alignItems:'center', gap:10, marginTop:6,
+      padding:'8px 10px', borderRadius:6, background:T.amberSoft, border:`1px solid ${T.amber}40` }}>
+      <span style={{ fontSize:13, color:T.text, flex:1 }}>{label}</span>
+      <button type="button" onClick={onConfirm}
+        style={{ padding:'5px 10px', borderRadius:4, cursor:'pointer',
+          background:T.core, border:'none', color:'#fff',
+          fontSize:12, fontWeight:700, fontFamily:T.font }}>
+        Confirm
+      </button>
+      <button type="button" onClick={onCancel}
+        style={{ padding:'5px 10px', borderRadius:4, cursor:'pointer',
+          background:'none', border:`1px solid ${T.border}`, color:T.textMid,
+          fontSize:12, fontWeight:700, fontFamily:T.font }}>
+        Cancel
+      </button>
+    </div>
+  )
+}
+
+function GateModal({ action, policy, onRun, onCancel }) {
+  const T = window.__T
+  const [confirmed, setConfirmed] = useState(false)
+  return (
+    <div role="dialog" aria-label="Gated action"
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', zIndex:500,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}
+      onClick={onCancel}>
+      <div className="pop" onClick={e => e.stopPropagation()}
+        style={{ width:'100%', maxWidth:460, borderRadius:8,
+          background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowMd }}>
+        <div style={{ padding:'18px 22px', borderBottom:`1px solid ${T.border}`,
+          display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:30, height:30, borderRadius:8, background:T.amberSoft,
+            display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <ShieldCheck size={15} color={T.amber} />
+          </div>
+          <p style={{ fontSize:16, fontWeight:800, color:T.text, margin:0 }}>One last check</p>
+        </div>
+        <div style={{ padding:'18px 22px' }}>
+          <p style={{ fontSize:14, fontWeight:700, color:T.text, margin:'0 0 10px' }}>{action.label}</p>
+          <div style={{ padding:'10px 12px', borderRadius:4, background:T.amberSoft, border:`1px solid ${T.amber}40`, marginBottom:14 }}>
+            <p style={{ fontSize:12, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:T.amber, margin:'0 0 4px' }}>
+              Why we're asking
+            </p>
+            <p style={{ fontSize:13, color:T.text, margin:0, lineHeight:1.5 }}>{policy}</p>
+          </div>
+          <label style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0', cursor:'pointer' }}>
+            <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}
+              style={{ width:16, height:16, accentColor:T.core, cursor:'pointer' }} />
+            <span style={{ fontSize:13, color:T.text }}>I confirm I want to run this action.</span>
+          </label>
+        </div>
+        <div style={{ padding:'14px 22px', borderTop:`1px solid ${T.border}`,
+          display:'flex', gap:8, justifyContent:'flex-end' }}>
+          <button type="button" onClick={onCancel}
+            style={{ padding:'8px 16px', borderRadius:4, cursor:'pointer',
+              background:'none', border:`1px solid ${T.border}`, color:T.text,
+              fontSize:13, fontWeight:700, fontFamily:T.font }}>
+            Cancel
+          </button>
+          <button type="button" onClick={() => confirmed && onRun()} disabled={!confirmed}
+            style={{ padding:'8px 16px', borderRadius:4,
+              cursor: confirmed ? 'pointer' : 'not-allowed',
+              background:confirmed ? T.red : T.borderMid, border:'none', color:'#fff',
+              opacity: confirmed ? 1 : 0.6,
+              fontSize:13, fontWeight:700, fontFamily:T.font }}>
+            Run
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -1217,18 +1575,18 @@ function AgentTrace({ trace }) {
   const T = window.__T
   const [open, setOpen] = useState(false)
   return (
-    <div style={{ borderRadius:4, background:T.coreSoft, border:`1px solid ${T.borderMid}`, marginTop:8, overflow:'hidden' }}>
+    <div style={{ borderRadius:6, background:T.surfaceMid, border:`1px solid ${T.border}`, marginTop:8, overflow:'hidden' }}>
       {/* Header row */}
       <button type="button" onClick={() => { SFX.tap(); setOpen(o=>!o) }}
         style={{ width:'100%', display:'flex', alignItems:'center', gap:7, padding:'8px 10px',
           background:'none', border:'none', cursor:'pointer', textAlign:'left', fontFamily:T.font }}>
-        <Sparkles size={10} color={T.core} style={{ flexShrink:0 }} />
-        <span style={{ flex:1, fontSize:13, fontWeight:600, color:T.core, lineHeight:1.4 }}>{trace.summary}</span>
-        <ChevronDown size={12} color={T.core} style={{ flexShrink:0, transition:'transform .2s', transform:open?'rotate(180deg)':'rotate(0deg)' }} />
+        <Sparkles size={11} color={T.core} style={{ flexShrink:0 }} />
+        <span style={{ flex:1, fontSize:13, fontWeight:600, color:T.textMid, lineHeight:1.4 }}>{trace.summary}</span>
+        <ChevronDown size={12} color={T.textSoft} style={{ flexShrink:0, transition:'transform .2s', transform:open?'rotate(180deg)':'rotate(0deg)' }} />
       </button>
       {/* Expanded steps */}
       {open && (
-        <div className="expand-down" style={{ padding:'4px 10px 10px', borderTop:`1px solid ${T.core}15` }}>
+        <div className="expand-down" style={{ padding:'4px 10px 10px', borderTop:`1px solid ${T.border}` }}>
           {trace.steps.map((step, si) => (
             <div key={si} style={{ marginTop:8 }}>
               <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:step.bullets?.length?4:0 }}>
@@ -1352,14 +1710,14 @@ function MessageTable({ table }) {
 }
 
 // ─── renderBubble ─────────────────────────────────────────────────────────────
-function renderBubble(m, T, onChipClick) {
+function renderBubble(m, T, onChipClick, onTieredClick) {
   return (
     <div>
       {renderMsgText(m.text, T)}
       {m.trace && <AgentTrace trace={m.trace} />}
       {m.sources && <SourceChips sources={m.sources} />}
       {m.table && <MessageTable table={m.table} />}
-      {m.actions && <ActionChips actions={m.actions} onChipClick={onChipClick} />}
+      {m.actions && <ActionChips actions={m.actions} onChipClick={onChipClick} onTieredClick={onTieredClick} />}
     </div>
   )
 }
@@ -1451,6 +1809,28 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
   const [thinking, setThinking] = useState(false)
   const endRef = useRef(null)
   const preselectFiredRef = useRef(false)
+  // Per-action L4 confirmations (key → true) so re-clicking doesn't re-prompt.
+  const [confirmedActions, setConfirmedActions] = useState({})
+  const [gateModalAction, setGateModalAction] = useState(null)
+  // Policy lines used when the L4 modal opens — mirrors the action key.
+  const POLICY_LINES = {
+    leave_backup: 'Within parental-leave policy v3 · Backup approver must be same level or above and have team overlap.',
+    approve_all:  'Within $5k single-approver limit · All 3 items pass expense-policy checks.',
+    reject_all:   'You are declining all 3 items. Submitters will be notified with reason prompt.',
+  }
+  // Drafts shown for L2 "review-first" actions.
+  const L2_DRAFTS = {
+    leave_note: {
+      subject: 'Handover while I\'m on parental leave (Jun 2 – Sep 1)',
+      body: "Hi Priya,\n\nI'm taking parental leave from Jun 2 through Sep 1. You've agreed to cover — thank you so much.\n\nA short handover:\n• Open calendar holds for my recurring 1:1s are delegated to you (view only).\n• Anything marked L4 in Jarvis routes to Liam while I'm out.\n• The Acme and CloudMetrics threads have full context pinned in OneDrive/Handover/.\n\nShout if anything is unclear — I'll be fully offline but can pop in for 30 min if it's genuinely urgent.\n\nAlex",
+    },
+  }
+
+  // Rule strings shown under "Done ✓" for L1 actions.
+  const L1_RULES = {
+    leave_pto:    'Act: File routine PTO if there are no calendar conflicts.',
+    leave_ooo:    'Act: Book focus blocks on free time.',
+  }
 
   useEffect(() => {
     preselectFiredRef.current = false
@@ -1477,6 +1857,76 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
   }, [messages, preselect])
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages, thinking])
+
+  // ── Tier-aware action runner ─────────────────────────────────────────────
+  // Effective tier = action.tier, but if the user's prefs.alwaysAsk[key] is on,
+  // bump to L4 regardless. prefs is read from window.__PREFS for this demo.
+  const effectiveTier = (action) => {
+    const prefs = window.__PREFS
+    if (prefs?.alwaysAsk?.[action.key]) return 'L4'
+    return action.tier || 'L1'
+  }
+  const doneReplyFor = (action) => ({ role:'block', kind:'done', actionKey:action.key, label:action.label, rule:L1_RULES[action.key] })
+  const runAction = (action, { skipConfirm = false } = {}) => {
+    const tier = effectiveTier(action)
+    setMessages(p => [...p, { role:'u', text:action.label }])
+    if (tier === 'L1') {
+      SFX.done(); HX.done()
+      setCoreState('executing')
+      setTimeout(() => setCoreState('idle'), 1200)
+      setMessages(p => [...p, doneReplyFor(action)])
+    } else if (tier === 'L2') {
+      const draft = L2_DRAFTS[action.key] || { subject:'Draft ready', body:'Draft content for your review.' }
+      setMessages(p => [...p, { role:'block', kind:'preview', actionKey:action.key, label:action.label, draft }])
+      setCoreState('confirming')
+    } else if (tier === 'L3') {
+      setMessages(p => [...p, { role:'block', kind:'confirm', actionKey:action.key, label:action.label }])
+      setCoreState('confirming')
+    } else if (tier === 'L4') {
+      if (skipConfirm || confirmedActions[action.key]) {
+        SFX.done(); HX.done()
+        setCoreState('executing')
+        setTimeout(() => setCoreState('idle'), 1500)
+        setMessages(p => [...p, doneReplyFor(action)])
+      } else {
+        setGateModalAction(action)
+      }
+    }
+  }
+  const handleTieredClick = (action) => runAction(action)
+  const undoLastDone = () => {
+    setMessages(p => {
+      const idx = [...p].reverse().findIndex(m => m.role === 'block' && m.kind === 'done')
+      if (idx === -1) return p
+      const actualIdx = p.length - 1 - idx
+      return [...p.slice(0, actualIdx), ...p.slice(actualIdx + 1)]
+    })
+    setCoreState('idle')
+  }
+  const sendPreview = (actionKey, label) => {
+    setMessages(p => p.map(m =>
+      m.role === 'block' && m.kind === 'preview' && m.actionKey === actionKey ? { ...m, consumed:true } : m
+    ).concat([{ role:'block', kind:'done', actionKey, label, rule:'Act: Draft replies in your voice (you Send).' }]))
+    SFX.done(); HX.done()
+  }
+  const editPreview = (actionKey) => {
+    const draft = L2_DRAFTS[actionKey]
+    if (draft) { setInput(draft.body) }
+    setMessages(p => p.map(m =>
+      m.role === 'block' && m.kind === 'preview' && m.actionKey === actionKey ? { ...m, consumed:true } : m
+    ))
+  }
+  const confirmInline = (actionKey, label) => {
+    setMessages(p => p.map(m =>
+      m.role === 'block' && m.kind === 'confirm' && m.actionKey === actionKey ? { ...m, consumed:true } : m
+    ).concat([{ role:'block', kind:'done', actionKey, label }]))
+    SFX.done(); HX.done()
+  }
+  const cancelInline = (actionKey) => {
+    setMessages(p => p.map(m =>
+      m.role === 'block' && m.kind === 'confirm' && m.actionKey === actionKey ? { ...m, consumed:true } : m
+    ))
+  }
 
   const sendText = (txt) => {
     if (!txt.trim()) return
@@ -1507,9 +1957,7 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
 
   const tabs = [
     { id:'chat', label:'Chat', Icon:MessageCircle },
-    { id:'docs', label:'Docs', Icon:FileText },
-    { id:'people', label:'People', Icon:Users },
-    { id:'channels', label:'Channels', Icon:Hash },
+    { id:'related', label:'Related', Icon:Layers },
   ]
 
   const T2 = window.__T
@@ -1582,26 +2030,61 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
       {/* Chat messages */}
       {activeTab==='chat' && (
         <div style={{ flex:1, overflowY:'auto', padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
-          {messages.map((m,i) => (
-            <div key={i} className="enter" style={{ animationDelay:`${i*.04}s` }}>
-              <div style={{ display:'flex', justifyContent:m.role==='u'?'flex-end':'flex-start' }}>
-                {m.role==='j' && (
-                  <div style={{ width:26, height:26, borderRadius:6, flexShrink:0, marginRight:8, marginTop:2,
-                    display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
-                    <Sparkles size={12} color="white" />
-                  </div>
-                )}
-                <div style={{ maxWidth:'84%', padding:'10px 13px', fontSize:14, lineHeight:1.6,
-                  borderRadius:8,
-                  ...(m.role==='u'
-                    ? { background:T.core, color:'white', borderBottomRightRadius:2 }
-                    : { background:T.surfaceMid, color:T.text, border:`1px solid ${T.border}`, borderBottomLeftRadius:2 }) }}>
-                  {m.role==='j' ? renderBubble(m, T, (label) => sendText(label)) : renderMsg(m.text)}
+          {messages.map((m,i) => {
+            // Render tier-aware blocks (done / preview / confirm)
+            if (m.role === 'block') {
+              if (m.consumed) return null
+              if (m.kind === 'done') {
+                return <div key={i} className="enter">
+                  <DoneWithUndo msg={m.label} rule={m.rule} onUndo={undoLastDone} />
                 </div>
+              }
+              if (m.kind === 'preview') {
+                return <div key={i} className="enter">
+                  <PreviewBlock draft={m.draft}
+                    onSend={() => sendPreview(m.actionKey, m.label)}
+                    onEdit={() => editPreview(m.actionKey)} />
+                </div>
+              }
+              if (m.kind === 'confirm') {
+                return <div key={i} className="enter">
+                  <ConfirmRow label={m.label + ' — continue?'}
+                    onConfirm={() => confirmInline(m.actionKey, m.label)}
+                    onCancel={() => cancelInline(m.actionKey)} />
+                </div>
+              }
+            }
+            const now = new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })
+            return (
+              <div key={i} className="enter" style={{ animationDelay:`${i*.04}s` }}>
+                <div style={{ display:'flex', justifyContent:m.role==='u'?'flex-end':'flex-start' }}>
+                  {m.role==='j' && (
+                    <div style={{ width:26, height:26, borderRadius:6, flexShrink:0, marginRight:8, marginTop:2,
+                      display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
+                      <Sparkles size={12} color="white" />
+                    </div>
+                  )}
+                  <div style={{ maxWidth:'84%',
+                    padding:'10px 13px',
+                    fontSize:14, lineHeight:1.55,
+                    borderRadius:10,
+                    ...(m.role==='u'
+                      ? { background:T.core, color:'white', borderBottomRightRadius:2 }
+                      : { background:T.surface, color:T.text, border:`1px solid ${T.border}`, borderBottomLeftRadius:2,
+                          boxShadow:T.shadowSm }) }}>
+                    {m.role === 'j' && (
+                      <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:6 }}>
+                        <span style={{ fontSize:12, fontWeight:800, color:T.text }}>Jarvis</span>
+                        <span style={{ fontSize:11, color:T.textSoft }}>{now}</span>
+                      </div>
+                    )}
+                    {m.role==='j' ? renderBubble(m, T, (label) => sendText(label), handleTieredClick) : renderMsg(m.text)}
+                  </div>
+                </div>
+                {m.role==='j' && <MessageFeedback msgIndex={i} />}
               </div>
-              {m.role==='j' && <MessageFeedback msgIndex={i} />}
-            </div>
-          ))}
+            )
+          })}
           {thinking && (
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <div style={{ width:26, height:26, borderRadius:6, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
@@ -1620,84 +2103,106 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
         </div>
       )}
 
-      {/* Docs tab */}
-      {activeTab==='docs' && (
-        <div style={{ flex:1, overflowY:'auto', padding:'12px 14px', display:'flex', flexDirection:'column', gap:8 }}>
-          <p style={{ fontSize:14, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', color:T.textXsoft, marginBottom:4 }}>Related documents</p>
-          {CHAT_DOCS.map((doc, i) => (
-            <div key={i} className="enter" style={{ display:'flex', alignItems:'center', gap:12, padding:'11px 13px', borderRadius:4,
-              background:T.surfaceMid, border:`1px solid ${T.border}`, cursor:'pointer', transition:'all .15s', animationDelay:`${i*.06}s` }}
-              onMouseEnter={e => { e.currentTarget.style.background=T.surface; e.currentTarget.style.borderColor=T.borderMid }}
-              onMouseLeave={e => { e.currentTarget.style.background=T.surfaceMid; e.currentTarget.style.borderColor=T.border }}>
-              <div style={{ width:34, height:34, borderRadius:4, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
-                background:`${doc.color}12` }}>
-                <doc.Icon size={15} color={doc.color} />
-              </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <p style={{ fontSize:14, fontWeight:600, color:T.text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{doc.name}</p>
-                <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:3 }}>
-                  <Chip text={doc.type} color={doc.color} />
-                  <span style={{ fontSize:14, color:T.textXsoft }}>{doc.edited}</span>
+      {/* Related tab — merged Docs + People + Channels */}
+      {activeTab==='related' && (
+        <div style={{ flex:1, overflowY:'auto', padding:'14px 14px 20px', display:'flex', flexDirection:'column', gap:18 }}>
+          {/* Docs */}
+          <div>
+            <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em',
+              color:T.textSoft, margin:'0 0 8px' }}>Documents</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {CHAT_DOCS.map((doc, i) => (
+                <div key={i} className="enter" style={{ display:'flex', alignItems:'center', gap:10,
+                  padding:'10px 12px', borderRadius:8,
+                  background:T.surface, border:`1px solid ${T.border}`,
+                  cursor:'pointer', transition:'all .15s', animationDelay:`${i*.05}s` }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor=T.core }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor=T.border }}>
+                  <div style={{ width:32, height:32, borderRadius:6, flexShrink:0,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    background:`${doc.color}14` }}>
+                    <doc.Icon size={14} color={doc.color} />
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0,
+                      overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{doc.name}</p>
+                    <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0' }}>{doc.type} · {doc.edited}</p>
+                  </div>
+                  <ExternalLink size={12} color={T.textSoft} />
                 </div>
-              </div>
-              <ExternalLink size={12} color={T.textXsoft} />
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          </div>
 
-      {/* People tab */}
-      {activeTab==='people' && (
-        <div style={{ flex:1, overflowY:'auto', padding:'12px 14px', display:'flex', flexDirection:'column', gap:8 }}>
-          <p style={{ fontSize:14, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', color:T.textXsoft, marginBottom:4 }}>Related people</p>
-          {CHAT_PEOPLE.map((person, i) => (
-            <div key={i} className="enter" style={{ display:'flex', alignItems:'center', gap:12, padding:'11px 13px', borderRadius:4,
-              background:T.surfaceMid, border:`1px solid ${T.border}`, animationDelay:`${i*.06}s` }}>
-              <div style={{ position:'relative', flexShrink:0 }}>
-                <div style={{ width:38, height:38, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                  background:`${person.color}18`, border:`1.5px solid ${person.color}40` }}>
-                  <span style={{ fontSize:14, fontWeight:800, color:person.color }}>{person.avatar}</span>
+          {/* People — with generated avatar photos */}
+          <div>
+            <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em',
+              color:T.textSoft, margin:'0 0 8px' }}>People</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {CHAT_PEOPLE.map((person, i) => (
+                <div key={i} className="enter" style={{ display:'flex', alignItems:'center', gap:10,
+                  padding:'10px 12px', borderRadius:8,
+                  background:T.surface, border:`1px solid ${T.border}`, animationDelay:`${i*.05}s` }}>
+                  <div style={{ position:'relative', flexShrink:0, width:36, height:36 }}>
+                    <img
+                      alt={person.name}
+                      src={`https://i.pravatar.cc/72?u=${encodeURIComponent(person.name)}`}
+                      style={{ width:36, height:36, borderRadius:'50%', display:'block',
+                        objectFit:'cover', border:`1.5px solid ${T.border}` }}
+                      onError={(e) => { e.currentTarget.style.display='none' }} />
+                    <div style={{ position:'absolute', bottom:0, right:0, width:10, height:10, borderRadius:'50%',
+                      background:person.online ? T.green : T.amber,
+                      border:`2px solid ${T.surface}` }} />
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0 }}>{person.name}</p>
+                    <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0' }}>{person.role}</p>
+                  </div>
+                  <button type="button"
+                    style={{ padding:'5px 11px', borderRadius:4, cursor:'pointer',
+                      background:'none', border:`1px solid ${T.border}`,
+                      color:T.core, fontSize:12, fontWeight:700, fontFamily:T.font }}>
+                    Message
+                  </button>
                 </div>
-                <div style={{ position:'absolute', bottom:1, right:1, width:9, height:9, borderRadius:'50%',
-                  background:person.online ? T.green : T.amber, border:`2px solid ${T.surface}` }} />
-              </div>
-              <div style={{ flex:1 }}>
-                <p style={{ fontSize:15, fontWeight:700, color:T.text }}>{person.name}</p>
-                <p style={{ fontSize:13, color:T.textSoft }}>{person.role}</p>
-                <p style={{ fontSize:14, color:person.online?T.green:T.amber, marginTop:2 }}>{person.status}</p>
-              </div>
-              <Btn variant="secondary" style={{ padding:'5px 11px', fontSize:13 }}>Message</Btn>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          </div>
 
-      {/* Channels tab */}
-      {activeTab==='channels' && (
-        <div style={{ flex:1, overflowY:'auto', padding:'12px 14px', display:'flex', flexDirection:'column', gap:8 }}>
-          <p style={{ fontSize:14, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', color:T.textXsoft, marginBottom:4 }}>Related channels</p>
-          {CHAT_CHANNELS.map((ch, i) => (
-            <div key={i} className="enter" style={{ display:'flex', alignItems:'center', gap:12, padding:'11px 13px', borderRadius:4,
-              background:T.surfaceMid, border:`1px solid ${T.border}`, cursor:'pointer', transition:'all .15s', animationDelay:`${i*.06}s` }}
-              onMouseEnter={e => e.currentTarget.style.borderColor=T.borderMid}
-              onMouseLeave={e => e.currentTarget.style.borderColor=T.border}>
-              <div style={{ width:34, height:34, borderRadius:4, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
-                background:T.coreSoft }}>
-                <Hash size={14} color={T.core} />
-              </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                  <p style={{ fontSize:14, fontWeight:700, color:T.text }}>{ch.name}</p>
-                  {ch.unread > 0 && (
-                    <span style={{ minWidth:18, height:18, padding:'0 5px', borderRadius:99, display:'flex', alignItems:'center', justifyContent:'center',
-                      background:T.core, color:'white', fontSize:13, fontWeight:800 }}>{ch.unread}</span>
-                  )}
+          {/* Channels */}
+          <div>
+            <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em',
+              color:T.textSoft, margin:'0 0 8px' }}>Channels</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {CHAT_CHANNELS.map((ch, i) => (
+                <div key={i} className="enter" style={{ display:'flex', alignItems:'center', gap:10,
+                  padding:'10px 12px', borderRadius:8, cursor:'pointer',
+                  background:T.surface, border:`1px solid ${T.border}`,
+                  transition:'all .15s', animationDelay:`${i*.05}s` }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor=T.core}
+                  onMouseLeave={e => e.currentTarget.style.borderColor=T.border}>
+                  <div style={{ width:32, height:32, borderRadius:6, flexShrink:0,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    background:T.coreSoft }}>
+                    <Hash size={14} color={T.core} />
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0 }}>{ch.name}</p>
+                      {ch.unread > 0 && (
+                        <span style={{ minWidth:16, height:16, padding:'0 5px', borderRadius:99,
+                          display:'flex', alignItems:'center', justifyContent:'center',
+                          background:T.core, color:'#fff', fontSize:10, fontWeight:800 }}>{ch.unread}</span>
+                      )}
+                    </div>
+                    <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0',
+                      overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{ch.last}</p>
+                  </div>
+                  <ChevronRight size={13} color={T.textSoft} />
                 </div>
-                <p style={{ fontSize:13, color:T.textSoft, marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{ch.last}</p>
-              </div>
-              <ChevronRight size={13} color={T.textXsoft} />
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       )}
 
@@ -1718,13 +2223,519 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
           <p style={{ fontSize:14, textAlign:'center', marginTop:7, color:T.textXsoft }}>All actions logged in Feed</p>
         </div>
       )}
+
+      {/* L4 gate modal */}
+      {gateModalAction && (
+        <GateModal action={gateModalAction}
+          policy={POLICY_LINES[gateModalAction.key] || 'Requires explicit confirmation per your Setup (Gate).'}
+          onCancel={() => { SFX.tap(); setGateModalAction(null) }}
+          onRun={() => {
+            setConfirmedActions(p => ({ ...p, [gateModalAction.key]: true }))
+            const a = gateModalAction
+            setGateModalAction(null)
+            runAction(a, { skipConfirm:true })
+          }} />
+      )}
     </div>
   )
 }
 
 
 // ─── Welcome Screen — Full landing page ────────────────────────────────────────
-function WelcomeScreen({ onLogin }) {
+// ─── "What I can do" drawer — simple, conversational ─────────────────────
+// The user sees four plain-English "I can help with" rows and can type their
+// own request to add/remove capabilities. No L1–L4 jargon. No permission math.
+function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
+  const T = window.__T
+  const [messages, setMessages] = useState([
+    { role:'j', text:"Here's what I can help with today. Want to add something, or take something off my plate? Just tell me." },
+  ])
+  const [input, setInput] = useState('')
+
+  // Esc dismiss
+  useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', h)
+    return () => document.removeEventListener('keydown', h)
+  }, [onClose])
+
+  // Plain-language summary of Jarvis's current "beat". Four rows, with an
+  // example so the user instantly recognises it in their day.
+  const helping = [
+    { emoji:'📊', title:'Meeting prep',       example:'I gather the deck, notes, and SVP context 30 min before.' },
+    { emoji:'📬', title:'Inbox and replies',  example:'I draft replies in your tone — you click Send.' },
+    { emoji:'🗓️', title:'Scheduling',         example:'I book focus time and move low-priority conflicts.' },
+    { emoji:'🏖️', title:'Routine HR/IT',      example:'PTO, reminders, profile updates, device tickets.' },
+  ]
+
+  const notYet = [
+    'Send emails to external customers without your review',
+    'Approve spend over $1,000',
+    'Change your direct reports',
+    'Read raw email or DM bodies',
+  ]
+
+  const send = () => {
+    if (!input.trim()) return
+    SFX.whisper(); HX.tap()
+    const v = input; setInput('')
+    setMessages(p => [...p, { role:'u', text:v }])
+    // Simple keyword-driven demo reply; in a real app this would call the agent.
+    setTimeout(() => {
+      const low = v.toLowerCase()
+      let reply = "Got it. I've noted that and updated what I'll do from here."
+      if (/remove|stop|don.?t|no longer/.test(low)) {
+        reply = "Noted — I'll stop doing that. You'll still see reminders in case I miss something."
+      } else if (/add|also|can you|could you|include/.test(low)) {
+        reply = "Happy to. I'll start watching for that and surface it in your brief tomorrow morning."
+      } else if (/setup|settings|permission/.test(low)) {
+        reply = "You can adjust all of this in Setup — I'll open it from the link below when you like."
+      }
+      setMessages(p => [...p, { role:'j', text: reply }])
+    }, 700)
+  }
+
+  return (
+    <div role="dialog" aria-label="What Jarvis can do"
+      style={{ position:'fixed', inset:0, zIndex:400, display:'flex', justifyContent:'flex-end',
+        background:'rgba(0,0,0,0.28)', backdropFilter:'blur(2px)' }}
+      onClick={onClose}>
+      <div className="enter-r" onClick={e => e.stopPropagation()}
+        style={{ width:440, maxWidth:'96vw', height:'100%', background:T.surface,
+          borderLeft:`1px solid ${T.border}`, display:'flex', flexDirection:'column',
+          boxShadow:'-12px 0 28px rgba(0,0,0,0.15)' }}>
+        {/* Header */}
+        <div style={{ padding:'16px 20px', borderBottom:`1px solid ${T.border}`,
+          display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
+          <div style={{ width:32, height:32, borderRadius:8, background:T.coreGrad,
+            display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Sparkles size={14} color="#fff" />
+          </div>
+          <div>
+            <p style={{ fontSize:15, fontWeight:800, color:T.text, margin:0 }}>What I can do</p>
+            <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0' }}>Here's where I'm helping — tell me to adjust.</p>
+          </div>
+          <div style={{ flex:1 }} />
+          <button type="button" aria-label="Close" onClick={onClose}
+            style={{ width:28, height:28, borderRadius:4, background:'none', border:'none', cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center', color:T.textSoft }}>
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Body — scrollable */}
+        <div style={{ flex:1, overflowY:'auto', padding:'16px 20px' }}>
+          {/* Intro conversation */}
+          {messages.map((m, i) => (
+            <div key={i} style={{ display:'flex', justifyContent: m.role==='u' ? 'flex-end' : 'flex-start',
+              marginBottom:8 }}>
+              {m.role === 'j' && (
+                <div style={{ width:22, height:22, borderRadius:5, flexShrink:0, marginRight:6, marginTop:2,
+                  display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
+                  <Sparkles size={10} color="#fff" />
+                </div>
+              )}
+              <div style={{ maxWidth:'86%', padding:'8px 12px', fontSize:13, lineHeight:1.5,
+                borderRadius:8,
+                ...(m.role==='u'
+                  ? { background:T.core, color:'#fff', borderBottomRightRadius:2 }
+                  : { background:T.surfaceMid, color:T.text, border:`1px solid ${T.border}`, borderBottomLeftRadius:2 }) }}>
+                {m.text}
+              </div>
+            </div>
+          ))}
+
+          {/* Helping today */}
+          <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em',
+            color:T.textSoft, margin:'18px 0 8px' }}>I'm helping with</p>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {helping.map((h, i) => (
+              <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:10,
+                padding:'10px 12px', borderRadius:8,
+                background:T.surface, border:`1px solid ${T.border}` }}>
+                <span style={{ fontSize:18, flexShrink:0, marginTop:2 }}>{h.emoji}</span>
+                <div style={{ flex:1 }}>
+                  <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0 }}>{h.title}</p>
+                  <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0', lineHeight:1.5 }}>{h.example}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Things I'd rather not touch */}
+          <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em',
+            color:T.textSoft, margin:'20px 0 8px' }}>Things I'd rather not touch</p>
+          <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+            {notYet.map((n, i) => (
+              <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:8, padding:'4px 0' }}>
+                <ShieldCheck size={13} color={T.green} style={{ flexShrink:0, marginTop:2 }} />
+                <p style={{ fontSize:13, color:T.textMid, margin:0, lineHeight:1.5 }}>{n}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Open Setup link */}
+          <button type="button"
+            onClick={() => { SFX.tap(); onGrantSystem?.() }}
+            style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:18,
+              padding:'8px 14px', borderRadius:4, cursor:'pointer',
+              background:'none', border:`1px solid ${T.border}`,
+              color:T.core, fontSize:13, fontWeight:700, fontFamily:T.font }}>
+            <Settings size={12} /> Open full Setup
+          </button>
+        </div>
+
+        {/* Footer — talk to Jarvis */}
+        <div style={{ padding:'12px 16px', borderTop:`1px solid ${T.border}`, flexShrink:0 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:99,
+            background:T.surface, border:`1px solid ${T.border}`, transition:'all .15s' }}>
+            <Sparkles size={14} color={T.coreMid} />
+            <input value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && send()}
+              placeholder="Ask me to add or remove something…"
+              style={{ flex:1, fontSize:13, background:'none', border:'none', outline:'none',
+                color:T.text, fontFamily:T.font }} />
+            <button type="button" onClick={send}
+              style={{ width:26, height:26, borderRadius:99, cursor:'pointer',
+                background: input.trim() ? T.core : T.surfaceMid,
+                border:'none', color: input.trim() ? '#fff' : T.textXsoft,
+                display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <ArrowRight size={13} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Tier badge — hidden from user-facing UI by design ────────────────────
+// Tier (L1–L4) still drives behaviour internally (autonomous / review / gate)
+// but we do not show the label to the user. Kept as a no-op so existing
+// call sites compile; will be fully removed once all surfaces are migrated.
+// eslint-disable-next-line no-unused-vars
+function TierBadge() { return null }
+
+// ─── Setup view — 3 steps, plain language, renders inside Teams chrome ────
+function SetupView({ initialPrefs, onComplete, onSkip, onBack }) {
+  const T = window.__T
+  const [step, setStep] = useState(1)
+  // Simpler prefs model exposed to the user. `trust` is the single dial that
+  // decides how eagerly Jarvis acts. It's expanded back into l1/l4/alwaysAsk
+  // when we save (so the underlying tiered chat behaviour keeps working).
+  const [draft, setDraft] = useState(() => ({
+    systems: { ...DEFAULT_PREFS.systems, ...(initialPrefs?.systems || {}) },
+    trust:   initialPrefs?.trust || 'review',         // 'auto' | 'review' | 'ask'
+    channel: initialPrefs?.notify?.channel || 'teams',
+    quiet:   { ...DEFAULT_PREFS.quiet, ...(initialPrefs?.quiet || {}) },
+  }))
+
+  // 6 connections shown in Step 1 — the most common Teams/Salesforce/HR set.
+  const SIMPLE_SYSTEMS = [
+    { id:'outlook',    name:'Outlook',              desc:'email and calendar' },
+    { id:'calendar',   name:'Calendar',             desc:'your meetings' },
+    { id:'onedrive',   name:'OneDrive / SharePoint',desc:'docs you own' },
+    { id:'workday',    name:'Workday',              desc:'HR, PTO, benefits' },
+    { id:'salesforce', name:'Salesforce',           desc:'cases and approvals' },
+    { id:'jira',       name:'Jira',                 desc:'tickets and sprints' },
+  ]
+
+  const TRUST_OPTIONS = [
+    { id:'auto',   title:'Handle what you can',      sub:'Small things just get done. I show you the log and an Undo.',
+      example:'e.g. book focus time, set reminders, update profile' },
+    { id:'review', title:'Draft it, I\'ll decide',   sub:'You see a draft before anything leaves the building.',
+      example:'e.g. reply emails, file PTO, send team notes' },
+    { id:'ask',    title:'Ask me every time',        sub:'Nothing happens without your confirmation.',
+      example:'e.g. prepare plans, surface options, wait for you' },
+  ]
+
+  const setSystem = (id, v) => { SFX.tap(); setDraft(d => ({ ...d, systems: { ...d.systems, [id]: v } })) }
+  const setTrust = (t) => { SFX.tap(); setDraft(d => ({ ...d, trust:t })) }
+  const setChannel = (c) => { SFX.tap(); setDraft(d => ({ ...d, channel:c })) }
+
+  const totalSteps = 3
+  const isLast = step === totalSteps
+  const canBack = step > 1
+
+  // When we save: expand the simple trust dial into the legacy prefs shape so
+  // the chat tier logic keeps working silently in the background.
+  const persist = (commitDraft) => {
+    const l1 = Object.fromEntries(L1_ACTIONS.map(a => [a.id, commitDraft.trust !== 'ask']))
+    // 'ask' everywhere means force L4 for every keyed action; 'auto' means skip L4 only for benign actions.
+    const alwaysAsk = commitDraft.trust === 'ask'
+      ? Object.fromEntries(['leave_pto','leave_ooo','leave_note','leave_backup'].map(k => [k, true]))
+      : {}
+    return {
+      ...DEFAULT_PREFS,
+      ...(initialPrefs || {}),
+      version: 1,
+      systems: { ...DEFAULT_PREFS.systems, ...commitDraft.systems },
+      trust: commitDraft.trust,
+      l1, l4: DEFAULT_PREFS.l4, alwaysAsk,
+      notify: { ...DEFAULT_PREFS.notify, channel: commitDraft.channel },
+      quiet: commitDraft.quiet,
+    }
+  }
+
+  const next = () => { SFX.tap(); setStep(s => Math.min(s + 1, totalSteps)) }
+  const back = () => { SFX.tap(); setStep(s => Math.max(s - 1, 1)) }
+  const skipDefaults = () => { SFX.tap(); onSkip?.(persist({ systems: DEFAULT_PREFS.systems, trust:'review', channel:'teams', quiet: DEFAULT_PREFS.quiet })) }
+  const finish = () => { SFX.done(); HX.done(); onComplete?.(persist(draft)) }
+
+  const stepTitles = [
+    { n:1, label:'Connect' },
+    { n:2, label:'Style' },
+    { n:3, label:'Reach' },
+  ]
+
+  // ── Progress chip strip — clearly shows active / done ───────────────────
+  const progressStrip = (
+    <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:28 }}>
+      {stepTitles.map((s, i) => {
+        const active = step === s.n
+        const done = step > s.n
+        return (
+          <React.Fragment key={s.n}>
+            <div style={{ display:'flex', alignItems:'center', gap:8,
+              padding:'6px 12px', borderRadius:99,
+              background: active ? T.core : done ? T.greenSoft : T.surface,
+              border: `1px solid ${active ? T.core : done ? T.green+'40' : T.border}`,
+              color: active ? '#fff' : done ? T.green : T.textSoft }}>
+              <div style={{ width:18, height:18, borderRadius:'50%',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                background: active ? 'rgba(255,255,255,0.2)' : done ? T.green : T.surfaceMid,
+                color: active ? '#fff' : done ? '#fff' : T.textSoft,
+                fontSize:11, fontWeight:800 }}>
+                {done ? <Check size={10} /> : s.n}
+              </div>
+              <span style={{ fontSize:13, fontWeight:700 }}>{s.label}</span>
+            </div>
+            {i < stepTitles.length - 1 && (
+              <div style={{ flex:'0 0 20px', height:1, background: step > s.n ? T.green : T.border }} />
+            )}
+          </React.Fragment>
+        )
+      })}
+    </div>
+  )
+
+  const headline = { fontSize:24, fontWeight:700, color:T.text, margin:'0 0 6px', letterSpacing:'-0.01em' }
+  const subline  = { fontSize:14, color:T.textSoft, lineHeight:1.55, margin:'0 0 20px' }
+
+  return (
+    <PageLayout maxWidth={720}>
+      <div style={{ maxWidth:640, margin:'8px auto 0' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+          <div style={{ width:32, height:32, borderRadius:8, background:T.coreGrad,
+            display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Sparkles size={15} color="#fff" />
+          </div>
+          <div>
+            <p style={{ fontSize:15, fontWeight:800, color:T.text, margin:0 }}>Let's get you set up</p>
+            <p style={{ fontSize:13, color:T.textSoft, margin:'2px 0 0' }}>Three small choices. Takes a minute.</p>
+          </div>
+        </div>
+
+        {progressStrip}
+
+        {/* ── Step 1 — Connect your tools ── */}
+        {step === 1 && (
+          <div className="fade">
+            <h2 style={headline}>Which of these should I keep an eye on?</h2>
+            <p style={subline}>I only read what I need. You can change this any time.</p>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10 }}>
+              {SIMPLE_SYSTEMS.map(s => {
+                const active = !!draft.systems[s.id]
+                const conn = CONNECTIONS.find(c => c.name.toLowerCase().includes(s.id.split('/')[0]))
+                return (
+                  <button key={s.id} type="button" role="switch" aria-checked={active}
+                    onClick={() => setSystem(s.id, !active)}
+                    style={{ display:'flex', alignItems:'center', gap:12, width:'100%',
+                      padding:'14px', borderRadius:8, cursor:'pointer', textAlign:'left',
+                      background: active ? T.coreSoft : T.surface,
+                      border:`2px solid ${active ? T.core : T.border}`,
+                      color:T.text, fontFamily:T.font, transition:'all .12s' }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.borderColor = T.coreMid }}
+                    onMouseLeave={e => { if (!active) e.currentTarget.style.borderColor = T.border }}>
+                    <span style={{ fontSize:22, flexShrink:0 }}>{conn?.logo || '🔌'}</span>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ fontSize:14, fontWeight:700, color:T.text, margin:0 }}>{s.name}</p>
+                      <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0' }}>{s.desc}</p>
+                    </div>
+                    <div style={{ width:20, height:20, borderRadius:4, flexShrink:0,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      background: active ? T.core : 'none',
+                      border: `1.5px solid ${active ? T.core : T.borderMid}` }}>
+                      {active && <Check size={12} color="#fff" />}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 2 — Trust dial (replaces old L1/L4 lists) ── */}
+        {step === 2 && (
+          <div className="fade">
+            <h2 style={headline}>How should I help?</h2>
+            <p style={subline}>Pick one. You can change this any time from "What I can do".</p>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {TRUST_OPTIONS.map(opt => {
+                const active = draft.trust === opt.id
+                return (
+                  <button key={opt.id} type="button" role="radio" aria-checked={active}
+                    onClick={() => setTrust(opt.id)}
+                    style={{ display:'flex', alignItems:'flex-start', gap:14, width:'100%',
+                      padding:'16px', borderRadius:10, cursor:'pointer', textAlign:'left',
+                      background: active ? T.coreSoft : T.surface,
+                      border:`2px solid ${active ? T.core : T.border}`,
+                      color:T.text, fontFamily:T.font, transition:'all .15s' }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.borderColor = T.coreMid }}
+                    onMouseLeave={e => { if (!active) e.currentTarget.style.borderColor = T.border }}>
+                    <div style={{ width:20, height:20, borderRadius:'50%', flexShrink:0, marginTop:2,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      background: active ? T.core : 'none',
+                      border: `2px solid ${active ? T.core : T.borderMid}` }}>
+                      {active && <div style={{ width:8, height:8, borderRadius:'50%', background:'#fff' }} />}
+                    </div>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontSize:15, fontWeight:700, color:T.text, margin:0 }}>{opt.title}</p>
+                      <p style={{ fontSize:13, color:T.textSoft, margin:'3px 0 6px', lineHeight:1.5 }}>{opt.sub}</p>
+                      <p style={{ fontSize:12, color:T.textSoft, margin:0, fontStyle:'italic' }}>{opt.example}</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 3 — When to reach me ── */}
+        {step === 3 && (
+          <div className="fade">
+            <h2 style={headline}>When should I reach out?</h2>
+            <p style={subline}>I'll respect quiet hours and ping you the way you prefer.</p>
+
+            <p style={{ fontSize:12, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em',
+              color:T.textSoft, margin:'0 0 8px' }}>Where to reach me</p>
+            <div style={{ display:'flex', gap:8, marginBottom:24 }}>
+              {[
+                { id:'teams', label:'Teams chat' },
+                { id:'email', label:'Email' },
+                { id:'both',  label:'Both' },
+              ].map(ch => {
+                const active = draft.channel === ch.id
+                return (
+                  <button key={ch.id} type="button" role="radio" aria-checked={active}
+                    onClick={() => setChannel(ch.id)}
+                    style={{ flex:1, padding:'12px', borderRadius:8, cursor:'pointer',
+                      background: active ? T.coreSoft : T.surface,
+                      border:`2px solid ${active ? T.core : T.border}`,
+                      color: active ? T.core : T.text,
+                      fontSize:14, fontWeight:700, fontFamily:T.font, transition:'all .15s' }}>
+                    {ch.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            <p style={{ fontSize:12, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em',
+              color:T.textSoft, margin:'0 0 8px' }}>Quiet hours</p>
+            <div style={{ display:'flex', gap:12, alignItems:'center', flexWrap:'wrap',
+              padding:'14px', borderRadius:8, background:T.surface, border:`1px solid ${T.border}` }}>
+              <label style={{ fontSize:13, color:T.textSoft }}>
+                From
+                <input type="time" value={draft.quiet.start}
+                  onChange={e => setDraft(d => ({ ...d, quiet:{ ...d.quiet, start:e.target.value } }))}
+                  style={{ display:'block', marginTop:4, padding:'7px 10px', fontSize:13,
+                    border:`1px solid ${T.border}`, borderRadius:4, background:T.surface, color:T.text, fontFamily:T.font }} />
+              </label>
+              <label style={{ fontSize:13, color:T.textSoft }}>
+                To
+                <input type="time" value={draft.quiet.end}
+                  onChange={e => setDraft(d => ({ ...d, quiet:{ ...d.quiet, end:e.target.value } }))}
+                  style={{ display:'block', marginTop:4, padding:'7px 10px', fontSize:13,
+                    border:`1px solid ${T.border}`, borderRadius:4, background:T.surface, color:T.text, fontFamily:T.font }} />
+              </label>
+              <div style={{ flex:1 }} />
+              <label style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, color:T.text }}>
+                <Toggle value={draft.quiet.weekend}
+                  onChange={() => { SFX.tap(); setDraft(d => ({ ...d, quiet:{ ...d.quiet, weekend:!d.quiet.weekend } })) }} />
+                Keep weekends quiet
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* ── Bottom controls ── */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:32,
+          paddingTop:18, borderTop:`1px solid ${T.border}` }}>
+          <button type="button" onClick={skipDefaults}
+            style={{ padding:'9px 14px', borderRadius:4, cursor:'pointer',
+              background:'none', border:'none',
+              color:T.textSoft, fontSize:13, fontWeight:600, fontFamily:T.font }}>
+            Use defaults
+          </button>
+          <div style={{ flex:1 }} />
+          {onBack && step === 1 && (
+            <button type="button" onClick={() => { SFX.tap(); onBack() }}
+              style={{ padding:'9px 14px', borderRadius:4, cursor:'pointer',
+                background:'none', border:`1px solid ${T.border}`,
+                color:T.text, fontSize:13, fontWeight:700, fontFamily:T.font }}>
+              Close
+            </button>
+          )}
+          {canBack && (
+            <button type="button" onClick={back}
+              style={{ padding:'9px 14px', borderRadius:4, cursor:'pointer',
+                background:'none', border:`1px solid ${T.border}`,
+                color:T.text, fontSize:13, fontWeight:700, fontFamily:T.font }}>
+              Back
+            </button>
+          )}
+          <button type="button" onClick={isLast ? finish : next}
+            style={{ display:'inline-flex', alignItems:'center', gap:6,
+              padding:'9px 18px', borderRadius:4, cursor:'pointer',
+              background:T.core, border:'none', color:'#fff',
+              fontSize:13, fontWeight:700, fontFamily:T.font,
+              boxShadow:T.shadowPurple }}>
+            {isLast ? "I'm ready" : 'Next'} <ArrowRight size={14} />
+          </button>
+        </div>
+      </div>
+    </PageLayout>
+  )
+}
+
+// ─── Tuning loader — bridge between Setup → Today ─────────────────────────
+function TuningLoader({ prefs }) {
+  const T = window.__T
+  const systemCount = Object.values(prefs?.systems || {}).filter(Boolean).length
+  const signalCount = Object.values(prefs?.l1 || {}).filter(Boolean).length + Object.values(prefs?.notify || {}).filter(v => v === true).length
+  return (
+    <div style={{ height:'100vh', display:'flex', alignItems:'center', justifyContent:'center',
+      background:T.appBg, fontFamily:T.font }}>
+      <style>{CSS}</style>
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
+        <div style={{ position:'relative', width:72, height:72 }}>
+          <div style={{ width:72, height:72, borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center',
+            background:T.coreGrad, boxShadow:T.shadowPurple, animation:'breathe 2s ease-in-out infinite' }}>
+            <Sparkles size={30} color="white" />
+          </div>
+        </div>
+        <p style={{ fontSize:18, fontWeight:800, color:T.text }}>Tuning your brief…</p>
+        <div style={{ fontSize:13, color:T.textSoft, textAlign:'center', lineHeight:1.8 }}>
+          <p>Reading {systemCount} system{systemCount===1?'':'s'}…</p>
+          <p>Watching for {signalCount} signal{signalCount===1?'':'s'}…</p>
+          <p>Building your first brief…</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function WelcomeScreen({ onLogin, onOpenBrief }) {
   const T = window.__T
   const isDark = T.appBg === '#1F1F1F'
 
@@ -1752,10 +2763,6 @@ function WelcomeScreen({ onLogin }) {
     return [val, ref]
   }
 
-  const BgParticle = ({ style }) => (
-    <div style={{ position:'absolute', borderRadius:'50%', pointerEvents:'none', ...style }} />
-  )
-
   const ctaStyle = {
     display:'inline-flex', alignItems:'center', gap:10, padding:'13px 28px',
     borderRadius:4, fontSize:15, fontWeight:700, color:'white',
@@ -1776,16 +2783,13 @@ function WelcomeScreen({ onLogin }) {
 
       {/* ── HERO ──────────────────────────────────────────────────────────────── */}
       <div style={{ position:'relative', overflow:'hidden', minHeight:'92vh', display:'flex', alignItems:'center' }}>
-        {/* Subtle brand gradient band — Fluent hero style */}
         <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
           <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg, ${T.core}, ${T.coreMid}, transparent)` }} />
         </div>
 
         <div style={{ ...sectionBase, width:'100%', zIndex:1, paddingTop:80, paddingBottom:80 }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:48 }}>
-            {/* Left: copy */}
             <div style={{ flex:1, maxWidth:580 }}>
-              {/* Eyebrow */}
               <div className="enter" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'6px 14px', borderRadius:99,
                 background:T.coreSoft, border:`1px solid ${T.core}30`, marginBottom:24 }}>
                 <div style={{ width:7, height:7, borderRadius:'50%', background:T.core, animation:'breathe 2s ease-in-out infinite' }} />
@@ -1822,6 +2826,19 @@ function WelcomeScreen({ onLogin }) {
                 </button>
               </div>
 
+              <div className="enter" style={{ marginTop:10, display:'flex', alignItems:'center', gap:10, animationDelay:'.18s' }}>
+                <button type="button"
+                  onClick={() => { SFX.tap(); onOpenBrief?.() }}
+                  style={{ display:'inline-flex', alignItems:'center', gap:6, padding:0,
+                    background:'none', border:'none', cursor:'pointer',
+                    color:T.core, fontSize:13, fontWeight:600, fontFamily:T.font,
+                    textDecoration:'underline', textUnderlineOffset:3, transition:'color .12s' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = T.coreMid }}
+                  onMouseLeave={e => { e.currentTarget.style.color = T.core }}>
+                  Already set up? Open my brief <ArrowRight size={12} />
+                </button>
+              </div>
+
               <p className="enter" style={{ fontSize:13, color:T.textXsoft, marginTop:14, animationDelay:'.2s' }}>
                 OAuth 2.0 · No passwords stored · IT-approved
               </p>
@@ -1835,7 +2852,6 @@ function WelcomeScreen({ onLogin }) {
               <div style={{ borderRadius:24, overflow:'hidden', border:`1px solid ${T.borderMid}`,
                 boxShadow:`0 24px 80px rgba(0,0,0,${isDark?.5:.15}), 0 0 0 1px ${T.border}`,
                 background:T.surfaceBlur, backdropFilter:'blur(20px)', position:'relative' }}>
-                {/* Mock top bar */}
                 <div style={{ padding:'12px 16px', borderBottom:`1px solid ${T.border}`,
                   display:'flex', alignItems:'center', gap:10, background:T.topBar }}>
                   <div style={{ width:28, height:28, borderRadius:'50%', background:T.coreGrad,
@@ -1847,12 +2863,11 @@ function WelcomeScreen({ onLogin }) {
                     <p style={{ fontSize:12, color:T.green }}>● Active · 9:04 AM</p>
                   </div>
                 </div>
-                {/* Messages */}
                 <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:10 }}>
                   {[
-                    { role:'j', text:'Good morning, Alex. Your DPA case is SLA+2 days and Amy Torres is OOO. I\'ve drafted an escalation to Legal.', delay:'0s' },
+                    { role:'j', text:"Good morning, Alex. Your DPA case is SLA+2 days and Amy Torres is OOO. I've drafted an escalation to Legal.", delay:'0s' },
                     { role:'u', text:'Send it.', delay:'.6s' },
-                    { role:'j', text:'Done ✓ Escalation sent. I\'ll update you when Amy\'s backup responds.', delay:'1.2s' },
+                    { role:'j', text:"Done ✓ Escalation sent. I'll update you when Amy's backup responds.", delay:'1.2s' },
                   ].map((m,i) => (
                     <div key={i} className="enter" style={{ display:'flex', justifyContent:m.role==='u'?'flex-end':'flex-start', animationDelay:m.delay }}>
                       {m.role==='j' && (
@@ -1869,7 +2884,6 @@ function WelcomeScreen({ onLogin }) {
                       </div>
                     </div>
                   ))}
-                  {/* Typing indicator */}
                   <div className="enter" style={{ display:'flex', alignItems:'center', gap:8, animationDelay:'1.8s' }}>
                     <div style={{ width:22, height:22, borderRadius:6, background:T.coreGrad,
                       display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -1889,12 +2903,10 @@ function WelcomeScreen({ onLogin }) {
           </div>
         </div>
 
-        {/* Scroll cue */}
         <div style={{ position:'absolute', bottom:28, left:'50%', transform:'translateX(-50%)',
           display:'flex', flexDirection:'column', alignItems:'center', gap:6, opacity:.4 }}>
           <span style={{ fontSize:12, color:T.textSoft, letterSpacing:'0.08em' }}>SCROLL</span>
-          <div style={{ width:1, height:32, background:`linear-gradient(${T.textSoft}, transparent)`,
-            animation:'float 2s ease-in-out infinite' }} />
+          <div style={{ width:1, height:32, background:`linear-gradient(${T.textSoft}, transparent)` }} />
         </div>
       </div>
 
@@ -1955,27 +2967,26 @@ function WelcomeScreen({ onLogin }) {
             {[
               {
                 num:'01', Icon:Activity, color:T.core, bg:T.coreSoft,
-                title:'Watch & Rank',
-                desc:'Every morning, Jarvis reads your Salesforce cases, Outlook threads, Jira tickets, and Workday queue. It ranks by urgency × impact × deadline — and builds your brief.',
-                example:'Flagged: DPA case is SLA+2 and go-live is Friday.',
+                title:'Connects your tools',
+                desc:'Jarvis reads across your Salesforce, Outlook, Jira, and Workday — nothing more than it needs — and builds one brief of what matters today.',
+                example:'Your DPA case is SLA+2 and go-live is Friday.',
               },
               {
                 num:'02', Icon:Zap, color:T.green, bg:T.greenSoft,
-                title:'Act Autonomously',
-                desc:'Low-risk tasks — compliance reminders, meeting prep, PTO verifications — Jarvis completes without asking. Every action is logged, auditable, and reversible.',
-                example:'Sent: Security training nudge with LMS deep link.',
+                title:'Handles the small stuff',
+                desc:"Routine work — reminders, meeting prep, PTO filing — Jarvis just does. You see it in your feed, always with one-click Undo.",
+                example:'Prepped your 10 AM QBR. Sent the training nudge.',
               },
               {
                 num:'03', Icon:ShieldCheck, color:T.amber, bg:T.amberSoft,
-                title:'Gate High-Stakes',
-                desc:'Anything that matters — deploys, legal escalations, hiring decisions — Jarvis surfaces with full context and waits for your explicit approval. No surprises.',
-                example:'Waiting: Prod deploy CR-4471 — needs your arm.',
+                title:'Asks before anything big',
+                desc:'Anything that matters — a deploy, a legal escalation, a hiring decision — Jarvis prepares the plan and waits for your OK. No surprises.',
+                example:'Ready to arm deploy v3.8.2. Your call.',
               },
             ].map((c,i) => (
               <div key={i} className="enter" style={{ padding:'24px', borderRadius:8, position:'relative', overflow:'hidden',
                 background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowSm,
                 animationDelay:`${i*.1}s` }}>
-                {/* Large number watermark */}
                 <div style={{ position:'absolute', top:-10, right:16, fontSize:80, fontWeight:900,
                   color:`${c.color}10`, lineHeight:1, pointerEvents:'none', userSelect:'none' }}>{c.num}</div>
                 <div style={{ width:44, height:44, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center',
@@ -2008,7 +3019,7 @@ function WelcomeScreen({ onLogin }) {
               {
                 emoji:'⚖️', tag:'Legal & Compliance', color:T.amber,
                 title:'DPA stuck? SLA breached?',
-                body:'Jarvis detects when a review is overdue, identifies who\'s OOO, finds the backup, and drafts the escalation — so you\'re never the bottleneck.',
+                body:"Jarvis detects when a review is overdue, identifies who's OOO, finds the backup, and drafts the escalation — so you're never the bottleneck.",
                 chips:['SalesforcePlugin','WorkdayPlugin','OutlookPlugin'],
               },
               {
@@ -2019,7 +3030,7 @@ function WelcomeScreen({ onLogin }) {
               },
               {
                 emoji:'🚨', tag:'Incidents & Ops', color:T.red,
-                title:'P1 fires while you\'re in a meeting?',
+                title:"P1 fires while you're in a meeting?",
                 body:'Jarvis detects it in Datadog, identifies the on-call engineer, assigns ownership in Salesforce, and sends the Teams message — all in under 90 seconds.',
                 chips:['DatadogPlugin','SalesforcePlugin','TeamsPlugin'],
               },
@@ -2087,22 +3098,21 @@ function WelcomeScreen({ onLogin }) {
                 ))}
               </div>
             </div>
-            {/* Tier legend */}
             <div style={{ width:340, flexShrink:0 }}>
               <div style={{ padding:'24px', borderRadius:8, background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowMd }}>
-                <p style={{ fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em', color:T.textXsoft, marginBottom:20 }}>Decision tiers</p>
+                <p style={{ fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em', color:T.textXsoft, marginBottom:20 }}>You're always in control</p>
                 {[
-                  { tier:'L1', label:'Auto-handled', desc:'Completes without asking. Logged in Feed.', color:T.teal },
-                  { tier:'L2', label:'Review surfaced', desc:'Shows you the action. One click to confirm.', color:T.blue },
-                  { tier:'L3', label:'Your decision', desc:'Jarvis prepares everything. You decide.', color:T.amber },
-                  { tier:'L4', label:'Gate required', desc:'Explicit approval before any action is taken.', color:T.red },
-                ].map(d => (
-                  <div key={d.tier} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:16, paddingBottom:16,
-                    borderBottom:`1px solid ${T.border}` }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 9px', borderRadius:99,
-                      background:`${d.color}15`, flexShrink:0 }}>
-                      <div style={{ width:6, height:6, borderRadius:'50%', background:d.color }} />
-                      <span style={{ fontSize:12, fontWeight:800, color:d.color }}>{d.tier}</span>
+                  { Icon:Zap,         label:'Acts on the small stuff',   desc:'Reminders, prep, filings. Undo sits right there.', color:T.green },
+                  { Icon:FileText,    label:'Drafts, you decide',        desc:'Nothing sends without your eyes on it.',           color:T.blue },
+                  { Icon:ShieldCheck, label:'Pauses before anything big',desc:'Deploys, escalations, hires all wait for your OK.', color:T.amber },
+                  { Icon:History,     label:'Every action is reversible',desc:'One log, one Undo — no permanent surprises.',       color:T.core  },
+                ].map((d, i) => (
+                  <div key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:16, paddingBottom:16,
+                    borderBottom:i<3?`1px solid ${T.border}`:'none' }}>
+                    <div style={{ width:32, height:32, borderRadius:8, flexShrink:0,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      background:`${d.color}15` }}>
+                      <d.Icon size={15} color={d.color} />
                     </div>
                     <div>
                       <p style={{ fontSize:14, fontWeight:700, color:T.text }}>{d.label}</p>
@@ -2192,7 +3202,7 @@ function WelcomeScreen({ onLogin }) {
           <div style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'8px 18px', borderRadius:99,
             background:T.coreSoft, border:`1px solid ${T.core}30`, marginBottom:28 }}>
             <Sparkles size={14} color={T.core} />
-            <span style={{ fontSize:14, fontWeight:700, color:T.core }}>Takes 30 seconds to connect</span>
+            <span style={{ fontSize:14, fontWeight:700, color:T.core }}>3 steps · 30 seconds</span>
           </div>
           <h2 style={{ fontSize:40, fontWeight:700, color:T.text, lineHeight:1.1, marginBottom:20 }}>
             Your morning brief<br />
@@ -2202,7 +3212,7 @@ function WelcomeScreen({ onLogin }) {
             </span>
           </h2>
           <p style={{ fontSize:18, color:T.textMid, marginBottom:40, maxWidth:460, margin:'0 auto 40px', lineHeight:1.7 }}>
-            Stop starting your day with a blank inbox and hoping nothing slipped. Let Jarvis watch, rank, and act — so you can lead.
+            Three small choices: what to watch, how to help, when to reach you.
           </p>
           <button type="button" onClick={() => { SFX.tap(); HX.tap(); onLogin() }}
             style={{ ...ctaStyle, padding:'14px 32px', fontSize:16 }}
@@ -2234,66 +3244,169 @@ function WelcomeScreen({ onLogin }) {
 function FeedView() {
   const T = window.__T
   const [expanded, setExpanded] = useState(null)
+  const [filter, setFilter] = useState('all') // 'all' | 'today' | 'yesterday' | 'running'
+
+  const isToday     = (t) => !/yesterday/i.test(t)
+  const isYesterday = (t) =>  /yesterday/i.test(t)
+
+  const filtered = FEED_ITEMS.filter(item => {
+    if (filter === 'all') return true
+    if (filter === 'today')     return isToday(item.time)
+    if (filter === 'yesterday') return isYesterday(item.time)
+    if (filter === 'running')   return item.status === 'running'
+    return true
+  })
+
+  const doneCount    = FEED_ITEMS.filter(i => i.status === 'done').length
+  const runningCount = FEED_ITEMS.filter(i => i.status === 'running').length
+
+  const filterPills = [
+    { key:'all',       label:'All',         count:FEED_ITEMS.length, color:T.text,   dot:T.textXsoft },
+    { key:'today',     label:'Today',       count:FEED_ITEMS.filter(i => isToday(i.time)).length, color:T.blue, dot:T.blue },
+    { key:'yesterday', label:'Yesterday',   count:FEED_ITEMS.filter(i => isYesterday(i.time)).length, color:T.amber, dot:T.amber },
+    { key:'running',   label:'Running now', count:runningCount, color:T.core, dot:T.core },
+  ]
+
   return (
-    <div style={{ padding:'24px 24px 40px', maxWidth:640, overflowY:'auto', height:'100%' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24 }}>
+    <PageLayout>
+      {/* Header — matches Skills page rhythm */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8, flexWrap:'wrap', gap:12 }}>
         <div>
-          <h2 style={{ fontSize:18, fontWeight:800, color:T.text }}>Activity log</h2>
-          <p style={{ fontSize:14, marginTop:3, color:T.textSoft }}>Every action Jarvis took — fully traceable.</p>
+          <p style={{ fontSize:13, fontWeight:700, color:T.core, textTransform:'uppercase', letterSpacing:'0.15em', marginBottom:6 }}>Activity feed</p>
+          <h1 style={{ fontSize:26, fontWeight:800, color:T.text, letterSpacing:'-0.02em', lineHeight:1.15 }}>
+            Every action Jarvis took,{' '}
+            <span style={{ background:`linear-gradient(135deg,${T.core},${T.coreBright})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
+              fully traceable.
+            </span>
+          </h1>
+          <p style={{ fontSize:15, color:T.textSoft, marginTop:6 }}>
+            Click an entry to see the steps. Anything Jarvis did automatically is reversible.
+            <span style={{ display:'inline-flex', alignItems:'center', gap:5, marginLeft:10, padding:'2px 9px', borderRadius:99,
+              background:T.greenSoft, color:T.green, fontSize:13, fontWeight:700 }}>
+              {doneCount} completed{runningCount ? ` · ${runningCount} running` : ''}
+            </span>
+          </p>
         </div>
       </div>
-      <div style={{ position:'relative', paddingLeft:18 }}>
-        <div style={{ position:'absolute', left:7, top:8, bottom:0, width:1, background:T.border }} />
-        {FEED_ITEMS.map((item, i) => (
-          <div key={item.id} className="enter" style={{ position:'relative', marginBottom:12, animationDelay:`${i*.08}s` }}>
-            <div style={{ position:'absolute', left:-22, top:16, width:11, height:11, borderRadius:'50%',
-              background:item.status==='running'?T.core:T.green,
-              boxShadow:item.status==='running'?`0 0 8px ${T.coreGlow}`:'none', zIndex:1 }} />
-            <GlassCard onClick={() => { SFX.tap(); setExpanded(expanded===item.id?null:item.id) }} style={{ padding:0, borderRadius:14, cursor:'pointer' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:12, padding:'13px 15px' }}>
-                <span style={{ fontSize:20, flexShrink:0 }}>{item.emoji}</span>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2 }}>
-                    <span style={{ fontWeight:700, fontSize:15, color:T.text }}>{item.title}</span>
-                    <span style={{ fontSize:14, fontWeight:700, padding:'2px 8px', borderRadius:99,
-                      background:item.status==='running'?T.coreSoft:T.greenSoft,
-                      color:item.status==='running'?T.core:T.green }}>
-                      {item.status==='running'?'● Running':'✓ Done'}
-                    </span>
-                  </div>
-                  <p style={{ fontSize:13, color:T.textSoft }}>{item.body}</p>
-                </div>
-                <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-                  <span style={{ fontSize:14, color:T.textXsoft }}>{item.time}</span>
-                  <ChevronDown size={13} color={T.textXsoft} style={{ transform:expanded===item.id?'rotate(180deg)':'', transition:'transform .2s' }} />
-                </div>
-              </div>
-              {expanded===item.id && (
-                <div style={{ padding:'0 15px 14px', borderTop:`1px solid ${T.border}` }}>
-                  <p style={{ fontSize:14, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em', color:T.textXsoft, marginTop:12, marginBottom:10 }}>Steps taken</p>
-                  <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-                    {item.steps.map((step, si) => {
-                      const done = item.status==='done' || si<item.steps.length-1
-                      return (
-                        <div key={si} style={{ display:'flex', alignItems:'center', gap:9 }}>
-                          <div style={{ width:18, height:18, borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
-                            background:done?T.greenSoft:T.coreSoft }}>
-                            {done
-                              ? <Check size={9} color={T.green} />
-                              : <Loader2 size={9} color={T.core} style={{ animation:'spin 1s linear infinite' }} />}
-                          </div>
-                          <p style={{ fontSize:14, color:done?T.textMid:T.core }}>{step}</p>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-            </GlassCard>
-          </div>
-        ))}
+
+      {/* Filter pills — same component pattern as Today */}
+      <div role="tablist" aria-label="Filter activity"
+        style={{ display:'flex', gap:8, margin:'18px 0 18px', flexWrap:'wrap' }}>
+        {filterPills.map(f => {
+          const active = filter === f.key
+          return (
+            <button key={f.key} role="tab" aria-selected={active} type="button"
+              onClick={() => { SFX.tap(); HX.tap(); setFilter(f.key) }}
+              style={{ display:'inline-flex', alignItems:'center', gap:8,
+                padding:'8px 14px', borderRadius:99, cursor:'pointer',
+                background: active ? f.color : T.surface,
+                border: `1px solid ${active ? f.color : T.border}`,
+                color: active ? '#fff' : T.textMid,
+                fontSize:13, fontWeight:600, fontFamily:T.font,
+                boxShadow: active ? T.shadowSm : 'none',
+                transition:'all .12s' }}
+              onMouseEnter={e => { if (!active) { e.currentTarget.style.borderColor = f.color; e.currentTarget.style.color = f.color } }}
+              onMouseLeave={e => { if (!active) { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMid } }}>
+              <span>{f.label}</span>
+              <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center',
+                minWidth:20, height:18, padding:'0 6px', borderRadius:99,
+                background: active ? 'rgba(255,255,255,0.22)' : T.surfaceMid,
+                color: active ? '#fff' : T.textSoft,
+                fontSize:11, fontWeight:700, lineHeight:1 }}>{f.count}</span>
+            </button>
+          )
+        })}
       </div>
-    </div>
+
+      {/* Card grid — single column, full width, consistent with intent cards */}
+      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+        {filtered.map((item, i) => {
+          const isOpen = expanded === item.id
+          const running = item.status === 'running'
+          return (
+            <div key={item.id} className="enter" style={{ animationDelay:`${i*.05}s` }}>
+              <button type="button"
+                onClick={() => { SFX.tap(); setExpanded(isOpen ? null : item.id) }}
+                aria-expanded={isOpen}
+                style={{ width:'100%', textAlign:'left', cursor:'pointer',
+                  background:T.surface, border:`1px solid ${T.border}`,
+                  borderRadius:10, padding:0, fontFamily:T.font,
+                  boxShadow:T.shadowSm, transition:'box-shadow .15s, border-color .15s' }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = T.shadowMd; e.currentTarget.style.borderColor = T.borderMid }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = T.shadowSm; e.currentTarget.style.borderColor = T.border }}>
+                <div style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px' }}>
+                  {/* Status orb — replaces left rail */}
+                  <div style={{ width:36, height:36, borderRadius:8, flexShrink:0,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    background: running ? T.coreSoft : T.greenSoft,
+                    border: `1px solid ${running ? T.core+'30' : T.green+'30'}` }}>
+                    <span style={{ fontSize:16 }}>{item.emoji}</span>
+                  </div>
+
+                  {/* Body */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3, flexWrap:'wrap' }}>
+                      <span style={{ fontSize:14, fontWeight:700, color:T.text }}>{item.title}</span>
+                      <span style={{ display:'inline-flex', alignItems:'center', gap:5,
+                        fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:99,
+                        background: running ? T.coreSoft : T.greenSoft,
+                        color: running ? T.core : T.green }}>
+                        <span style={{ width:5, height:5, borderRadius:'50%',
+                          background: running ? T.core : T.green,
+                          animation: running ? 'breathe 1.4s ease-in-out infinite' : 'none' }} />
+                        {running ? 'Running' : 'Done'}
+                      </span>
+                    </div>
+                    <p style={{ fontSize:13, color:T.textSoft, margin:0, lineHeight:1.5 }}>{item.body}</p>
+                  </div>
+
+                  {/* Time + chevron */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                    <span style={{ fontSize:12, fontWeight:600, color:T.textSoft }}>{item.time}</span>
+                    <ChevronDown size={14} color={T.textSoft}
+                      style={{ transition:'transform .2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                  </div>
+                </div>
+
+                {/* Expanded steps */}
+                {isOpen && (
+                  <div className="expand-down" style={{ padding:'4px 16px 14px 66px', borderTop:`1px solid ${T.border}` }}>
+                    <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase',
+                      letterSpacing:'0.12em', color:T.textSoft, marginTop:12, marginBottom:8 }}>Steps taken</p>
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      {item.steps.map((step, si) => {
+                        const stepDone = item.status === 'done' || si < item.steps.length - 1
+                        return (
+                          <div key={si} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                            <div style={{ width:18, height:18, borderRadius:'50%', flexShrink:0,
+                              display:'flex', alignItems:'center', justifyContent:'center',
+                              background: stepDone ? T.greenSoft : T.coreSoft }}>
+                              {stepDone
+                                ? <Check size={9} color={T.green} />
+                                : <Loader2 size={9} color={T.core} style={{ animation:'spin 1s linear infinite' }} />}
+                            </div>
+                            <p style={{ fontSize:13, color: stepDone ? T.textMid : T.core, margin:0 }}>{step}</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </button>
+            </div>
+          )
+        })}
+
+        {/* Empty state */}
+        {filtered.length === 0 && (
+          <div style={{ padding:'40px 20px', textAlign:'center',
+            background:T.surface, border:`1px dashed ${T.border}`, borderRadius:10 }}>
+            <p style={{ fontSize:14, fontWeight:700, color:T.text, margin:0 }}>Nothing here yet.</p>
+            <p style={{ fontSize:13, color:T.textSoft, margin:'4px 0 0' }}>Try a different filter — Jarvis logs every action it takes.</p>
+          </div>
+        )}
+      </div>
+    </PageLayout>
   )
 }
 
@@ -2305,6 +3418,18 @@ function AgentsView({ onNew }) {
   const [conns, setConns] = useState(CONNECTIONS)
   const [activeSection, setActiveSection] = useState('agents')
   const toggleAgent = id => setAgents(p => p.map(a => a.id===id ? {...a, enabled:!a.enabled} : a))
+  // Suggested agents — hard-coded demo + per-item accept/dismiss state.
+  const [suggestions, setSuggestions] = useState([
+    { id:'s1', name:'Run QBR prep weekly', why:'You opened the QBR scenario 4 times this month.', schedule:'Weekly · Mon 08:30', color:'#0B5CAB', icon:'📋' },
+    { id:'s2', name:'Auto-file PTO under 3 days', why:"Within your Setup — no calendar conflicts.", schedule:'On request', color:'#107C41', icon:'🏝️' },
+    { id:'s3', name:'Notify me when an approval crosses 5 days', why:'Matches your default notify policy.', schedule:'Continuous', color:'#835B00', icon:'⏰' },
+  ])
+  const acceptSuggestion = (s) => {
+    SFX.tap()
+    setAgents(p => [...p, { id:'ag_'+s.id, name:s.name, desc:s.why, schedule:s.schedule, enabled:true, runs:0, lastRun:'Just now' }])
+    setSuggestions(p => p.filter(x => x.id !== s.id))
+  }
+  const dismissSuggestion = (s) => { SFX.tap(); setSuggestions(p => p.filter(x => x.id !== s.id)) }
   const sectionTab = (id, label) => (
     <button type="button" onClick={() => { SFX.tap(); setActiveSection(id) }}
       style={{ padding:'6px 16px', borderRadius:4, fontSize:13, fontWeight:600, border:'none', cursor:'pointer', transition:'all .15s',
@@ -2314,113 +3439,123 @@ function AgentsView({ onNew }) {
     </button>
   )
   return (
-    <div style={{ padding:'24px 28px 48px', overflowY:'auto', height:'100%', maxWidth:900 }}>
-      {/* Header */}
+    <PageLayout>
+      {/* Header — Skills: things Jarvis knows how to do on a schedule */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8 }}>
         <div>
-          <p style={{ fontSize:13, fontWeight:700, color:T.core, textTransform:'uppercase', letterSpacing:'0.15em', marginBottom:6 }}>Your AI workforce</p>
-          <h1 style={{ fontSize:26, fontWeight:900, color:T.text, letterSpacing:'-0.02em', lineHeight:1.15 }}>
-            Agents that{' '}
+          <p style={{ fontSize:13, fontWeight:700, color:T.core, textTransform:'uppercase', letterSpacing:'0.15em', marginBottom:6 }}>Your skills</p>
+          <h1 style={{ fontSize:26, fontWeight:800, color:T.text, letterSpacing:'-0.02em', lineHeight:1.15 }}>
+            What Jarvis knows how to do,{' '}
             <span style={{ background:`linear-gradient(135deg,${T.core},${T.coreBright})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
-              work while you focus.
+              quietly.
             </span>
           </h1>
           <p style={{ fontSize:15, color:T.textSoft, marginTop:6 }}>
-            Build, configure, and connect agents to your tools.
+            Skills that run on a schedule. Pause, tweak the cadence, or add a new one.
             <span style={{ display:'inline-flex', alignItems:'center', gap:5, marginLeft:10, padding:'2px 9px', borderRadius:99,
               background:T.greenSoft, color:T.green, fontSize:13, fontWeight:700 }}>
-              {agents.filter(a=>a.enabled).length} running · {agents.length} total
+              {agents.filter(a=>a.enabled).length} active · {agents.reduce((s,a)=>s+(a.runs||0),0)} runs this month
             </span>
           </p>
         </div>
-        <Btn variant="primary" icon={Plus} onClick={() => { SFX.tap(); onNew() }} style={{ fontSize:15, padding:'9px 18px' }}>New Agent</Btn>
+        <Btn variant="primary" icon={Plus} onClick={() => { SFX.tap(); onNew() }} style={{ fontSize:15, padding:'9px 18px' }}>New skill</Btn>
       </div>
 
       {/* Section tabs */}
       <div style={{ display:'inline-flex', gap:2, padding:'3px', borderRadius:4, background:T.surfaceMid, border:`1px solid ${T.border}`, marginBottom:24 }}>
-        {sectionTab('agents', 'My Agents')}
+        {sectionTab('agents', 'My skills')}
         {sectionTab('connections', 'Connections')}
       </div>
 
       {/* ── My Agents ── */}
       {activeSection==='agents' && (
         <div>
-          {/* Active agents */}
-          <div style={{ marginBottom:32 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-              <p style={{ fontSize:15, fontWeight:800, color:T.text }}>Active</p>
-              <span style={{ fontSize:13, fontWeight:700, padding:'2px 8px', borderRadius:99, background:T.greenSoft, color:T.green }}>
-                {agents.filter(a=>a.enabled).length} running
-              </span>
-            </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:12 }}>
-              {agents.filter(a=>a.enabled).map(agent => (
-                <div key={agent.id} style={{ borderRadius:8, padding:'16px 16px 12px', background:T.surface,
-                  border:`1px solid ${T.border}`, borderLeft:`4px solid ${agent.color}`,
-                  boxShadow:T.shadowSm, transition:'box-shadow .15s', position:'relative', overflow:'hidden' }}
-                  onMouseEnter={e => e.currentTarget.style.boxShadow=T.shadowMd}
-                  onMouseLeave={e => e.currentTarget.style.boxShadow=T.shadowSm}>
-                  <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:10 }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      {/* Gradient orb icon */}
-                      <div style={{ width:40, height:40, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18,
-                        background:`${agent.color}15`, border:`1px solid ${T.border}`, flexShrink:0 }}>{agent.icon}</div>
-                      <div>
-                        <p style={{ fontSize:15, fontWeight:800, color:T.text }}>{agent.name}</p>
-                        <p style={{ fontSize:13, color:T.textSoft, marginTop:1 }}>{agent.schedule}</p>
-                      </div>
-                    </div>
-                    <Toggle value={agent.enabled} onChange={() => { SFX.tap(); toggleAgent(agent.id) }} />
+          {/* All skills — single unified list. The Toggle is the only state cue. */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:12 }}>
+            {agents.map(agent => (
+              <div key={agent.id} style={{ borderRadius:10, padding:'16px',
+                background:T.surface, border:`1px solid ${T.border}`,
+                boxShadow:T.shadowSm, transition:'box-shadow .15s, border-color .15s',
+                display:'flex', flexDirection:'column', gap:14 }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow=T.shadowMd; e.currentTarget.style.borderColor=T.borderMid }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow=T.shadowSm; e.currentTarget.style.borderColor=T.border }}>
+
+                {/* Title row — name + toggle */}
+                <div style={{ display:'flex', alignItems:'flex-start', gap:10 }}>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <p style={{ fontSize:15, fontWeight:700, color:T.text, margin:0, lineHeight:1.3 }}>{agent.name}</p>
+                    <p style={{ fontSize:13, color:T.textSoft, margin:'3px 0 0' }}>{agent.schedule}</p>
                   </div>
-                  <p style={{ fontSize:14, color:T.textMid, lineHeight:1.5, marginBottom:12 }}>{agent.desc}</p>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingTop:10, borderTop:`1px solid ${T.border}` }}>
-                    <div style={{ display:'flex', gap:16 }}>
-                      <div>
-                        <p style={{ fontSize:22, fontWeight:900, color:agent.color, lineHeight:1 }}>{agent.runs}</p>
-                        <p style={{ fontSize:12, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:T.textXsoft, marginTop:2 }}>Runs</p>
-                      </div>
-                      <div>
-                        <p style={{ fontSize:14, fontWeight:700, color:T.textMid, lineHeight:1 }}>{agent.lastRun}</p>
-                        <p style={{ fontSize:12, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:T.textXsoft, marginTop:2 }}>Last run</p>
-                      </div>
-                    </div>
-                    <div style={{ display:'flex', gap:4 }}>
-                      <button type="button" style={{ width:28, height:28, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', background:T.surfaceMid, border:`1px solid ${T.border}`, cursor:'pointer', color:T.textSoft }}><Edit2 size={11}/></button>
-                      <button type="button" style={{ width:28, height:28, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', background:T.surfaceMid, border:`1px solid ${T.border}`, cursor:'pointer', color:T.textSoft }}><Copy size={11}/></button>
-                    </div>
-                  </div>
+                  <Toggle value={agent.enabled} onChange={() => { SFX.tap(); toggleAgent(agent.id) }} />
                 </div>
-              ))}
-              {/* New agent CTA */}
-              <div onClick={() => { SFX.tap(); onNew() }}
-                style={{ borderRadius:8, padding:'18px', background:'none', border:`1px dashed ${T.border}`,
-                  cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8,
-                  minHeight:160, transition:'all .15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor=T.core; e.currentTarget.style.background=T.coreSoft }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor=T.border; e.currentTarget.style.background='none' }}>
-                <div style={{ width:40, height:40, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center', background:T.coreSoft }}>
-                  <Plus size={18} color={T.core} />
+
+                {/* Description */}
+                <p style={{ fontSize:13, color:T.textMid, lineHeight:1.55, margin:0 }}>{agent.desc}</p>
+
+                {/* Footer — runs · last run · edit */}
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
+                  paddingTop:12, borderTop:`1px solid ${T.border}` }}>
+                  <p style={{ fontSize:12, color:T.textSoft, margin:0 }}>
+                    <span style={{ fontWeight:700, color:T.text }}>{agent.runs}</span> runs · last {agent.lastRun}
+                  </p>
+                  <button type="button" aria-label="Edit skill"
+                    style={{ width:28, height:28, borderRadius:4,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      background:'none', border:`1px solid ${T.border}`, cursor:'pointer',
+                      color:T.textSoft, transition:'all .12s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor=T.core; e.currentTarget.style.color=T.core }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor=T.border; e.currentTarget.style.color=T.textSoft }}>
+                    <Edit2 size={12} />
+                  </button>
                 </div>
-                <p style={{ fontSize:15, fontWeight:700, color:T.core }}>New Agent</p>
-                <p style={{ fontSize:13, color:T.textSoft, textAlign:'center' }}>Build from a template or start from scratch</p>
               </div>
-            </div>
+            ))}
+
+            {/* New skill CTA — sits at the end of the same grid */}
+            <button type="button" onClick={() => { SFX.tap(); onNew() }}
+              style={{ borderRadius:10, padding:'24px 18px',
+                background:'none', border:`1px dashed ${T.border}`,
+                cursor:'pointer', display:'flex', flexDirection:'column',
+                alignItems:'center', justifyContent:'center', gap:8,
+                minHeight:160, transition:'all .15s', fontFamily:T.font, color:T.textSoft }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor=T.core; e.currentTarget.style.background=T.coreSoft; e.currentTarget.style.color=T.core }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor=T.border; e.currentTarget.style.background='none'; e.currentTarget.style.color=T.textSoft }}>
+              <Plus size={18} />
+              <span style={{ fontSize:14, fontWeight:700 }}>New skill</span>
+              <span style={{ fontSize:12, textAlign:'center' }}>Build from a template or start from scratch</span>
+            </button>
           </div>
 
-          {/* Inactive agents */}
-          {agents.filter(a=>!a.enabled).length > 0 && (
-            <div>
-              <p style={{ fontSize:15, fontWeight:800, color:T.textSoft, marginBottom:12 }}>Inactive</p>
-              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                {agents.filter(a=>!a.enabled).map(agent => (
-                  <div key={agent.id} style={{ borderRadius:4, padding:'11px 14px', background:T.surface,
-                    border:`1px solid ${T.border}`, display:'flex', alignItems:'center', gap:14, opacity:.6 }}>
-                    <div style={{ width:32, height:32, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, background:T.surfaceMid }}>{agent.icon}</div>
-                    <div style={{ flex:1 }}>
-                      <p style={{ fontSize:15, fontWeight:700, color:T.text }}>{agent.name}</p>
-                      <p style={{ fontSize:13, color:T.textSoft }}>{agent.desc}</p>
+          {/* Suggested skills — sit at the bottom; user sees what's installed first */}
+          {suggestions.length > 0 && (
+            <div style={{ marginTop:32 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+                <Sparkles size={14} color={T.core} />
+                <p style={{ fontSize:15, fontWeight:800, color:T.text, margin:0 }}>Skills I'd suggest</p>
+                <span style={{ fontSize:12, color:T.textSoft }}>· Based on how you've been working</span>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(260px, 1fr))', gap:12 }}>
+                {suggestions.map(s => (
+                  <div key={s.id} style={{ borderRadius:10, padding:'14px',
+                    background:T.surface, border:`1px dashed ${T.core}55`,
+                    backgroundImage:`linear-gradient(180deg, ${T.coreSoft} 0%, transparent 60%)` }}>
+                    <p style={{ fontSize:14, fontWeight:700, color:T.text, margin:0 }}>{s.name}</p>
+                    <p style={{ fontSize:12, color:T.textSoft, margin:'4px 0 0', lineHeight:1.5 }}>{s.why}</p>
+                    <p style={{ fontSize:11, color:T.textSoft, margin:'10px 0' }}>{s.schedule}</p>
+                    <div style={{ display:'flex', gap:6 }}>
+                      <button type="button" onClick={() => acceptSuggestion(s)}
+                        style={{ padding:'6px 12px', borderRadius:4, cursor:'pointer',
+                          background:T.core, border:'none', color:'#fff',
+                          fontSize:12, fontWeight:700, fontFamily:T.font }}>
+                        Accept
+                      </button>
+                      <button type="button" onClick={() => dismissSuggestion(s)}
+                        style={{ padding:'6px 12px', borderRadius:4, cursor:'pointer',
+                          background:'none', border:`1px solid ${T.border}`, color:T.textMid,
+                          fontSize:12, fontWeight:700, fontFamily:T.font }}>
+                        Dismiss
+                      </button>
                     </div>
-                    <Toggle value={agent.enabled} onChange={() => { SFX.tap(); toggleAgent(agent.id) }} />
                   </div>
                 ))}
               </div>
@@ -2439,7 +3574,10 @@ function AgentsView({ onNew }) {
                 onMouseEnter={e => e.currentTarget.style.boxShadow=T.shadowMd}
                 onMouseLeave={e => e.currentTarget.style.boxShadow=T.shadowSm}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-                  <span style={{ fontSize:28 }}>{c.logo}</span>
+                  <div style={{ width:36, height:36, display:'flex', alignItems:'center',
+                    justifyContent:'center', flexShrink:0 }}>
+                    <ConnectionLogo conn={c} size={32} />
+                  </div>
                   <span style={{ fontSize:13, fontWeight:600, padding:'3px 9px', borderRadius:4,
                     background:c.connected?T.greenSoft:T.surfaceMid,
                     color:c.connected?T.green:T.textSoft }}>
@@ -2461,7 +3599,7 @@ function AgentsView({ onNew }) {
           </div>
         </div>
       )}
-    </div>
+    </PageLayout>
   )
 }
 
@@ -2637,9 +3775,11 @@ function AgentFlowPanel({ conv }) {
 }
 
 // ─── Conversations View ────────────────────────────────────────────────────────
-function ConversationsView({ openConvId, onConvOpen, setCoreState }) {
+function ConversationsView({ openConvId, onConvOpen, setCoreState, coreState, persona }) {
   const T = window.__T
-  const [activeCat, setActiveCat] = useState('All')
+  // Local, mutable copy so we can pin / start a new chat without touching the
+  // shared CONVERSATIONS demo data. Seeded once from the constant.
+  const [convs, setConvs] = useState(() => CONVERSATIONS.map(c => ({ ...c, pinned:false })))
   const [activeConv, setActiveConv] = useState(openConvId || null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -2649,14 +3789,53 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState }) {
   // When openConvId changes from outside (expand from overlay), open that conv
   useEffect(() => { if (openConvId) { setActiveConv(openConvId) } }, [openConvId])
 
-  const currentConv = CONVERSATIONS.find(c => c.id === activeConv)
+  const currentConv = convs.find(c => c.id === activeConv)
   useEffect(() => {
-    if (currentConv) setMessages(currentConv.messages)
+    if (currentConv) setMessages(currentConv.messages || [])
   }, [activeConv])
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages, thinking])
 
-  const filtered = activeCat === 'All' ? CONVERSATIONS : CONVERSATIONS.filter(c => c.category === activeCat)
+  // Sort: pinned first (preserve relative order), then everyone else.
+  const sortedConvs = [...convs].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
+
+  const togglePin = (id) => {
+    SFX.tap()
+    setConvs(p => p.map(c => c.id === id ? { ...c, pinned: !c.pinned } : c))
+  }
+
+  // "New chat" deselects whatever's open. The empty pane shows the WhisperBar
+  // hero — same UI as Today. A real entry only appears once the user submits.
+  const newChat = () => {
+    SFX.tap(); HX.tap()
+    setActiveConv(null)
+    setMessages([])
+    setInput('')
+  }
+
+  // Hero composer submit — turns the empty state into a brand-new conversation
+  // seeded with the user's first message and Jarvis's first reply.
+  const startNewChat = (txt) => {
+    if (!txt.trim()) return
+    SFX.whisper(); HX.tap()
+    const id = 'cv_new_' + Date.now()
+    const stamp = new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })
+    const title = txt.length > 48 ? txt.slice(0, 48) + '…' : txt
+    const fresh = {
+      id, title, preview: txt, time: stamp, date:'Today',
+      pinned:false, unread:0,
+      messages: [{ role:'u', text: txt }],
+    }
+    setConvs(p => [fresh, ...p])
+    setActiveConv(id)
+    setMessages(fresh.messages)
+    setInput('')
+    setThinking(true); setCoreState('thinking')
+    setTimeout(() => {
+      setThinking(false); setCoreState('idle')
+      setMessages(p => [...p, { role:'j', text:"Got it — let's pick this apart. What outcome are you after?" }])
+    }, 900)
+  }
 
   const sendText = (txt) => {
     if (!txt.trim()) return
@@ -2664,6 +3843,11 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState }) {
     setInput('')
     setMessages(p => [...p, { role:'u', text:txt }])
     setThinking(true); setCoreState('thinking')
+    // If the active thread is still titled "New chat", use the user's first
+    // message as its working title so the sidebar stops showing "New chat".
+    setConvs(p => p.map(c => (c.id === activeConv && c.title === 'New chat')
+      ? { ...c, title: txt.length > 48 ? txt.slice(0, 48) + '…' : txt }
+      : c))
     setTimeout(() => {
       setThinking(false); setCoreState('idle')
       setMessages(p => [...p, { role:'j', text:"Got it. I've noted that and will follow up. Is there anything else you'd like me to handle?" }])
@@ -2677,58 +3861,89 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState }) {
   return (
     <div style={{ flex:1, display:'flex', overflow:'hidden', height:'100%' }}>
       {/* Left: conversation list */}
-      <div style={{ width:280, flexShrink:0, borderRight:`1px solid ${T.border}`, display:'flex', flexDirection:'column', background:T.rail }}>
-        {/* Search */}
-        <div style={{ padding:'14px 12px 10px', borderBottom:`1px solid ${T.border}` }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:12,
+      <div style={{ width:280, flexShrink:0, borderRight:`1px solid ${T.border}`, display:'flex', flexDirection:'column', background:T.surface }}>
+        {/* Search at the top of the rail */}
+        <div style={{ padding:'14px 12px 6px' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:99,
             background:T.surfaceMid, border:`1px solid ${T.border}` }}>
-            <Search size={13} color={T.textXsoft} />
-            <input placeholder="Search conversations…" style={{ flex:1, fontSize:14, background:'none', border:'none', outline:'none', color:T.text, fontFamily:T.font }} />
+            <Search size={13} color={T.textSoft} />
+            <input placeholder="Search conversations…" style={{ flex:1, fontSize:13, background:'none', border:'none', outline:'none', color:T.text, fontFamily:T.font }} />
           </div>
         </div>
-        {/* Categories */}
-        <div style={{ padding:'8px 12px', borderBottom:`1px solid ${T.border}`, display:'flex', gap:5, flexWrap:'wrap' }}>
-          {CONVERSATION_CATEGORIES.map(cat => (
-            <button key={cat} type="button" onClick={() => { SFX.tap(); setActiveCat(cat) }}
-              style={{ padding:'4px 11px', borderRadius:99, fontSize:13, fontWeight:700, cursor:'pointer', transition:'all .15s',
-                border: activeCat===cat ? 'none' : `1px solid ${T.border}`,
-                background: activeCat===cat ? T.core : T.surfaceMid,
-                color: activeCat===cat ? 'white' : T.textSoft,
-                boxShadow: activeCat===cat ? T.shadowPurple : 'none' }}>
-              {cat}
-            </button>
-          ))}
+
+        {/* New chat — plain sidebar row, like Gemini */}
+        <div style={{ padding:'4px 6px 8px' }}>
+          <button type="button" onClick={newChat}
+            style={{ display:'flex', alignItems:'center', gap:12, width:'100%',
+              padding:'9px 14px', borderRadius:99, cursor:'pointer',
+              background:'none', border:'none',
+              color:T.text, fontSize:14, fontWeight:500, fontFamily:T.font,
+              textAlign:'left', transition:'background .12s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.surfaceMid }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'none' }}>
+            <PenSquare size={15} color={T.textSoft} />
+            <span>New chat</span>
+          </button>
         </div>
-        {/* List */}
-        <div style={{ flex:1, overflowY:'auto', padding:'8px 8px' }}>
-          {filtered.map(conv => (
-            <div key={conv.id} onClick={() => { SFX.tap(); setActiveConv(conv.id) }}
-              style={{ padding:'11px 12px', borderRadius:4, marginBottom:4, cursor:'pointer', transition:'all .15s', position:'relative',
-                background: activeConv===conv.id ? T.coreSoft : T.surface,
-                border: `1px solid ${T.border}`,
-                borderLeft: activeConv===conv.id ? `3px solid ${T.core}` : `1px solid ${T.border}`,
-                boxShadow: activeConv===conv.id ? T.shadowSm : 'none' }}
-              onMouseEnter={e => { if(activeConv!==conv.id) { e.currentTarget.style.background=T.surfaceMid }}}
-              onMouseLeave={e => { if(activeConv!==conv.id) { e.currentTarget.style.background=T.surface }}}>
-              <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:3 }}>
-                <p style={{ fontSize:14, fontWeight:700, color: activeConv===conv.id ? T.core : T.text, lineHeight:1.3, flex:1, marginRight:8 }}>{conv.title}</p>
-                <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4, flexShrink:0 }}>
-                  <span style={{ fontSize:13, color:T.textXsoft }}>{conv.time}</span>
-                  {conv.unread > 0 && (
-                    <span style={{ width:18, height:18, borderRadius:'50%', background:T.core, color:'white', fontSize:13, fontWeight:800,
-                      display:'flex', alignItems:'center', justifyContent:'center' }}>{conv.unread}</span>
-                  )}
+        {/* List — Gemini-style single-line items, selected pill, hover-revealed pin */}
+        <div style={{ flex:1, overflowY:'auto', padding:'4px 6px' }}>
+          {/* Pinned section header */}
+          {sortedConvs.some(c => c.pinned) && (
+            <p style={{ fontSize:11, fontWeight:700, color:T.textSoft,
+              textTransform:'uppercase', letterSpacing:'0.08em',
+              padding:'10px 14px 6px', margin:0 }}>Pinned</p>
+          )}
+          {sortedConvs.map((conv, idx) => {
+            const active = activeConv === conv.id
+            // Insert a "Recent" header at the boundary between pinned and the rest.
+            const prev = sortedConvs[idx - 1]
+            const showRecentHeader = !conv.pinned && (prev?.pinned)
+            return (
+              <React.Fragment key={conv.id}>
+                {showRecentHeader && (
+                  <p style={{ fontSize:11, fontWeight:700, color:T.textSoft,
+                    textTransform:'uppercase', letterSpacing:'0.08em',
+                    padding:'12px 14px 6px', margin:0 }}>Recent</p>
+                )}
+                <div className="conv-row" style={{ position:'relative' }}>
+                  <button type="button"
+                    onClick={() => { SFX.tap(); setActiveConv(conv.id) }}
+                    title={conv.title}
+                    style={{ display:'flex', alignItems:'center', width:'100%',
+                      padding:'9px 36px 9px 14px', borderRadius:99, marginBottom:2,
+                      cursor:'pointer', textAlign:'left',
+                      background: active ? T.coreSoft : 'none',
+                      border: 'none',
+                      color: active ? T.core : T.text,
+                      fontFamily: T.font,
+                      transition:'background .12s, color .12s' }}
+                    onMouseEnter={e => { if (!active) e.currentTarget.style.background = T.surfaceMid }}
+                    onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'none' }}>
+                    <span style={{ flex:1, fontSize:14, fontWeight: active ? 700 : 500,
+                      lineHeight:1.3,
+                      overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      {conv.title}
+                    </span>
+                  </button>
+                  {/* Pin / Unpin — always visible if pinned, hover-reveal otherwise */}
+                  <button type="button" aria-label={conv.pinned ? 'Unpin' : 'Pin'}
+                    onClick={(e) => { e.stopPropagation(); togglePin(conv.id) }}
+                    className="conv-pin"
+                    style={{ position:'absolute', top:'50%', right:8, transform:'translateY(-50%)',
+                      width:24, height:24, borderRadius:99, cursor:'pointer',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      background:'none', border:'none',
+                      color: conv.pinned ? (active ? T.core : T.textMid) : T.textSoft,
+                      opacity: conv.pinned ? 1 : 0,
+                      transition:'opacity .12s, color .12s' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = T.core }}
+                    onMouseLeave={e => { e.currentTarget.style.color = conv.pinned ? (active ? T.core : T.textMid) : T.textSoft }}>
+                    <Pin size={13} style={{ transform: conv.pinned ? 'rotate(45deg)' : 'rotate(0deg)' }} />
+                  </button>
                 </div>
-              </div>
-              <p style={{ fontSize:13, color:T.textSoft, lineHeight:1.4,
-                overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{conv.preview}</p>
-              <div style={{ marginTop:5 }}>
-                <span style={{ fontSize:11, fontWeight:600, padding:'2px 7px', borderRadius:99,
-                  border:`1px solid ${T.border}`,
-                  background:`${T.core}10`, color:T.core }}>{conv.category}</span>
-              </div>
-            </div>
-          ))}
+              </React.Fragment>
+            )
+          })}
         </div>
       </div>
 
@@ -2737,27 +3952,6 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState }) {
         <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
           {/* Messages column */}
           <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-            {/* Conv header */}
-            <div style={{ padding:'14px 20px', borderBottom:`1px solid ${T.border}`, flexShrink:0,
-              display:'flex', alignItems:'center', justifyContent:'space-between', background:T.topBar }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <div style={{ width:32, height:32, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center',
-                  background:T.coreGrad }}>
-                  <Sparkles size={15} color="white" />
-                </div>
-                <div>
-                  <p style={{ fontSize:15, fontWeight:800, color:T.text }}>{currentConv.title}</p>
-                  <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:2 }}>
-                    <span style={{ fontSize:12, fontWeight:600, padding:'1px 7px', borderRadius:99, background:`${T.core}10`, border:`1px solid ${T.border}`, color:T.core }}>{currentConv.category}</span>
-                    <span style={{ fontSize:14, color:T.textXsoft }}>{currentConv.date} · {currentConv.time}</span>
-                  </div>
-                </div>
-              </div>
-              <div style={{ display:'flex', gap:6 }}>
-                <Btn variant="secondary" icon={Tag} style={{ padding:'5px 10px', fontSize:13 }}>Categorise</Btn>
-                <Btn variant="secondary" icon={Folder} style={{ padding:'5px 10px', fontSize:13 }}>Archive</Btn>
-              </div>
-            </div>
             {/* Messages */}
             <div style={{ flex:1, overflowY:'auto', padding:'20px 24px', display:'flex', flexDirection:'column', gap:12 }}>
               {messages.map((m, i) => (
@@ -2795,25 +3989,10 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState }) {
               )}
               <div ref={endRef} />
             </div>
-            {/* Input */}
-            <div style={{ padding:'12px 20px 16px', borderTop:`1px solid ${T.border}`, flexShrink:0 }}>
-              <div style={{ borderRadius:4, transition:'box-shadow .15s' }}
-                ref={el => { if(el) el._el = el }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 14px', borderRadius:4,
-                  background:T.surface, border:`1px solid ${T.border}`, transition:'all .15s' }}>
-                  <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()}
-                    onFocus={e => {
-                      e.currentTarget.parentElement.style.borderColor=T.core
-                      e.currentTarget.parentElement.style.boxShadow=`0 0 0 1px ${T.core}`
-                    }}
-                    onBlur={e => {
-                      e.currentTarget.parentElement.style.borderColor=T.border
-                      e.currentTarget.parentElement.style.boxShadow='none'
-                    }}
-                    placeholder="Continue the conversation…"
-                    style={{ flex:1, fontSize:15, background:'none', border:'none', outline:'none', color:T.text, fontFamily:T.font }} />
-                  <Btn variant="primary" icon={Send} onClick={send} style={{ padding:'6px 12px' }} />
-                </div>
+            {/* Continue input — same compact pill as the Today WhisperBar */}
+            <div style={{ padding:'14px 20px 18px', borderTop:`1px solid ${T.border}`, flexShrink:0 }}>
+              <div style={{ maxWidth:720, margin:'0 auto' }}>
+                <ContinueBar value={input} onChange={setInput} onSubmit={send} />
               </div>
             </div>
           </div>
@@ -2821,23 +4000,59 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState }) {
           <AgentFlowPanel conv={currentConv} />
         </div>
       ) : (
-        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:16 }}>
-          {/* Animated Sparkles orb */}
-          <div style={{ position:'relative', width:72, height:72 }}>
-            <div style={{ position:'absolute', inset:-8, borderRadius:'50%',
-              background:`radial-gradient(ellipse, ${T.coreGlow} 0%, transparent 70%)`,
-              animation:'breathe 3s ease-in-out infinite', pointerEvents:'none' }} />
-            <div style={{ width:72, height:72, borderRadius:22, display:'flex', alignItems:'center', justifyContent:'center',
-              background:T.coreGrad, boxShadow:`0 8px 32px ${T.coreGlow}`, animation:'float 4s ease-in-out infinite' }}>
-              <Sparkles size={30} color="white" />
-            </div>
-          </div>
-          <div style={{ textAlign:'center' }}>
-            <p style={{ fontSize:17, fontWeight:800, color:T.text, marginBottom:4 }}>Select a conversation</p>
-            <p style={{ fontSize:14, color:T.textSoft }}>Choose from the list to read and continue</p>
+        // Empty state — exact same WhisperBar hero used on the Today page.
+        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'24px' }}>
+          <div style={{ width:'100%', maxWidth:620 }}>
+            <WhisperBar hero persona={persona} coreState={coreState} setCoreState={setCoreState}
+              onCommand={(v) => startNewChat(v)} />
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Continue bar — re-uses the visual language of the Today WhisperBar ─────
+// Compact pill with Sparkles + mic + send. No persona, no prompt categories.
+function ContinueBar({ value, onChange, onSubmit, placeholder = 'Continue the conversation…' }) {
+  const T = window.__T
+  const [focused, setFocused] = useState(false)
+  return (
+    <div style={{
+      background: T.surface,
+      border: `1px solid ${focused ? T.core : T.border}`,
+      borderRadius: 999,
+      boxShadow: focused ? `0 0 0 3px ${T.core}1f, ${T.shadowMd}` : T.shadowSm,
+      transition: 'box-shadow .18s, border-color .18s',
+      display:'flex', alignItems:'center', gap:10,
+      padding:'8px 8px 8px 18px',
+    }}>
+      <Sparkles size={16} color={T.coreMid} />
+      <input value={value} onChange={e => onChange(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && onSubmit()}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        placeholder={placeholder}
+        style={{ flex:1, fontSize:14, background:'none', border:'none', outline:'none',
+          color:T.text, fontFamily:T.font, fontWeight:400, lineHeight:1.4, padding:'4px 0' }} />
+      <button type="button" aria-label="Voice input"
+        style={{ width:30, height:30, borderRadius:99,
+          background:'none', border:'none', cursor:'pointer',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          color:T.textSoft, transition:'background .12s', flexShrink:0 }}
+        onMouseEnter={e => { e.currentTarget.style.background = T.surfaceMid }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'none' }}>
+        <Mic size={14} />
+      </button>
+      <button type="button" onClick={onSubmit}
+        style={{ width:30, height:30, borderRadius:99,
+          background: value.trim() ? T.core : T.surfaceMid,
+          border: 'none', cursor: value.trim() ? 'pointer' : 'default',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          color: value.trim() ? '#fff' : T.textXsoft,
+          transition:'all .15s', flexShrink:0 }}>
+        <ArrowRight size={15} />
+      </button>
     </div>
   )
 }
@@ -2865,19 +4080,33 @@ function WhisperBar({ persona, coreState, setCoreState, onCommand, hero }) {
     setCoreState('thinking')
     setTimeout(() => { onCommand(v); setCoreState('idle') }, 900)
   }
-  // Filter chips — act as filters for the intent cards below
-  const managerChips = ['Team readiness brief', 'Batch approvals', 'Who is at risk?']
-  const employeeChips = ['Prep my 10 AM', 'Draft reply to Acme', 'What needs me today?']
-  const chips = persona === 'manager' ? managerChips : employeeChips
+  // Mic toggles a voice-listening session; only the mic puts Jarvis into "listening".
+  const toggleMic = () => {
+    SFX.tap(); HX.tap()
+    if (coreState === 'listening') {
+      setCoreState('idle')
+    } else {
+      setCoreState('listening')
+      // Auto-timeout so the state doesn't get stuck if the user never submits.
+      setTimeout(() => setCoreState(s => s === 'listening' ? 'idle' : s), 6000)
+    }
+  }
   const ph = persona==='manager' ? 'Ask anything — "Team readiness brief", "Who is at risk?"…'
     : 'Ask anything — "Prep my 10 AM", "Draft reply to Acme"…'
 
   if (hero) {
-    const userName = persona === 'manager' ? 'Alex' : 'Pritesh'
-    const greeting = coreState === 'thinking' ? 'On it…' : coreState === 'listening' ? 'Listening…' : `Hi ${userName}`
-    const subGreeting = coreState === 'thinking' ? 'Jarvis is working on that.' : coreState === 'listening' ? 'Go ahead, I\'m here.' : 'Where should we start?'
+    const userName = persona === 'manager' ? 'Alex' : 'Alex'
+    // Visual hierarchy: a warm, large, inviting greeting.
+    // Listening is voice-only; typing is silent.
+    const greetingLead = coreState === 'thinking' ? 'On it…'
+                       : coreState === 'listening' ? 'Listening…'
+                       : `Good morning, ${userName}.`
+    const greetingQ    = coreState === 'thinking' ? 'Jarvis is working on that.'
+                       : coreState === 'listening' ? 'Go ahead, I\'m here.'
+                       : 'Where should we start?'
 
-    // Category prompt buckets, persona-aware
+    // Category prompt buckets, persona-aware — restored from earlier spec,
+    // now aligned with the employee-service JTBDs in the product draft.
     const PROMPT_CATEGORIES = [
       { id:'discover', label:'Discover', Icon:Compass, color:T.core,
         prompts: persona==='manager'
@@ -2886,95 +4115,85 @@ function WhisperBar({ persona, coreState, setCoreState, onCommand, hero }) {
       { id:'find',     label:'Find',     Icon:Search,  color:T.blue,
         prompts: persona==='manager'
           ? ['Find my 1:1 notes with Liam','Find the Q2 planning thread','Find approvals older than 5 days','Find docs I reviewed last week']
-          : ['Find my last email to Maria Chen','Find the Acme SOW draft','Find the QBR deck','Find my 1:1 notes with Sarah'] },
+          : ['Find my last PTO request','Find the benefits enrolment page','Find the QBR deck','Find my 1:1 notes with Sarah'] },
       { id:'create',   label:'Create',   Icon:PenSquare,color:T.teal,
         prompts: persona==='manager'
           ? ['Draft a Wellness Day note to Liam','Create a hiring panel debrief template','Draft a sprint retro agenda','Write a promotion justification']
-          : ['Draft a reply to Acme','Write a meeting follow-up','Create a status update for my team','Draft a decision doc for the deploy'] },
+          : ['Draft my parental-leave handoff','Request PTO for next month','Write a meeting follow-up','Raise an IT ticket for laptop refresh'] },
       { id:'brainstorm',label:'Brainstorm',Icon:Lightbulb,color:T.amber,
         prompts: persona==='manager'
           ? ['Ideas to reduce team burnout risk','How to speed up our hiring loop','Ways to close the React 19 skill gap','How to rebalance on-call']
-          : ['How should I frame the Acme renewal?','Ideas for tomorrow\'s QBR opener','How do I unblock the DPA?','Questions to ask in my 1:1 today'] },
+          : ['How to plan my parental leave handoff','Ideas for my QBR opener','What benefits should I pick this year?','Questions to ask in my 1:1 today'] },
     ]
 
     return (
-      <div className="enter" style={{ marginBottom: 20, position:'relative', zIndex: openCat ? 200 : 'auto' }}>
-        {/* Gemini-style greeting */}
-        <div style={{ marginBottom: 20, textAlign: 'center' }}>
-          <p style={{ fontSize: 22, fontWeight: 400, color: T.textSoft, margin: '0 0 2px', fontFamily: T.font }}>
-            {greeting}
+      <div className="enter" style={{ marginBottom: 12, position:'relative', zIndex: openCat ? 200 : 'auto' }}>
+        {/* Warm, inviting greeting — strong visual hierarchy, two lines */}
+        <div style={{ textAlign:'center', marginBottom:14 }}>
+          <p style={{ fontSize:18, fontWeight:500, color:T.textSoft, margin:'0 0 4px',
+            fontFamily:T.font, lineHeight:1.3, letterSpacing:'-0.005em' }}>
+            {greetingLead}
           </p>
-          <p style={{ fontSize: 34, fontWeight: 700, color: T.text, margin: 0, lineHeight: 1.2, fontFamily: T.font }}>
-            {subGreeting}
+          <p style={{
+            fontSize:30, fontWeight:700, margin:0, lineHeight:1.2,
+            fontFamily:T.font, letterSpacing:'-0.02em',
+            background:`linear-gradient(135deg, ${T.core} 0%, ${T.coreMid} 50%, ${T.blue} 100%)`,
+            WebkitBackgroundClip:'text', backgroundClip:'text',
+            WebkitTextFillColor:'transparent', color:'transparent',
+          }}>
+            {greetingQ}
           </p>
         </div>
 
-        {/* Large pill input box */}
+        {/* Compact pill input — single row */}
         <div style={{
           background: T.surface,
           border: `1px solid ${focused ? T.core : T.border}`,
-          borderRadius: 20,
-          boxShadow: focused ? `0 0 0 2px ${T.core}22, ${T.shadowMd}` : T.shadowMd,
-          transition: 'box-shadow .15s, border-color .15s',
-          overflow: 'hidden',
+          borderRadius: 999,
+          boxShadow: focused ? `0 0 0 3px ${T.core}1f, ${T.shadowMd}` : T.shadowSm,
+          transition: 'box-shadow .18s, border-color .18s',
+          display:'flex', alignItems:'center', gap:10,
+          padding:'8px 8px 8px 18px',
         }}>
-          {/* Text input area */}
-          <div style={{ padding: '18px 22px 10px' }}>
-            <div style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
-              <div style={{ color: T.textXsoft, flexShrink:0, paddingTop:2 }}>
-                {coreState==='thinking'
-                  ? <Loader2 size={18} color={T.core} style={{ animation:'spin 1s linear infinite' }} />
-                  : <Sparkles size={18} color={T.coreMid} />}
-              </div>
-              <input ref={inputRef} value={val} onChange={e=>setVal(e.target.value)}
-                onKeyDown={e=>e.key==='Enter'&&submit()}
-                onFocus={() => { setFocused(true); setCoreState('listening') }}
-                onBlur={() => { setFocused(false); if(coreState==='listening') setCoreState('idle') }}
-                placeholder={ph}
-                style={{ flex:1, fontSize:16, background:'none', border:'none', outline:'none',
-                  color:T.text, fontFamily:T.font, fontWeight:400, lineHeight:1.5 }} />
-            </div>
+          <div style={{ color: T.textXsoft, flexShrink:0, display:'flex', alignItems:'center' }}>
+            {coreState==='thinking'
+              ? <Loader2 size={16} color={T.core} style={{ animation:'spin 1s linear infinite' }} />
+              : <Sparkles size={16} color={T.coreMid} />}
           </div>
-          {/* Bottom toolbar row */}
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
-            padding:'8px 16px 14px' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-              <button type="button"
-                style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 12px', borderRadius:99,
-                  background:'none', border:`1px solid ${T.border}`, cursor:'pointer',
-                  color:T.textSoft, fontSize:13, fontWeight:500, fontFamily:T.font,
-                  transition:'all .12s' }}
-                onMouseEnter={e=>{ e.currentTarget.style.background=T.surfaceMid; e.currentTarget.style.borderColor=T.borderMid }}
-                onMouseLeave={e=>{ e.currentTarget.style.background='none'; e.currentTarget.style.borderColor=T.border }}>
-                <Sliders size={14} />
-                Tools
-              </button>
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <button type="button"
-                style={{ width:34, height:34, borderRadius:99, background:'none',
-                  border:`1px solid ${T.border}`, cursor:'pointer', display:'flex',
-                  alignItems:'center', justifyContent:'center', color:T.textSoft,
-                  transition:'all .12s' }}
-                onMouseEnter={e=>{ e.currentTarget.style.background=T.surfaceMid }}
-                onMouseLeave={e=>{ e.currentTarget.style.background='none' }}>
-                <Mic size={15} />
-              </button>
-              <button type="button" onClick={submit}
-                style={{ width:34, height:34, borderRadius:99,
-                  background: val.trim() ? T.core : T.surfaceMid,
-                  border: 'none', cursor: val.trim() ? 'pointer' : 'default',
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  color: val.trim() ? '#fff' : T.textXsoft,
-                  transition:'all .15s' }}>
-                <ArrowRight size={16} />
-              </button>
-            </div>
-          </div>
+          <input ref={inputRef} value={val} onChange={e=>setVal(e.target.value)}
+            onKeyDown={e=>e.key==='Enter'&&submit()}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder={ph}
+            style={{ flex:1, fontSize:14, background:'none', border:'none', outline:'none',
+              color:T.text, fontFamily:T.font, fontWeight:400, lineHeight:1.4, padding:'4px 0' }} />
+          <button type="button"
+            aria-label={coreState==='listening' ? 'Stop listening' : 'Start voice input'}
+            onClick={toggleMic}
+            style={{ width:30, height:30, borderRadius:99,
+              background: coreState==='listening' ? T.redSoft : 'none',
+              border:'none', cursor:'pointer', display:'flex',
+              alignItems:'center', justifyContent:'center',
+              color: coreState==='listening' ? T.red : T.textSoft,
+              transition:'background .12s, color .12s', flexShrink:0 }}
+            onMouseEnter={e=>{ if (coreState!=='listening') e.currentTarget.style.background=T.surfaceMid }}
+            onMouseLeave={e=>{ if (coreState!=='listening') e.currentTarget.style.background='none' }}>
+            <Mic size={14} />
+          </button>
+          <button type="button" onClick={submit}
+            style={{ width:30, height:30, borderRadius:99,
+              background: val.trim() ? T.core : T.surfaceMid,
+              border: 'none', cursor: val.trim() ? 'pointer' : 'default',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              color: val.trim() ? '#fff' : T.textXsoft,
+              transition:'all .15s', flexShrink:0 }}>
+            <ArrowRight size={15} />
+          </button>
         </div>
 
         {/* Prompt categories — plain text links, each opens a dropdown of prompts */}
-        <div style={{ display:'flex', gap:24, marginTop:16, flexWrap:'wrap', justifyContent:'center', alignItems:'center' }}>
+        <div style={{ display:'flex', gap:22, marginTop:12, flexWrap:'wrap',
+          justifyContent:'center', alignItems:'center' }}>
           {PROMPT_CATEGORIES.map(cat => {
             const { Icon } = cat
             const isOpen = openCat === cat.id
@@ -2983,9 +4202,9 @@ function WhisperBar({ persona, coreState, setCoreState, onCommand, hero }) {
                 <button type="button"
                   onClick={() => { SFX.tap(); setOpenCat(isOpen ? null : cat.id) }}
                   style={{ display:'inline-flex', alignItems:'center', gap:6,
-                    padding:0, background:'none', border:'none', cursor:'pointer',
+                    padding:'4px 2px', background:'none', border:'none', cursor:'pointer',
                     color: isOpen ? cat.color : T.textSoft,
-                    fontSize:13, fontWeight:500, fontFamily:T.font,
+                    fontSize:13, fontWeight:600, fontFamily:T.font,
                     transition:'color .12s' }}
                   onMouseEnter={e => { if (!isOpen) e.currentTarget.style.color = cat.color }}
                   onMouseLeave={e => { if (!isOpen) e.currentTarget.style.color = T.textSoft }}>
@@ -2993,7 +4212,8 @@ function WhisperBar({ persona, coreState, setCoreState, onCommand, hero }) {
                   <span>{cat.label}</span>
                 </button>
                 {isOpen && (
-                  <div className="expand-down" style={{ position:'absolute', top:'calc(100% + 8px)', left:'50%', transform:'translateX(-50%)',
+                  <div className="expand-down" style={{ position:'absolute', top:'calc(100% + 8px)',
+                    left:'50%', transform:'translateX(-50%)',
                     minWidth:280, background:T.surface, border:`1px solid ${T.border}`, borderRadius:8,
                     boxShadow:T.shadowMd, padding:4, zIndex:100, fontFamily:T.font }}>
                     {cat.prompts.map((p, i) => (
@@ -3033,11 +4253,15 @@ function WhisperBar({ persona, coreState, setCoreState, onCommand, hero }) {
           </div>
           <input value={val} onChange={e=>setVal(e.target.value)}
             onKeyDown={e=>e.key==='Enter'&&submit()}
-            onFocus={() => { setFocused(true); setCoreState('listening') }}
-            onBlur={() => { setFocused(false); if(coreState==='listening') setCoreState('idle') }}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             placeholder={ph}
             style={{ flex:1, fontSize:15, background:'none', border:'none', outline:'none', color:T.text, fontFamily:T.font }} />
-          <button type="button" style={{ padding:5, background:'none', border:'none', cursor:'pointer', color:T.textSoft }}>
+          <button type="button"
+            onClick={toggleMic}
+            style={{ padding:5, background: coreState==='listening' ? T.redSoft : 'none',
+              border:'none', cursor:'pointer',
+              color: coreState==='listening' ? T.red : T.textSoft, borderRadius:4 }}>
             <Mic size={15} />
           </button>
           <Btn variant="primary" icon={ArrowRight} onClick={submit} style={{ padding:'6px 12px' }} />
@@ -3063,16 +4287,38 @@ function ThemeToggle({ mode, onToggle }) {
   )
 }
 
+// ─── Shared page layout ───────────────────────────────────────────────────
+// Single source of truth for all in-app tab pages (Today, Feed, Routines,
+// Setup). Conversations is intentionally excluded — it has its own three-pane
+// chat layout that fills the viewport edge-to-edge.
+function PageLayout({ children, maxWidth = 1280 }) {
+  return (
+    <div style={{ flex:1, overflowY:'auto', padding:'24px 0 60px' }}>
+      <div style={{ maxWidth, margin:'0 auto', padding:'0 24px' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [mode, setMode] = useState('light')
   const T = THEMES[mode]
   // Expose T globally for child components that reference window.__T
   window.__T = T
+  // Keep the global --focus-ring CSS var in sync with the theme's core color.
+  useEffect(() => {
+    try { document.documentElement.style.setProperty('--focus-ring', T.core) } catch {}
+  }, [T.core])
 
-  const [scene, setScene] = useState('welcome')
+  const [scene, setScene] = useState('welcome') // welcome | setup | tuning | app
   const [tab, setTab] = useState('today')
   const [persona, setPersona] = useState('employee')
+  // Load persisted Setup preferences (null = not set up yet)
+  const [prefs, setPrefs] = useState(() => loadPrefs())
+  // Expose prefs for deeply-nested components (ChatPanel tier logic, etc.)
+  window.__PREFS = prefs
   const [personaOpen, setPersonaOpen] = useState(false)
   const PERSONAS = [
     { id:'employee', label:'Employee',   sub:'Individual contributor view' },
@@ -3104,8 +4350,16 @@ export default function App() {
   const [logging, setLogging] = useState(false)
   // Conversations tab — which conv to open (set when expanding from overlay)
   const [openConvId, setOpenConvId] = useState(null)
-  // Today tab filter — null means "All", else one of 'tasks'|'meetings'|'decision'|'followups'
+  // Today tab filter — null means "All" (default).
   const [todayFilter, setTodayFilter] = useState(null)
+  // "What I can do" drawer visibility
+  const [showCapabilities, setShowCapabilities] = useState(false)
+  // "Last refreshed N min ago" ticker for the Neural Core microcopy
+  const [lastRefreshedMin, setLastRefreshedMin] = useState(2)
+  useEffect(() => {
+    const id = setInterval(() => setLastRefreshedMin(m => m + 1), 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   const allIntents = persona==='manager' ? MANAGER_INTENTS : INTENTS
   const notDismissed = allIntents.filter(i => !dismissIds.includes(i.id))
@@ -3115,12 +4369,31 @@ export default function App() {
     decision:  (i) => i.tier === 'L3' || i.tier === 'L4',
     followups: (i) => /follow|pending|waiting|awaiting|reply/i.test((i.headline || '') + ' ' + (i.cat || '') + ' ' + (i.action || '')),
   }
-  const visibleIntents = todayFilter && INTENT_FILTERS[todayFilter]
+  const filteredIntents = todayFilter && INTENT_FILTERS[todayFilter]
     ? notDismissed.filter(INTENT_FILTERS[todayFilter])
     : notDismissed
+  // If the user picked use cases in Setup, bias sort so matching intents come first.
+  const useCaseSystemPrefix = (ucId) => {
+    const uc = USE_CASES.find(u => u.id === ucId)
+    if (!uc) return []
+    return uc.chips.map(c => c.replace('Plugin','').toLowerCase())
+  }
+  const intentMatchesPickedUseCase = (intent) => {
+    if (!prefs?.useCases?.length) return false
+    const src = (intent.source || '').toLowerCase()
+    for (const ucId of prefs.useCases) {
+      const vendors = useCaseSystemPrefix(ucId)
+      if (vendors.some(v => src.includes(v))) return true
+    }
+    return false
+  }
+  const visibleIntents = (prefs?.useCases?.length
+    ? [...filteredIntents].sort((a, b) => (intentMatchesPickedUseCase(b) ? 1 : 0) - (intentMatchesPickedUseCase(a) ? 1 : 0))
+    : filteredIntents)
   const heroIntent = visibleIntents.find(i => i.isHero)
   const restIntents = visibleIntents.filter(i => !i.isHero)
   const doneCount = doneIds.filter(id => allIntents.find(i => i.id===id)).length
+  const overnightHandled = FEED_ITEMS.filter(f => f.status === 'done').length
 
   // Proactive alert at 4s
   useEffect(() => {
@@ -3129,9 +4402,40 @@ export default function App() {
     return () => clearTimeout(t)
   }, [scene, notifDone])
 
-  const handleLogin = () => {
+  // Original "log in and show app" path — reused after Setup completes too.
+  const runLoaderToApp = () => {
     SFX.tap(); setLogging(true)
-    setTimeout(() => { setLogging(false); setScene('app'); setCoreState('thinking'); setTimeout(() => setCoreState('idle'), 2200) }, 1400)
+    setTimeout(() => {
+      setLogging(false); setScene('app'); setCoreState('thinking')
+      setTimeout(() => setCoreState('idle'), 2200)
+    }, 1400)
+  }
+
+  // Welcome CTA: branch based on whether prefs exist.
+  const handleLogin = () => {
+    if (prefs) {
+      runLoaderToApp()
+    } else {
+      SFX.tap()
+      setScene('setup')
+    }
+  }
+  // Welcome "Already set up? Open my brief →" — bypasses setup.
+  const handleOpenBrief = () => { runLoaderToApp() }
+
+  // Setup → complete (persist, show tuning loader, then loader → Today, then one-time toast).
+  const [tuningPrefs, setTuningPrefs] = useState(null)
+  const setupPendingToastRef = useRef(false)
+  const handleSetupComplete = (newPrefs) => {
+    savePrefs(newPrefs)
+    setPrefs(newPrefs)
+    setTuningPrefs(newPrefs)
+    setScene('tuning')
+    setupPendingToastRef.current = true
+    setTimeout(() => {
+      setScene('welcome') // ensure welcome loader path is clean
+      runLoaderToApp()
+    }, 1400)
   }
   const [chatPreselect, setChatPreselect] = useState(null)
   const openChat = (item, scenario=null, preselect=null) => { setChatItem(item); setChatScenario(scenario); setChatPreselect(preselect); setShowChat(true); setChatTab('chat'); setCoreState('confirming'); SFX.open() }
@@ -3145,14 +4449,80 @@ export default function App() {
     setCoreState('idle')
     SFX.open()
   }
+
+  // ─── Toasts with Undo ──────────────────────────────────────────────────
+  // Toast shape: { msg, kind: 'done'|'dismissed'|'info', onUndo?: () => void }
+  const toastTimerRef = useRef(null)
+  const showToast = (t) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    setToast(t)
+    toastTimerRef.current = setTimeout(() => setToast(null), t.onUndo ? 6000 : 3000)
+  }
+  // Fire the "You're set up" toast once after Today mounts post-Setup.
+  useEffect(() => {
+    if (scene === 'app' && setupPendingToastRef.current) {
+      setupPendingToastRef.current = false
+      showToast({ msg:"You're set up. I'll work within these rules.", kind:'done' })
+    }
+  }, [scene]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Undo helpers — pure state reverts, used by both toast and Handled panel.
+  const undoDone = (id) => {
+    setDoneIds(p => p.filter(x => x !== id))
+    setDismissIds(p => p.filter(x => x !== id))
+    setToast(null)
+  }
+  const undoDismiss = (id) => {
+    setDismissIds(p => p.filter(x => x !== id))
+    setToast(null)
+  }
+
   const handleAct = (intent, preselect=null) => openChat(intent, intent.chatScenario||null, preselect)
-  const handleDone = id => { SFX.done(); HX.done(); setDoneIds(p=>[...p,id]); setTimeout(() => setDismissIds(p=>[...p,id]), 400) }
-  const handleDismiss = id => { SFX.tap(); setDismissIds(p=>[...p,id]) }
+  const handleDone = id => {
+    SFX.done(); HX.done()
+    setDoneIds(p=>[...p,id])
+    setTimeout(() => setDismissIds(p=>[...p,id]), 400)
+    showToast({ msg:'Marked done', kind:'done', onUndo: () => undoDone(id) })
+  }
+  const handleDismiss = id => {
+    SFX.tap()
+    setDismissIds(p=>[...p,id])
+    showToast({ msg:'Removed from today', kind:'dismissed', onUndo: () => undoDismiss(id) })
+  }
   const handleRemind = id => {
     SFX.tap(); HX.tap()
-    setToast({ msg:'Reminder set · I\'ll bring this back in 1 hour', tone:'info' })
-    setTimeout(() => setToast(null), 3000)
+    showToast({ msg:'Reminder set · I\'ll bring this back in 1 hour', kind:'info' })
   }
+
+  // ─── Day-cleared peak moment ──────────────────────────────────────────
+  const dayClearedFiredRef = useRef(false)
+  const isDayCleared = scene === 'app' && tab === 'today' && allIntents.length > 0 && doneCount === allIntents.length
+  useEffect(() => {
+    if (!isDayCleared) { dayClearedFiredRef.current = false; return }
+    if (dayClearedFiredRef.current) return
+    dayClearedFiredRef.current = true
+    SFX.done()
+  }, [isDayCleared])
+
+  // ─── Handled items panel ──────────────────────────────────────────────
+  const [handledOpen, setHandledOpen] = useState(false)
+  // Derive the handled list from state. Done takes precedence over Dismissed
+  // for items where the id appears in both (Done pushes the id into both).
+  const handledList = dismissIds
+    .map(id => {
+      const intent = allIntents.find(i => i.id === id)
+      if (!intent) return null
+      return { intent, kind: doneIds.includes(id) ? 'done' : 'dismissed' }
+    })
+    .filter(Boolean)
+    .reverse() // most recent first
+  // Close the panel on outside click
+  useEffect(() => {
+    if (!handledOpen) return
+    const handler = (e) => { if (!e.target.closest?.('.handled-pop')) setHandledOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [handledOpen])
   const handleNotifAct = () => { setShowNotif(false); setNotifDone(true); openChat(null,'incident') }
   const handleEventClick = ev => openChat({
     headline:ev.title, tier:'L2', source:ev.location,
@@ -3164,8 +4534,11 @@ export default function App() {
     { id:'today',         label:'Today',         Icon:LayoutDashboard },
     { id:'conversations', label:'Conversations',  Icon:MessageCircle },
     { id:'feed',          label:'Feed',           Icon:History },
-    { id:'agents',        label:'Agents',         Icon:Bot },
+    { id:'agents',        label:'Skills',         Icon:Bot },
   ]
+
+  // Tuning screen — bridge from Setup → Today
+  if (scene === 'tuning') return <TuningLoader prefs={tuningPrefs} />
 
   // Loading screen
   if (logging) return (
@@ -3185,6 +4558,9 @@ export default function App() {
       </div>
     </div>
   )
+
+  // (Setup is no longer rendered as a full-screen early return — it renders
+  // inside the Teams chrome via the scene dispatcher below.)
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden', background:T.appBg, fontFamily:T.font, position:'relative', transition:'background .3s' }}>
@@ -3242,7 +4618,18 @@ export default function App() {
           )}
         </div>
         <div style={{ flex:1 }} />
-        <span style={{ fontSize:11, color:'#6A6A6A' }}>
+        <button type="button"
+          onClick={() => { SFX.tap(); setMode(m => m==='light' ? 'dark' : 'light') }}
+          style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 10px',
+            borderRadius:4, border:'1px solid #2A2A2A', background:'#151515',
+            color:'#E5E5E5', fontSize:11, fontWeight:600, cursor:'pointer',
+            fontFamily:T.font, transition:'background .12s' }}
+          onMouseEnter={e=>{ e.currentTarget.style.background='#1E1E1E' }}
+          onMouseLeave={e=>{ e.currentTarget.style.background='#151515' }}>
+          {mode==='light' ? <Moon size={11} /> : <Sun size={11} />}
+          {mode==='light' ? 'Dark' : 'Light'}
+        </button>
+        <span style={{ fontSize:11, color:'#6A6A6A', marginLeft:12 }}>
           Jarvis demo · not a Microsoft product surface
         </span>
       </div>
@@ -3396,7 +4783,18 @@ export default function App() {
           </nav>
           <div style={{ flex:1 }} />
 
-          <ThemeToggle mode={mode} onToggle={() => setMode(m=>m==='light'?'dark':'light')} />
+          {scene==='app' && (
+            <button type="button" aria-label="What I can do"
+              onClick={() => { SFX.tap(); setShowCapabilities(true) }}
+              style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'6px 12px', borderRadius:4,
+                background:T.surfaceMid, border:`1px solid ${T.border}`, cursor:'pointer',
+                transition:'all .15s', color:T.textMid, fontSize:13, fontWeight:600, fontFamily:T.font }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor=T.core; e.currentTarget.style.color=T.core }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor=T.border; e.currentTarget.style.color=T.textMid }}>
+              <Compass size={13} />
+              What I can do
+            </button>
+          )}
 
           {/* Org badge — static identity strip, not interactive */}
           {scene==='app' && (
@@ -3473,14 +4871,20 @@ export default function App() {
 
         {/* Page content */}
         <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column' }}>
-          {scene==='welcome' && <WelcomeScreen onLogin={handleLogin} />}
+          {scene==='welcome' && <WelcomeScreen onLogin={handleLogin} onOpenBrief={handleOpenBrief} />}
+          {scene==='setup' && (
+            <SetupView
+              initialPrefs={prefs}
+              onBack={() => { SFX.tap(); setScene(prefs ? 'app' : 'welcome') }}
+              onSkip={(p) => handleSetupComplete(p)}
+              onComplete={(p) => handleSetupComplete(p)} />
+          )}
 
           {scene==='app' && tab==='today' && (
-            <div style={{ flex:1, overflowY:'auto', padding:'24px 0 60px' }}>
-              <div style={{ maxWidth:1280, margin:'0 auto', padding:'0 24px' }}>
+            <PageLayout>
 
-                {/* ── Hero: Ask Jarvis — primary action, top of page ── */}
-                <div style={{ width:'50%', margin:'50px auto', position:'relative', zIndex:50 }}>
+                {/* ── Hero: Ask Jarvis — compact, single-row input; intent card below is the visual hero ── */}
+                <div style={{ maxWidth:620, margin:'8px auto 10px', position:'relative', zIndex:50 }}>
                   <WhisperBar hero persona={persona} coreState={coreState} setCoreState={setCoreState}
                     onCommand={cmd => {
                       const l = cmd.toLowerCase()
@@ -3489,14 +4893,117 @@ export default function App() {
                     }} />
                 </div>
 
-                {/* ── Brief heading ── */}
-                <div style={{ display:'flex', alignItems:'baseline', gap:10, marginBottom:14, flexWrap:'wrap' }}>
-                  <h2 style={{ fontSize:18, fontWeight:700, lineHeight:1.2, color:T.text, margin:0 }}>
-                    {persona==='manager' ? 'Your team needs 3 things.' : 'Your brief'}
-                  </h2>
-                  <span style={{ fontSize:13, fontWeight:600, color:T.textSoft }}>
-                    {doneCount} of {allIntents.length} complete
+                {/* ── Brief banner — below prompt categories, above filters ── */}
+                <div style={{ display:'flex', alignItems:'flex-start', gap:12,
+                  padding:'14px 0', borderTop:`1px solid ${T.border}`, marginBottom:6 }}>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:'flex', alignItems:'baseline', gap:10, flexWrap:'wrap' }}>
+                      <p style={{ fontSize:20, fontWeight:700, color:T.text, lineHeight:1.2, margin:0,
+                        letterSpacing:'-0.01em' }}>
+                        {persona==='manager'
+                          ? `Your team needs ${visibleIntents.length} ${visibleIntents.length===1?'thing':'things'}.`
+                          : `I handled ${overnightHandled} things overnight.`}
+                      </p>
+                      <span style={{ fontSize:12, color:T.textSoft, fontWeight:500 }}>
+                        last refreshed {lastRefreshedMin} min ago
+                      </span>
+                    </div>
+                    <p style={{ fontSize:13, fontWeight:500, color:T.textSoft, margin:'4px 0 0' }}>
+                      {visibleIntents.length} need you now · {doneCount} can wait.
+                    </p>
+                  </div>
+                  {/* ── View handled (N) — popover showing done + dismissed items with per-item Undo ── */}
+                  {handledList.length > 0 && (
+                    <div className="handled-pop" style={{ position:'relative' }}>
+                      <button type="button"
+                        onClick={() => { SFX.tap(); setHandledOpen(o => !o) }}
+                        style={{ display:'inline-flex', alignItems:'center', gap:6,
+                          padding:'5px 10px', borderRadius:99, cursor:'pointer',
+                          background:T.surface, border:`1px solid ${T.border}`,
+                          color:T.textMid, fontSize:12, fontWeight:600, fontFamily:T.font,
+                          transition:'all .12s' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = T.core; e.currentTarget.style.color = T.core }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMid }}>
+                        <History size={12} />
+                        Handled ({handledList.length})
+                      </button>
+                      {handledOpen && (
+                        <div className="expand-down" style={{ position:'absolute', top:'calc(100% + 6px)', right:0,
+                          width:380, maxWidth:'90vw', maxHeight:360, overflowY:'auto',
+                          background:T.surface, border:`1px solid ${T.border}`, borderRadius:8,
+                          boxShadow:T.shadowMd, padding:6, zIndex:110, fontFamily:T.font }}>
+                          <div style={{ padding:'8px 10px 6px', display:'flex', alignItems:'baseline',
+                            justifyContent:'space-between', borderBottom:`1px solid ${T.border}`, marginBottom:4 }}>
+                            <p style={{ fontSize:12, fontWeight:700, color:T.text, margin:0,
+                              textTransform:'uppercase', letterSpacing:'0.08em' }}>Handled today</p>
+                            <p style={{ fontSize:11, color:T.textXsoft, margin:0 }}>{handledList.length} item{handledList.length===1?'':'s'}</p>
+                          </div>
+                          {handledList.map(({ intent, kind }) => (
+                            <div key={intent.id}
+                              style={{ display:'flex', alignItems:'flex-start', gap:10,
+                                padding:'8px 10px', borderRadius:6,
+                                transition:'background .1s' }}
+                              onMouseEnter={e => { e.currentTarget.style.background = T.surfaceMid }}
+                              onMouseLeave={e => { e.currentTarget.style.background = 'none' }}>
+                              <div style={{ flexShrink:0, width:20, height:20, borderRadius:99,
+                                display:'flex', alignItems:'center', justifyContent:'center',
+                                background: kind==='done' ? T.greenSoft : T.surfaceMid,
+                                color: kind==='done' ? T.green : T.textSoft }}>
+                                {kind==='done' ? <Check size={11} /> : <X size={11} />}
+                              </div>
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <p style={{ fontSize:12, fontWeight:600, color:T.text,
+                                  lineHeight:1.35, margin:0,
+                                  overflow:'hidden', textOverflow:'ellipsis',
+                                  display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>
+                                  {intent.headline}
+                                </p>
+                                <p style={{ fontSize:11, color:T.textSoft, margin:'2px 0 0' }}>
+                                  {kind==='done' ? 'Marked done' : 'Removed from today'}
+                                  {intent.cat ? ` · ${intent.cat}` : ''}
+                                </p>
+                              </div>
+                              <button type="button"
+                                onClick={() => {
+                                  SFX.tap()
+                                  kind==='done' ? undoDone(intent.id) : undoDismiss(intent.id)
+                                }}
+                                style={{ flexShrink:0, padding:'4px 10px', borderRadius:4,
+                                  background:'none', border:`1px solid ${T.border}`,
+                                  color:T.core, fontSize:11, fontWeight:700, fontFamily:T.font,
+                                  cursor:'pointer', transition:'all .12s' }}
+                                onMouseEnter={e => { e.currentTarget.style.background = T.coreSoft; e.currentTarget.style.borderColor = T.core }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = T.border }}>
+                                Undo
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Jarvis overnight insight — informational banner, NOT a card.
+                       No card radius, no shadow, no hover. Sits under heading, above filters. ── */}
+                <div role="note" aria-label="Jarvis overnight insight"
+                  style={{ display:'flex', alignItems:'center', gap:10,
+                    padding:'8px 12px 8px 10px', marginBottom:14,
+                    borderLeft:`3px solid ${T.core}`,
+                    background:`linear-gradient(90deg, ${T.coreSoft} 0%, transparent 85%)`,
+                    cursor:'default', userSelect:'text' }}>
+                  <span style={{ flexShrink:0, display:'inline-flex', alignItems:'center', gap:5,
+                    fontSize:10, fontWeight:700, color:T.core,
+                    textTransform:'uppercase', letterSpacing:'0.1em' }}>
+                    <Sparkles size={11} color={T.core} />
+                    Overnight insight
                   </span>
+                  <span style={{ width:1, height:12, background:T.border, flexShrink:0 }} />
+                  <p style={{ flex:1, fontSize:13, fontWeight:500, lineHeight:1.45, color:T.textMid, margin:0 }}>
+                    {persona==='manager'
+                      ? <>Your team's velocity is <strong style={{ color:T.text }}>12% above target</strong> — but Liam's hours are masking a dependency risk on the Auth refactor.</>
+                      : <>Your last 3 PTO requests were approved in under 24h. If the current one stalls past tomorrow, I'll flag it.</>}
+                  </p>
                 </div>
 
                 {/* ── Filter pills — click to filter intent cards ── */}
@@ -3540,37 +5047,72 @@ export default function App() {
 
                   {/* Left: intent cards — 60% */}
                   <div style={{ flex:3, minWidth:0 }}>
-                    {heroIntent && (
-                      <HeroCard intent={heroIntent} onAct={handleAct} onDone={handleDone} onDismiss={handleDismiss} onRemind={handleRemind}
-                        isDone={doneIds.includes(heroIntent.id)}
-                        />
-                    )}
-                    {restIntents.map((intent, i) => (
-                      <IntentCard key={intent.id} intent={intent} idx={i}
-                        onAct={handleAct} onDone={handleDone} onDismiss={handleDismiss} onRemind={handleRemind}
-                        isDone={doneIds.includes(intent.id)}
-                        />
-                    ))}
-                    <div className="enter" style={{ marginTop:14, padding:'15px 17px', borderRadius:16,
-                      background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowSm,
-                      backdropFilter:'blur(12px)', animationDelay:'.3s' }}>
-                      <div style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
-                        <div style={{ width:34, height:34, borderRadius:10, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:T.coreSoft }}>
-                          <Sparkles size={15} color={T.core} />
+
+                    {isDayCleared ? (
+                      <div className="pop" style={{ padding:'32px 28px', borderRadius:12,
+                        background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowMd,
+                        backgroundImage:`radial-gradient(60% 90% at 50% -10%, ${T.coreSoft}, transparent 70%)` }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+                          <div style={{ width:36, height:36, borderRadius:10, background:T.coreGrad,
+                            display:'flex', alignItems:'center', justifyContent:'center', animation:'breathe 2s ease-in-out infinite' }}>
+                            <Sparkles size={16} color="#fff" />
+                          </div>
+                          <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:T.core, margin:0 }}>
+                            Day cleared
+                          </p>
                         </div>
-                        <div>
-                          <p style={{ fontSize:14, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.15em', color:T.core, marginBottom:5 }}>Jarvis overnight insight</p>
-                          <p style={{ fontSize:15, fontWeight:600, lineHeight:1.55, color:T.text, marginBottom:4 }}>
-                            {persona==='manager'
-                              ? "Your team's velocity is 12% above target — but Liam's hours are masking a dependency risk on the Auth refactor."
-                              : "Your Acme SOW response time is 40% faster than your last 3 deals. Pre-briefing Legal appears to be the variable."}
-                          </p>
-                          <p style={{ fontSize:13, color:T.textSoft }}>
-                            {persona==='manager' ? 'Sprint 16 · Jira velocity · Liam Davis hours' : 'Outlook thread history · 4 recent SOW cycles'}
-                          </p>
+                        <h2 style={{ fontSize:28, fontWeight:700, color:T.text, margin:'0 0 6px', letterSpacing:'-0.01em' }}>
+                          That's the lot.
+                        </h2>
+                        <p style={{ fontSize:15, color:T.textSoft, margin:'0 0 16px', lineHeight:1.6 }}>
+                          I'll keep watching. Anything else you'd like me to look at?
+                        </p>
+                        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                          <button type="button"
+                            onClick={() => { SFX.tap(); setTab('feed') }}
+                            style={{ display:'inline-flex', alignItems:'center', gap:6,
+                              padding:'10px 14px', borderRadius:4, cursor:'pointer',
+                              background:T.core, border:'none', color:'#fff',
+                              fontSize:13, fontWeight:700, fontFamily:T.font }}>
+                            <History size={14} /> Show what I did today
+                          </button>
+                          <button type="button"
+                            onClick={() => { SFX.tap(); openChat({ headline:'Plan tomorrow', tier:'L1', source:'Jarvis' }, null, 'Plan tomorrow') }}
+                            style={{ display:'inline-flex', alignItems:'center', gap:6,
+                              padding:'10px 14px', borderRadius:4, cursor:'pointer',
+                              background:'none', border:`1px solid ${T.border}`, color:T.text,
+                              fontSize:13, fontWeight:700, fontFamily:T.font }}>
+                            <Sparkles size={14} /> Plan tomorrow
+                          </button>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        {heroIntent && (
+                          <HeroCard intent={heroIntent} onAct={handleAct} onDone={handleDone} onDismiss={handleDismiss} onRemind={handleRemind}
+                            isDone={doneIds.includes(heroIntent.id)}
+                            />
+                        )}
+                        {restIntents.map((intent, i) => (
+                          <IntentCard key={intent.id} intent={intent} idx={i}
+                            onAct={handleAct} onDone={handleDone} onDismiss={handleDismiss} onRemind={handleRemind}
+                            isDone={doneIds.includes(intent.id)}
+                            />
+                        ))}
+                        {prefs && (
+                          <p style={{ fontSize:12, color:T.textSoft, margin:'16px 0 0', textAlign:'center' }}>
+                            Personalised from your Set up ·{' '}
+                            <button type="button"
+                              onClick={() => { SFX.tap(); setScene('setup') }}
+                              style={{ padding:0, background:'none', border:'none', cursor:'pointer',
+                                color:T.core, fontSize:12, fontWeight:600, fontFamily:T.font,
+                                textDecoration:'underline', textUnderlineOffset:2 }}>
+                              Edit →
+                            </button>
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
 
                   {/* Right: schedule — 40% */}
@@ -3579,12 +5121,12 @@ export default function App() {
                   </div>
 
                 </div>
-              </div>
-            </div>
+            </PageLayout>
           )}
 
           {scene==='app' && tab==='conversations' && (
-            <ConversationsView openConvId={openConvId} onConvOpen={id=>setOpenConvId(id)} setCoreState={setCoreState} />
+            <ConversationsView openConvId={openConvId} onConvOpen={id=>setOpenConvId(id)}
+              persona={persona} coreState={coreState} setCoreState={setCoreState} />
           )}
           {scene==='app' && tab==='feed' && <FeedView />}
           {scene==='app' && tab==='agents' && <AgentsView onNew={() => setShowWizard(true)} />}
@@ -3604,15 +5146,38 @@ export default function App() {
 
       {showWizard && <AgentWizard onClose={() => setShowWizard(false)} />}
       {showAddMeeting && <AddMeetingModal onClose={() => setShowAddMeeting(false)} />}
+      {showCapabilities && (
+        <CapabilitiesDrawer
+          prefs={prefs}
+          onClose={() => setShowCapabilities(false)}
+          onGrantSystem={(sysId) => { setShowCapabilities(false); setScene('setup') }} />
+      )}
 
-      {/* Lightweight global toast (reminder confirmations, etc.) */}
+
+      {/* Lightweight global toast with optional Undo affordance */}
       {toast && (
         <div className="enter" style={{ position:'fixed', bottom:20, left:'50%', transform:'translateX(-50%)',
-          zIndex:220, padding:'10px 16px', borderRadius:6, fontSize:13, fontWeight:500,
+          zIndex:220, padding:'8px 10px 8px 14px', borderRadius:8, fontSize:13, fontWeight:500,
           background:'#292929', color:'#fff', fontFamily:T.font,
-          boxShadow:'0 8px 24px rgba(0,0,0,0.35)', display:'flex', alignItems:'center', gap:10 }}>
-          <Bell size={13} color={T.blue} />
-          <span>{toast.msg}</span>
+          boxShadow:'0 8px 24px rgba(0,0,0,0.35)', display:'flex', alignItems:'center', gap:12 }}>
+          {toast.kind === 'done'
+            ? <Check size={13} color={T.green} />
+            : toast.kind === 'dismissed'
+              ? <X size={13} color={T.textSoft} />
+              : <Bell size={13} color={T.blue} />}
+          <span style={{ paddingRight: toast.onUndo ? 0 : 2 }}>{toast.msg}</span>
+          {toast.onUndo && (
+            <button type="button"
+              onClick={() => { SFX.tap(); toast.onUndo() }}
+              style={{ padding:'4px 10px', borderRadius:4, fontSize:12, fontWeight:700,
+                background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)',
+                color:'#fff', cursor:'pointer', fontFamily:T.font, letterSpacing:'0.02em',
+                transition:'background .12s' }}
+              onMouseEnter={e=>{ e.currentTarget.style.background='rgba(255,255,255,0.18)' }}
+              onMouseLeave={e=>{ e.currentTarget.style.background='rgba(255,255,255,0.08)' }}>
+              Undo
+            </button>
+          )}
         </div>
       )}
     </div>
