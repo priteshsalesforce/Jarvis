@@ -81,9 +81,9 @@ const THEMES = {
     border:      '#D1D1D1',   // colorNeutralStroke1
     borderMid:   '#C7C7C7',   // colorNeutralStroke2
     // Shadows — Fluent two-layer elevation formula
-    shadowSm:    '0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14)',   // shadow2
-    shadowMd:    '0 0 2px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.14)',   // shadow8
-    shadowPurple:'0 0 2px rgba(92,46,145,0.14), 0 4px 12px rgba(92,46,145,0.18)',
+    shadowSm:    '0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03)',
+    shadowMd:    '0 2px 6px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04)',
+    shadowPurple:'0 2px 8px rgba(92,46,145,0.10), 0 1px 2px rgba(92,46,145,0.06)',
     font: '"Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif',
   },
   dark: {
@@ -115,9 +115,9 @@ const THEMES = {
     border:      '#666666',   // colorNeutralStroke1 dark
     borderMid:   '#525252',   // colorNeutralStroke2 dark
     // Shadows — darker two-layer
-    shadowSm:    '0 0 2px rgba(0,0,0,0.28), 0 1px 2px rgba(0,0,0,0.32)',
-    shadowMd:    '0 0 2px rgba(0,0,0,0.28), 0 4px 8px rgba(0,0,0,0.32)',
-    shadowPurple:'0 0 2px rgba(155,110,200,0.2), 0 4px 12px rgba(155,110,200,0.28)',
+    shadowSm:    '0 1px 2px rgba(0,0,0,0.20), 0 1px 1px rgba(0,0,0,0.16)',
+    shadowMd:    '0 2px 6px rgba(0,0,0,0.22), 0 1px 2px rgba(0,0,0,0.18)',
+    shadowPurple:'0 2px 8px rgba(155,110,200,0.18), 0 1px 2px rgba(155,110,200,0.14)',
     font: '"Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif',
   },
 }
@@ -159,6 +159,9 @@ input, textarea, select { font-family: inherit; }
 ::selection { background: rgba(92,46,145,0.15); }
 .card-action-tip:hover .tip-label { opacity: 1; }
 .conv-row:hover .conv-pin { opacity: 1; }
+.j-msg .j-feedback { opacity: 0; transition: opacity .15s; }
+.j-msg:hover .j-feedback,
+.j-feedback:focus-within { opacity: 1; }
 `
 
 
@@ -263,30 +266,6 @@ const FEED_ITEMS = [
 ]
 
 const CHAT_SCENARIOS = {
-  p1:[{
-    role:'j',
-    text:"I've pulled the full picture on Case #DPA-8821.\n\n**What's happening:** Amy Torres is OOO until Wednesday but your pipeline go-live is Friday. SLA already breached by 2 days.\n\nWhat would you like to do?",
-    trace:{
-      summary:'Compiled 3 sources and surfaced 2 actions',
-      steps:[
-        { label:'Loaded Case #DPA-8821 from Salesforce', plugin:'SalesforcePlugin',
-          bullets:['Status: In Review','SLA breached +2 days','Assigned reviewer: Amy Torres'] },
-        { label:'Checked Amy Torres availability', plugin:'WorkdayPlugin',
-          bullets:['OOO until May 4','No backup reviewer assigned'] },
-        { label:'Retrieved General Counsel contact', plugin:'SalesforcePlugin',
-          bullets:['gc@orgfarm.com · Direct line confirmed'] },
-      ]
-    },
-    actions:[
-      { label:'Draft escalation to General Counsel', key:'A' },
-      { label:'Set Thursday morning reminder', key:'B' },
-      { label:'Show full case timeline', key:'C' },
-    ],
-    sources:[
-      { name:'Case #DPA-8821', updated:'5 days ago', icon:Database, color:'#8C4B02' },
-      { name:'Acme SOW v3 - Redlines.docx', updated:'Today 09:14 · Legal', icon:FileText, color:'#7526E3' },
-    ]
-  }],
   incident:[{
     role:'j',
     text:"🔴 **P1: Auth Service Down — INC-9942**\n\nEU-West-1 returning 503s on /v1/auth. Detected 4 min ago. 3 enterprise customers impacted. Incident owner: unassigned.\n\n**On-call identified:** Raj Mehta — available now.",
@@ -321,10 +300,6 @@ const CHAT_SCENARIOS = {
           bullets:['18% incident improvement noted','Budget: primary concern last quarter'] },
       ]
     },
-    sources:[
-      { name:'QBR-H2-2026.pptx', updated:'Yesterday · Priya', icon:FileText, color:'#0B5CAB' },
-      { name:'Apr 14 Meeting Notes.docx', updated:'18 days ago · Alex', icon:FileText, color:'#2E844A' },
-    ]
   }],
   burnout:[{
     role:'j',
@@ -418,10 +393,6 @@ const CHAT_SCENARIOS = {
       { label:'Draft handover note to Priya',            key:'leave_note',   tier:'L2' },
       { label:'Nominate Liam as backup approver',        key:'leave_backup', tier:'L4' },
     ],
-    sources:[
-      { name:'Parental leave policy v3', updated:'Updated Mar 12 · Workday', icon:FileText, color:'#0B5CAB' },
-      { name:'Backfill request template', updated:'OrgFarm HR · v2', icon:FileText, color:'#2E844A' },
-    ]
   }],
 }
 
@@ -522,11 +493,11 @@ const USE_CASES = [
 // Each row: { system, tier, action, example }
 const CAPABILITIES = {
   legal: [
-    { system:'Salesforce',  tier:'L1', action:'Flag SLA breaches on cases assigned to you',        example:'DPA-8821 is SLA+2 — surfaced in your brief.' },
-    { system:'Workday',     tier:'L1', action:'Check reviewer availability',                        example:'Amy Torres OOO until May 4 — no action needed.' },
-    { system:'Outlook',     tier:'L2', action:'Draft escalation to General Counsel for review',     example:'Draft ready — you click Send.' },
-    { system:'Salesforce',  tier:'L3', action:'Choose between escalation vs waiting for reviewer',  example:'Shows trade-offs, you decide.' },
-    { system:'Salesforce',  tier:'L4', action:'File a legal escalation on your behalf',             example:'Requires your explicit confirmation.' },
+    { system:'Workday',     tier:'L1', action:'Track compliance training due dates',                example:'Annual security training due in 3 days — reminded you.' },
+    { system:'Workday',     tier:'L1', action:'Surface policy updates that affect you',             example:'Parental-leave policy v3 published — flagged in your brief.' },
+    { system:'Outlook',     tier:'L2', action:'Draft a question to Legal for review',               example:'Draft ready — you click Send.' },
+    { system:'Workday',     tier:'L3', action:'Propose how to handle a compliance gap',             example:'Shows your options, you decide.' },
+    { system:'Workday',     tier:'L4', action:'File a formal compliance attestation',               example:'Requires your explicit confirmation.' },
   ],
   meetings: [
     { system:'Outlook',     tier:'L1', action:'Assemble prep bundle 30 min before each meeting',    example:'QBR deck, notes, SVP context — ready at 9:30.' },
@@ -574,115 +545,149 @@ function savePrefs(p) {
 const CONVERSATION_CATEGORIES = ['All', 'Decisions', 'Follow-ups', 'Incidents', 'Meetings', 'Analysis']
 
 const CONVERSATIONS = [
-  { id:'cv1', title:'Legal DPA escalation — Acme pipeline',
-    preview:'I can draft an escalation to General Counsel right now. Want me to proceed?',
+  // ── Hero on Today: parental-leave plan ───────────────────────────────────
+  { id:'cv1', title:'Parental-leave plan — Jun 2 to Sep 1',
+    preview:"I drafted the full handoff across Workday, Outlook, IT, and your team.",
     time:'09:14', date:'Today', category:'Decisions', unread:1,
-    flowSteps:[
-      { label:'Loaded Case #DPA-8821 from Salesforce', plugin:'SalesforcePlugin' },
-      { label:'Checked Amy Torres OOO status', plugin:'WorkdayPlugin' },
-      { label:'Retrieved General Counsel contact', plugin:'SalesforcePlugin' },
-    ],
     messages:[
-      {role:'j',
-        text:"I've pulled the full picture on Case #DPA-8821.\n\n**Situation:** Amy Torres is OOO until Wednesday but your pipeline go-live is Friday. SLA already breached by 2 days.\n\nWhat would you like to do?",
+      { role:'j',
+        text:"I drafted the full handoff for **Jun 2 to Sep 1** across HR, Calendar, IT, and your team. Pick what I should handle on my own and what you'd like to review first.",
         trace:{
-          summary:'Compiled 3 sources and surfaced 2 actions',
+          summary:'Orchestrated 4 systems to prepare a leave handoff',
           steps:[
-            { label:'Loaded Case #DPA-8821 from Salesforce', plugin:'SalesforcePlugin', bullets:['Status: In Review','SLA breached +2 days'] },
-            { label:'Checked Amy Torres availability', plugin:'WorkdayPlugin', bullets:['OOO until May 4','No backup assigned'] },
-            { label:'Retrieved General Counsel contact', plugin:'SalesforcePlugin' },
+            { label:'Read Parental leave policy v3', bullets:['Allows 12 weeks paid (Jun 2 – Aug 25)','+1 week unpaid to Sep 1 within policy','30-day notice window — within range'] },
+            { label:'Composed OOO and blocked the calendar', bullets:['Block Jun 2 00:00 → Sep 1 23:59','Auto-reply: "On leave until Sep 1 — Priya covering"','Calendar delegated to Priya (view only)'] },
+            { label:'Prepared IT access handover', bullets:['Draft RITM-0043001: suspend non-shared tokens','Shared inboxes stay active'] },
+            { label:'Drafted handover note for Priya', bullets:['Warm tone, 3 short sections','Backup approver: Liam (overlap + seniority)'] },
           ]
         },
         actions:[
-          { label:'Draft escalation to General Counsel', key:'A' },
-          { label:'Set Thursday morning reminder', key:'B' },
-          { label:'Show full case timeline', key:'C' },
+          { label:'File PTO Jun 2 – Sep 1 in Workday',    key:'leave_pto',    tier:'L1' },
+          { label:'Block calendar with OOO + auto-reply', key:'leave_ooo',    tier:'L1' },
+          { label:'Draft handover note to Priya',          key:'leave_note',   tier:'L2' },
+          { label:'Nominate Liam as backup approver',      key:'leave_backup', tier:'L4' },
         ],
-        sources:[
-          { name:'Case #DPA-8821', updated:'5 days ago', icon:Database, color:'#8C4B02' },
-          { name:'Acme SOW v3 - Redlines.docx', updated:'Today 09:14 · Legal', icon:FileText, color:'#7526E3' },
-        ]
       },
     ]},
-  { id:'cv2', title:'QBR prep — SVP meeting 10:00 AM',
-    preview:'Deck found, 3 open actions surfaced, SVP context compiled.',
-    time:'09:02', date:'Today', category:'Meetings', unread:0,
-    flowSteps:[
-      { label:'Located QBR deck in SharePoint', plugin:'SharePointPlugin' },
-      { label:'Surfaced Apr 14 meeting notes', plugin:'OutlookPlugin' },
-      { label:'Fetched SVP briefing history', plugin:'SalesforcePlugin' },
-      { label:'Drafted 3-point opener', plugin:'ClaudePlugin' },
-    ],
+
+  // ── PTO nudge ────────────────────────────────────────────────────────────
+  { id:'cv2', title:'PTO request — pending with your manager',
+    preview:"Submitted Apr 29 for May 14–16. Manager SLA is 2 business days.",
+    time:'08:51', date:'Today', category:'Follow-ups', unread:0,
     messages:[
-      {role:'j',
-        text:"**QBR prep bundle — ready for 10:00 AM**\n\n📄 **Deck:** QBR-H2-2026.pptx (Priya edited yesterday)\n📋 **3 open actions** from Apr 14 — none closed\n💬 **SVP context:** Last discussion was budget; she flagged the 18% incident improvement\n\nShall I draft a 3-point opener?",
+      { role:'j',
+        text:"Your PTO request for **May 14–16** has been with Sarah for 3 days. Manager SLA is 2 business days, and there are no calendar conflicts for that week. I can send a light nudge on your behalf.",
         trace:{
-          summary:'Compiled 4 sources and surfaced 3 open actions',
+          summary:'Checked Workday queue and your manager calendar',
           steps:[
-            { label:'Located QBR deck in SharePoint', plugin:'SharePointPlugin', bullets:['Last edited yesterday by Priya Nair'] },
-            { label:'Surfaced Apr 14 meeting notes', plugin:'OutlookPlugin', bullets:['3 open actions — none closed'] },
-            { label:'Retrieved SVP briefing history', plugin:'SalesforcePlugin', bullets:['Budget flagged · 18% incident improvement noted'] },
-          ]
-        },
-        sources:[
-          { name:'QBR-H2-2026.pptx', updated:'Yesterday · Priya', icon:FileText, color:'#0B5CAB' },
-          { name:'Apr 14 Meeting Notes.docx', updated:'18 days ago · Alex', icon:FileText, color:'#2E844A' },
-        ]
-      },
-      {role:'u', text:"Yes, draft the opener please"},
-      {role:'j', text:"Here's a 3-point opener:\n\n1. **Progress on reliability** — We hit 99.95% uptime, a direct result of the incident process changes you asked about last quarter.\n2. **Revenue pipeline** — 3 deals at final stage, total ARR $2.1M. Acme is the largest, and we're on track.\n3. **Ask** — Approval to accelerate the CloudMetrics data pipeline (blocked by Legal right now — separate thread)."},
-    ]},
-  { id:'cv3', title:'P1 Incident — Auth Service Down',
-    preview:'Raj Mehta assigned as incident owner. War room open.',
-    time:'08:47', date:'Today', category:'Incidents', unread:0,
-    flowSteps:[
-      { label:'Detected 503 spike via Datadog', plugin:'DatadogPlugin' },
-      { label:'Identified 3 impacted enterprise accounts', plugin:'SalesforcePlugin' },
-      { label:'Assigned incident owner: Raj Mehta', plugin:'SalesforcePlugin' },
-      { label:'Sent Teams notification to Raj', plugin:'TeamsPlugin' },
-    ],
-    messages:[
-      {role:'j',
-        text:"🔴 **P1: Auth Service Down — INC-9942**\n\nEU-West-1 returning 503s on /v1/auth. 3 enterprise customers impacted. Incident owner: unassigned.\n\n**On-call identified:** Raj Mehta — available now.",
-        trace:{
-          summary:'Detected anomaly across 2 services and identified on-call',
-          steps:[
-            { label:'Detected 503 spike on /v1/auth', plugin:'DatadogPlugin', bullets:['Error rate: 94%','4 min ago'] },
-            { label:'Identified 3 impacted accounts', plugin:'SalesforcePlugin', bullets:['Acme Corp · CloudMetrics · TechBridge'] },
-            { label:'Located on-call: Raj Mehta', plugin:'WorkdayPlugin', bullets:['Status: Available'] },
-          ]
+            { label:'Pulled the request from Workday', bullets:['Submitted Apr 29 at 14:02','Status: Pending with Sarah Chen'] },
+            { label:'Checked your manager availability', bullets:['No OOO blocks today or yesterday','In-office both days'] },
+            { label:'Calendar conflict check on May 14–16', bullets:['No team milestones','No meetings you own'] },
+          ],
         },
         actions:[
-          { label:'Assign Raj as owner', key:'A' },
-          { label:'Send Raj a Teams message', key:'B' },
-          { label:'Open a war room channel', key:'C' },
-        ]
+          { label:'Send a light nudge to Sarah', key:'A' },
+          { label:'Wait until tomorrow', key:'B' },
+        ],
       },
-      {role:'u', text:"A"},
-      {role:'j', text:"Done ✓ Raj Mehta assigned as incident owner in Salesforce. He's been notified via Teams with full context.\n\nI'll monitor and update you every 15 minutes or sooner if status changes."},
+      { role:'u', text:"Send the nudge" },
+      { role:'j', text:"Sent. I kept it short and friendly: *Quick reminder that my May 14–16 PTO is still pending — let me know if anything blocks approval.* I'll let you know when she responds." },
     ]},
-  { id:'cv4', title:'Sprint 24 team readiness analysis',
-    preview:'React 19 skill gap identified across 4 engineers.',
-    time:'Yesterday', date:'Yesterday', category:'Analysis', unread:0,
+
+  // ── QBR prep (single Outlook source, no Acme) ────────────────────────────
+  { id:'cv3', title:'QBR prep — SVP meeting 10:00 AM',
+    preview:"Deck, last meeting actions, and SVP context — bundle ready.",
+    time:'09:02', date:'Today', category:'Meetings', unread:0,
     messages:[
-      {role:'u', text:"What's causing the velocity drop this sprint?"},
-      {role:'j', text:"I pulled the data across Jira and GitHub.\n\n**Root cause:** React 19 Transitions API — 4 engineers (Liam, Sam, Dev, Priya) are taking avg 3.2 days on tasks estimated at 1.8 days. This is a 3-sprint pattern.\n\n**Fix available:** A Masterclass is scheduled Friday 2–4 PM. No calendar conflicts for any of the 4.\n\nShall I enrol them?"},
+      { role:'j',
+        text:"Your QBR with Sarah is at **10 AM**. The deck is ready, three actions from last time are still open, and Sarah's last priority was reliability. Want me to draft a 3-point opener?",
+        trace:{
+          summary:'Compiled prep across SharePoint and Outlook',
+          steps:[
+            { label:'Found the QBR deck in SharePoint', bullets:['QBR-H2-2026.pptx','Last edited yesterday by Priya'] },
+            { label:'Pulled Apr 14 meeting notes from Outlook', bullets:['3 actions still open','None reassigned'] },
+            { label:'Retrieved Sarah\'s briefing history', bullets:['Reliability flagged twice','+18% incident improvement noted'] },
+          ],
+        },
+        actions:[
+          { label:'Draft a 3-point opener', key:'A' },
+          { label:'Open the deck', key:'B' },
+          { label:'Show open actions only', key:'C' },
+        ],
+      },
+      { role:'u', text:"Draft the opener" },
+      { role:'j',
+        text:"Here's a 3-point opener — tight, lead with reliability since that's her stated priority:\n\n1. **Reliability** — We hit 99.95% uptime this quarter, a direct outcome of the incident-process changes you asked for in Q1.\n2. **Throughput** — Sprint velocity is back on target after the React 19 ramp; team is averaging 1.9d per ticket vs. 3.2d a sprint ago.\n3. **Ask** — Approve the platform refresh budget so we can keep this momentum into H2." },
     ]},
-  { id:'cv5', title:'Acme SOW revision — Sections 3.2 & 4.1',
-    preview:'Legal approved redlines. Maria Chen deadline is May 1.',
-    time:'Apr 30', date:'Apr 30', category:'Follow-ups', unread:0,
+
+  // ── Compliance training ──────────────────────────────────────────────────
+  { id:'cv4', title:'Compliance training — due in 3 days',
+    preview:"45 minutes. I can block calendar time tomorrow morning.",
+    time:'08:38', date:'Today', category:'Follow-ups', unread:0,
     messages:[
-      {role:'j', text:"Legal has approved redlines on the Acme SOW. Sections **3.2** and **4.1** need your revision before sending to Maria Chen.\n\nDeadline: **May 1 EOD**. That's tomorrow.\n\nShall I open the draft and highlight the changed sections?"},
-      {role:'u', text:"Yes"},
-      {role:'j', text:"Opened Acme SOW v3 in OneDrive. Sections 3.2 and 4.1 are highlighted with Legal's comments inline.\n\nOnce you're done, I can send it directly to Maria Chen with a covering note. Just let me know."},
+      { role:'j',
+        text:"Your annual security + data-handling refresher is due **May 9**. It's about 45 minutes. Want me to block 9:00 – 9:45 tomorrow on your calendar so it doesn't slip?",
+        trace:{
+          summary:'Checked Workday compliance and your free time',
+          steps:[
+            { label:'Pulled compliance status from Workday', bullets:['Module: Security + Data Handling','Last completed: May 2025'] },
+            { label:'Found a free slot for tomorrow morning', bullets:['9:00 – 9:45 is open','No standing meetings before 10:00'] },
+          ],
+        },
+        actions:[
+          { label:'Block 9:00 – 9:45 tomorrow', key:'A' },
+          { label:'Open the training now', key:'B' },
+          { label:'Remind me Friday', key:'C' },
+        ],
+      },
     ]},
-  { id:'cv6', title:'Liam Davis burnout risk — team wellness',
-    preview:'Wellness Day authorised. Sloane covering Friday.',
+
+  // ── Benefits enrolment ───────────────────────────────────────────────────
+  { id:'cv5', title:'Benefits enrolment — closes Thursday',
+    preview:"Your dependent coverage hasn't rolled forward. I can pre-fill it.",
+    time:'Yesterday', date:'Yesterday', category:'Follow-ups', unread:0,
+    messages:[
+      { role:'j',
+        text:"Open enrolment closes **May 8 EOD**. Your dependent coverage still reflects last year's selections — you have two dependents on file. I can pre-fill this year's plan from those choices and surface only what's changed for you to confirm.",
+        trace:{
+          summary:'Checked Workday benefits and last year\'s plan',
+          steps:[
+            { label:'Pulled current benefits from Workday', bullets:['Plan: Premium PPO','Dependents: 2 covered','Renewal flag: not yet selected'] },
+            { label:'Compared 2025 plan to 2026 options', bullets:['Premium PPO premium up $14/month','HSA contribution cap higher in 2026'] },
+          ],
+        },
+        actions:[
+          { label:'Pre-fill from last year', key:'A' },
+          { label:'Walk me through the changes', key:'B' },
+        ],
+      },
+      { role:'u', text:"Pre-fill" },
+      { role:'j', text:"Done. Selections are saved as a draft in Workday — nothing is submitted yet. Three things changed: premium up by $14/mo, higher HSA cap, dental network unchanged. Review and submit when you're ready." },
+    ]},
+
+  // ── Manager: burnout (matches MANAGER_INTENTS hero) ──────────────────────
+  { id:'cv6', title:'Liam Davis — capacity warning',
+    preview:"55–61 hour weeks for 3 sprints. Sloane available Friday.",
     time:'Apr 29', date:'Apr 29', category:'Decisions', unread:0,
     messages:[
-      {role:'j', text:"**Capacity warning: Liam Davis**\n\n55–61 hour weeks over 3 sprints. Sentiment markers +20%. I've identified Sloane as Friday backup with no conflicts.\n\nYour call:\n**A** · Authorise Wellness Day + confirm Sloane\n**B** · Review draft message to Liam first\n**C** · Flag for 1:1 instead"},
-      {role:'u', text:"A — authorise it"},
-      {role:'j', text:"Done ✓ Wellness Day approved for Friday. Sloane confirmed as backup coverage. I've sent Liam a warm Teams message letting him know, and updated the sprint board to redistribute his 2 remaining tasks."},
+      { role:'j',
+        text:"**Capacity warning on Liam.** Three sprints at 55–61 hours, fatigue markers +20% on aggregated Slack signals. Sloane has no Friday conflicts and is familiar with Liam's open work.",
+        trace:{
+          summary:'Reviewed 3 sprints of Jira and aggregated Slack signals',
+          steps:[
+            { label:'Pulled Jira sprint hours for Liam', bullets:['Sprint 22: 58h · 23: 61h · 24: 55h','Team average: 38h'] },
+            { label:'Checked aggregated Slack sentiment', bullets:['+20% fatigue markers vs. baseline','No raw DMs accessed'] },
+            { label:'Identified Friday coverage', bullets:['Sloane available, no conflicts','Familiar with Liam\'s open tickets'] },
+          ],
+        },
+        actions:[
+          { label:'Authorise a Wellness Day Friday', key:'A' },
+          { label:'Review my draft note to Liam', key:'B' },
+          { label:'Flag this for our 1:1 instead', key:'C' },
+        ],
+      },
+      { role:'u', text:"Authorise it" },
+      { role:'j', text:"Done. Wellness Day approved for Friday, Sloane is on as cover, and I sent Liam a short, warm Teams note letting him know it's looked after. I'll re-run capacity signals next Friday." },
     ]},
 ]
 
@@ -705,16 +710,17 @@ const TEMPLATES = [
 ]
 
 const CHAT_DOCS = [
-  {name:'QBR-H2-2026.pptx',type:'Presentation',edited:'Yesterday · Priya',Icon:FileText,color:'#0B5CAB'},
-  {name:'Apr 14 Meeting Notes.docx',type:'Document',edited:'18 days ago · Alex',Icon:FileText,color:'#2E844A'},
-  {name:'CloudMetrics DPA - Case #DPA-8821',type:'Salesforce Case',edited:'5 days ago',Icon:Database,color:'#8C4B02'},
-  {name:'Acme SOW v3 - Redlines.docx',type:'Contract',edited:'Today 09:14 · Legal',Icon:Lock,color:'#7526E3'},
+  {name:'Parental leave policy v3',     type:'Workday policy',     edited:'Updated Mar 12',         Icon:FileText, color:'#0B5CAB'},
+  {name:'Backfill request template',     type:'OrgFarm HR · v2',    edited:'Updated 6 weeks ago',    Icon:FileText, color:'#2E844A'},
+  {name:'QBR-H2-2026.pptx',              type:'Presentation',       edited:'Yesterday · Priya',      Icon:FileText, color:'#0B5CAB'},
+  {name:'Apr 14 Meeting Notes.docx',     type:'Document',           edited:'18 days ago',            Icon:FileText, color:'#2E844A'},
+  {name:'2026 Benefits guide',           type:'Workday',            edited:'Open enrolment',         Icon:FileText, color:'#7526E3'},
 ]
 const CHAT_PEOPLE = [
-  {name:'Amy Torres',role:'Legal Reviewer',status:'OOO until May 4',avatar:'AT',color:'#8C4B02',online:false},
-  {name:'Maria Chen',role:'Acme Corp — PM',status:'Online',avatar:'MC',color:'#0B5CAB',online:true},
-  {name:'Raj Mehta',role:'Infra On-call',status:'Available',avatar:'RM',color:'#0B827C',online:true},
-  {name:'Priya Nair',role:'Product Designer',status:'In meeting',avatar:'PN',color:'#7526E3',online:false},
+  {name:'Sarah Chen',  role:'Your manager',          status:'In office',                avatar:'SC', color:'#0B5CAB', online:true },
+  {name:'Priya Nair',  role:'Designer · cover for you', status:'In a meeting',          avatar:'PN', color:'#7526E3', online:false},
+  {name:'Liam Davis',  role:'Engineer',              status:'Heads-down',                avatar:'LD', color:'#0B827C', online:true },
+  {name:'HR Service',  role:'OrgFarm HR Service',    status:'Responds within 4 hours',   avatar:'HR', color:'#2E844A', online:true },
 ]
 const CHAT_CHANNELS = [
   {name:'#incident-response',unread:14,last:'Raj: Snapshot ready, initiating rollback…'},
@@ -937,7 +943,7 @@ function CardActionRow({ size = 26, onDone, onRemind, onRemove, visible }) {
 function HeroCard({ intent, onAct, onDone, onDismiss, onRemind, isDone }) {
   const T = window.__T; const tm = TIER_META_FN(T)
   if (isDone) return (
-    <div className="done" style={{ marginBottom:12, padding:'14px 18px', borderRadius:16,
+    <div className="done" style={{ marginBottom:10, padding:'14px 18px', borderRadius:16,
       background:T.greenSoft, border:`1px solid ${T.teal}30`, display:'flex', alignItems:'center', gap:12 }}>
       <CheckCircle2 size={18} color={T.green} />
       <div>
@@ -957,7 +963,7 @@ function HeroCard({ intent, onAct, onDone, onDismiss, onRemind, isDone }) {
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); SFX.tap(); HX.tap(); onAct(intent) } }}
       onMouseEnter={e => { setHover(true); e.currentTarget.style.boxShadow=T.shadowMd }}
       onMouseLeave={e => { setHover(false); e.currentTarget.style.boxShadow=T.shadowSm }}
-      style={{ marginBottom:12, borderRadius:8, overflow:'hidden', position:'relative', cursor:'pointer',
+      style={{ marginBottom:10, borderRadius:8, overflow:'hidden', position:'relative', cursor:'pointer',
         background:T.surface, border:`1px solid ${T.border}`,
         boxShadow:T.shadowSm, transition:'box-shadow .15s' }}>
       <CardActionRow size={26} visible={hover}
@@ -993,7 +999,7 @@ function HeroCard({ intent, onAct, onDone, onDismiss, onRemind, isDone }) {
           )}
         </div>
         <h2 style={{ fontSize:15, fontWeight:700, lineHeight:1.35, color:T.text, marginBottom:7, paddingRight:68 }}>{intent.headline}</h2>
-        <p style={{ fontSize:14, lineHeight:1.6, color:T.textMid, marginBottom:14 }}>{intent.why}</p>
+        <p style={{ fontSize:13, lineHeight:1.55, color:T.textMid, marginBottom:9 }}>{intent.why}</p>
         {/* 2 signal bullets: stakes first, new data second */}
         <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
           {signals.map((s, i) => (
@@ -1012,7 +1018,7 @@ function HeroCard({ intent, onAct, onDone, onDismiss, onRemind, isDone }) {
 function IntentCard({ intent, idx, onAct, onDone, onDismiss, onRemind, isDone }) {
   const T = window.__T; const tm = TIER_META_FN(T)
   if (isDone) return (
-    <div className="done" style={{ marginBottom:8, padding:'10px 14px', borderRadius:12,
+    <div className="done" style={{ marginBottom:10, padding:'10px 14px', borderRadius:12,
       background:T.greenSoft, border:`1px solid ${T.teal}25`, display:'flex', alignItems:'center', gap:8 }}>
       <Check size={12} color={T.green} />
       <span style={{ fontSize:14, color:T.green, fontWeight:600 }}>Done — {intent.headline}</span>
@@ -1029,7 +1035,7 @@ function IntentCard({ intent, idx, onAct, onDone, onDismiss, onRemind, isDone })
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); SFX.tap(); HX.tap(); onAct(intent) } }}
       onMouseEnter={e => { setHover(true); e.currentTarget.style.boxShadow=T.shadowMd }}
       onMouseLeave={e => { setHover(false); e.currentTarget.style.boxShadow=T.shadowSm }}
-      style={{ marginBottom:8, borderRadius:8, overflow:'hidden', animationDelay:`${idx*.05}s`, cursor:'pointer',
+      style={{ marginBottom:10, borderRadius:8, overflow:'hidden', animationDelay:`${idx*.05}s`, cursor:'pointer',
         background:T.surface, border:`1px solid ${T.border}`,
         boxShadow:T.shadowSm, transition:'box-shadow .15s' }}>
       <div style={{ padding:'11px 13px 12px', position:'relative' }}>
@@ -1382,7 +1388,8 @@ function renderMsgText(text, T) {
 // ─── ActionChips ─────────────────────────────────────────────────────────────
 function ActionChips({ actions, onChipClick, onTieredClick }) {
   const T = window.__T
-  // Tier drives behaviour silently. The chip itself is a plain pill — no L-label.
+  // Faint-purple fill so chips stand out on a white conversation background.
+  // Tier drives behaviour silently. No L-label is shown.
   return (
     <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:10 }}>
       {actions.map(a => {
@@ -1395,11 +1402,11 @@ function ActionChips({ actions, onChipClick, onTieredClick }) {
               else onChipClick(a.label)
             }}
             style={{ display:'inline-flex', alignItems:'center', gap:6,
-              fontSize:13, fontWeight:600, padding:'6px 12px', borderRadius:99, cursor:'pointer',
-              background:T.surface, color:T.text, border:`1px solid ${T.border}`,
+              fontSize:13, fontWeight:600, padding:'6px 14px', borderRadius:99, cursor:'pointer',
+              background:T.coreSoft, color:T.core, border:`1px solid ${T.core}25`,
               transition:'all .15s', fontFamily:T.font }}
-            onMouseEnter={e => { e.currentTarget.style.background=T.coreSoft; e.currentTarget.style.borderColor=T.core; e.currentTarget.style.color=T.core }}
-            onMouseLeave={e => { e.currentTarget.style.background=T.surface; e.currentTarget.style.borderColor=T.borderMid; e.currentTarget.style.color=T.text }}>
+            onMouseEnter={e => { e.currentTarget.style.background=T.core; e.currentTarget.style.borderColor=T.core; e.currentTarget.style.color='#fff' }}
+            onMouseLeave={e => { e.currentTarget.style.background=T.coreSoft; e.currentTarget.style.borderColor=`${T.core}25`; e.currentTarget.style.color=T.core }}>
             {a.label}
           </button>
         )
@@ -1571,44 +1578,53 @@ function GateModal({ action, policy, onRun, onCancel }) {
 }
 
 // ─── AgentTrace ──────────────────────────────────────────────────────────────
-function AgentTrace({ trace }) {
+// ─── AgentTrace — Gemini-style "Show thinking · N sources" accordion ──────
+// No surrounding card. Just a chevron + label. Steps appear inline only when
+// open, indented with green check glyphs. Source count is derived from `trace`.
+function AgentTrace({ trace, sourcesCount = 0 }) {
   const T = window.__T
   const [open, setOpen] = useState(false)
+  const stepCount = trace.steps?.length || 0
+  const summary = sourcesCount > 0
+    ? `Show thinking · ${sourcesCount} ${sourcesCount === 1 ? 'source' : 'sources'}`
+    : `Show thinking · ${stepCount} ${stepCount === 1 ? 'step' : 'steps'}`
   return (
-    <div style={{ borderRadius:6, background:T.surfaceMid, border:`1px solid ${T.border}`, marginTop:8, overflow:'hidden' }}>
-      {/* Header row */}
+    <div style={{ marginTop:10, marginBottom:6 }}>
+      {/* Header row — borderless. Label first, chevron after. 12 px. */}
       <button type="button" onClick={() => { SFX.tap(); setOpen(o=>!o) }}
-        style={{ width:'100%', display:'flex', alignItems:'center', gap:7, padding:'8px 10px',
-          background:'none', border:'none', cursor:'pointer', textAlign:'left', fontFamily:T.font }}>
-        <Sparkles size={11} color={T.core} style={{ flexShrink:0 }} />
-        <span style={{ flex:1, fontSize:13, fontWeight:600, color:T.textMid, lineHeight:1.4 }}>{trace.summary}</span>
-        <ChevronDown size={12} color={T.textSoft} style={{ flexShrink:0, transition:'transform .2s', transform:open?'rotate(180deg)':'rotate(0deg)' }} />
+        style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 0',
+          background:'none', border:'none', cursor:'pointer',
+          color:T.textSoft, fontSize:12, fontWeight:500, fontFamily:T.font,
+          transition:'color .12s' }}
+        onMouseEnter={e => { e.currentTarget.style.color = T.text }}
+        onMouseLeave={e => { e.currentTarget.style.color = T.textSoft }}>
+        <span>{summary}</span>
+        <ChevronDown size={13}
+          style={{ transition:'transform .2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} />
       </button>
-      {/* Expanded steps */}
+
+      {/* Expanded steps — visible only when open. Indented, no card wrapper. */}
       {open && (
-        <div className="expand-down" style={{ padding:'4px 10px 10px', borderTop:`1px solid ${T.border}` }}>
+        <div className="expand-down" style={{ paddingLeft:22, marginTop:8, display:'flex', flexDirection:'column', gap:10 }}>
           {trace.steps.map((step, si) => (
-            <div key={si} style={{ marginTop:8 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:step.bullets?.length?4:0 }}>
-                <div style={{ width:16, height:16, borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
-                  background:T.greenSoft }}>
-                  <Check size={8} color={T.green} />
+            <div key={si}>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <div style={{ width:18, height:18, borderRadius:'50%', flexShrink:0,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  background:T.surfaceMid }}>
+                  <Check size={10} color={T.textSoft} strokeWidth={2.5} />
                 </div>
-                <span style={{ fontSize:13, fontWeight:600, color:T.text, flex:1 }}>{step.label}</span>
-                {step.plugin && (
-                  <span style={{ fontSize:12, fontWeight:600, padding:'2px 7px', borderRadius:4,
-                    background:`${T.core}15`, color:T.core, border:`1px solid ${T.border}`,
-                    whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:3 }}>
-                    <Database size={8} />{step.plugin}
-                  </span>
-                )}
+                <span style={{ fontSize:14, fontWeight:500, color:T.text, lineHeight:1.5 }}>
+                  {step.label}
+                </span>
               </div>
-              {step.bullets?.map((b,bi) => (
-                <div key={bi} style={{ display:'flex', alignItems:'flex-start', gap:5, paddingLeft:22, marginTop:2 }}>
-                  <span style={{ color:T.textXsoft, fontSize:14, marginTop:1 }}>·</span>
-                  <span style={{ fontSize:14, color:T.textSoft, lineHeight:1.5 }}>{b}</span>
+              {step.bullets?.length > 0 && (
+                <div style={{ paddingLeft:28, marginTop:4, display:'flex', flexDirection:'column', gap:2 }}>
+                  {step.bullets.map((b, bi) => (
+                    <span key={bi} style={{ fontSize:13, color:T.textSoft, lineHeight:1.55 }}>{b}</span>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           ))}
         </div>
@@ -1652,7 +1668,7 @@ function MessageFeedback({ msgIndex }) {
     color: active ? activeColor : T.textXsoft,
   })
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:1, marginTop:4, paddingLeft:34 }}>
+    <div className="j-feedback" style={{ display:'flex', alignItems:'center', gap:1, marginTop:6 }}>
       <button type="button" style={btnStyle(vote==='up', T.core)} title="Helpful"
         onClick={() => { SFX.tap(); setVote(v => v==='up'?null:'up') }}
         onMouseEnter={e => { if(vote!=='up') e.currentTarget.style.color=T.core }}
@@ -1680,26 +1696,36 @@ function MessageFeedback({ msgIndex }) {
   )
 }
 
-// ─── MessageTable ─────────────────────────────────────────────────────────────
+// ─── MessageTable — Gemini-style clean table ─────────────────────────────
+// Subtle outer border, header row in surfaceMid, generous cell padding, no
+// alternating row background.
 function MessageTable({ table }) {
   const T = window.__T
   return (
-    <div style={{ overflowX:'auto', marginTop:10, borderRadius:4, border:`1px solid ${T.border}` }}>
-      <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+    <div style={{ overflowX:'auto', marginTop:14, borderRadius:8, border:`1px solid ${T.border}` }}>
+      <table style={{ width:'100%', borderCollapse:'separate', borderSpacing:0, fontSize:14, fontFamily:T.font }}>
         <thead>
           <tr>
             {table.headers.map((h,i) => (
-              <th key={i} style={{ padding:'7px 10px', textAlign:'left', fontWeight:700,
-                background:T.surfaceMid, color:T.textMid, fontSize:12, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em',
-                borderBottom:`1px solid ${T.border}` }}>{h}</th>
+              <th key={i} style={{ padding:'12px 16px', textAlign:'left',
+                background:T.surfaceMid, color:T.textMid,
+                fontSize:13, fontWeight:600,
+                borderBottom:`1px solid ${T.border}`,
+                borderRight: i < table.headers.length - 1 ? `1px solid ${T.border}` : 'none' }}>
+                {h}
+              </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {table.rows.map((row, ri) => (
-            <tr key={ri} style={{ background: ri%2===0 ? T.surface : T.surfaceMid }}>
+            <tr key={ri}>
               {row.map((cell, ci) => (
-                <td key={ci} style={{ padding:'7px 10px', color:T.text, borderBottom: ri<table.rows.length-1?`1px solid ${T.border}`:'none' }}>{cell}</td>
+                <td key={ci} style={{ padding:'12px 16px', color:T.text, fontSize:14, lineHeight:1.5,
+                  borderBottom: ri < table.rows.length - 1 ? `1px solid ${T.border}` : 'none',
+                  borderRight: ci < row.length - 1 ? `1px solid ${T.border}` : 'none' }}>
+                  {cell}
+                </td>
               ))}
             </tr>
           ))}
@@ -1709,14 +1735,16 @@ function MessageTable({ table }) {
   )
 }
 
-// ─── renderBubble ─────────────────────────────────────────────────────────────
+// ─── renderBubble — order: thinking → answer → table → sources → actions ─
+// Mirrors Gemini's reading order: the thinking accordion sits above the prose,
+// the answer body follows, then any data viz, then citations and CTA chips.
 function renderBubble(m, T, onChipClick, onTieredClick) {
   return (
     <div>
+      {m.trace && <AgentTrace trace={m.trace} sourcesCount={m.sources?.length || 0} />}
       {renderMsgText(m.text, T)}
-      {m.trace && <AgentTrace trace={m.trace} />}
-      {m.sources && <SourceChips sources={m.sources} />}
       {m.table && <MessageTable table={m.table} />}
+      {m.sources && <SourceChips sources={m.sources} />}
       {m.actions && <ActionChips actions={m.actions} onChipClick={onChipClick} onTieredClick={onTieredClick} />}
     </div>
   )
@@ -1726,50 +1754,68 @@ function renderBubble(m, T, onChipClick, onTieredClick) {
 // Build a conversational opening message + proposed action chips for any intent id.
 // Keeps tone natural (rephrase the situation) rather than restating the card verbatim.
 function buildIntentOpening(item) {
-  // Per-intent scripted openings — conversational tone, 3 proposed next actions.
+  // Per-intent scripted openings — conversational tone, aligned with INTENTS / MANAGER_INTENTS.
   const byId = {
+    // Employee
     y1: {
-      text: "The Q2 planning thread has 3 replies with no owner, and the Confluence page hasn't been touched in 4 days.\n\nWant me to pick owners from the thread and draft assignments, or pull the full thread so you can decide?",
+      text: "Your **PTO request for May 14–16** has been pending with Sarah for 3 days. Manager SLA is 2 business days, and there are no calendar conflicts that week. I can send a friendly nudge.",
       actions: [
-        { label:'Propose owners & draft assignments', key:'A' },
-        { label:'Show me the full thread', key:'B' },
-        { label:'Post in the team channel for owners', key:'C' },
+        { label:'Send a light nudge to Sarah', key:'A' },
+        { label:'Wait until tomorrow', key:'B' },
+        { label:'Show the original request', key:'C' },
       ],
     },
     y2: {
-      text: "Your annual compliance training is due Apr 30 — it's about 45 minutes and you haven't started yet.\n\nI can open it now, block time on your calendar, or remind you tomorrow.",
+      text: "Your annual **security + data-handling refresher** is due **May 9** — about 45 minutes. I can open it now, block time tomorrow morning, or remind you Friday.",
       actions: [
         { label:'Open training now', key:'A' },
         { label:'Block 45 min tomorrow morning', key:'B' },
-        { label:'Remind me tomorrow at 9 AM', key:'C' },
+        { label:'Remind me Friday', key:'C' },
       ],
     },
     f1: {
-      text: "Legal approved the Acme SOW redlines at 09:14 today. Sections 3.2 and 4.1 still need your updates before it goes to Maria Chen tomorrow.\n\nWant me to draft those two sections from Legal's notes, or open the doc so you can handle it?",
+      text: "**Open enrolment closes May 8.** Your dependent coverage hasn't rolled forward this year. I can pre-fill from last year's selections and surface only what changed for you to confirm.",
       actions: [
-        { label:'Draft sections 3.2 & 4.1 from redlines', key:'A' },
-        { label:'Open the SOW draft', key:'B' },
-        { label:'Share status with Maria', key:'C' },
+        { label:'Pre-fill from last year', key:'A' },
+        { label:'Walk me through what changed', key:'B' },
+        { label:'Open Workday benefits', key:'C' },
       ],
     },
     f2: {
-      text: "Jordan Parker's hiring debrief is Wednesday at 11 AM. The scorecard is the one thing holding up the debrief.\n\nI can pre-fill it from your interview notes, or just open a blank form.",
+      text: "Your **emergency contact** on file is from October 2023 — HR flagged it during the annual audit. It's a single-field update.",
       actions: [
-        { label:'Pre-fill from my interview notes', key:'A' },
-        { label:'Open a blank scorecard', key:'B' },
-        { label:'Remind me tonight', key:'C' },
+        { label:'Open the contact field', key:'A' },
+        { label:'Use the same person, refresh the date', key:'B' },
+        { label:'Remind me later', key:'C' },
       ],
     },
     e2: {
-      text: "CR-4471 is approved and the deploy gate for v3.8.2 opens at 2 PM. Raj Mehta is on-call and rollback is staged.\n\nHow would you like to handle the arming?",
+      text: "Your $4,200 travel reimbursement is **over your single-approver limit** — Finance needs explicit confirmation before it routes to the VP. The trip and policy line check out.",
       actions: [
-        { label:'Arm Blue/Green shift now', key:'A' },
-        { label:'Walk me through the rollback plan', key:'B' },
-        { label:'Ping Raj before we arm', key:'C' },
+        { label:'Confirm and route to VP', key:'A' },
+        { label:'Show me the receipts', key:'B' },
+        { label:'Send back to Finance with a note', key:'C' },
+      ],
+    },
+    p2: {
+      text: "Your **laptop refresh ticket** has been in IT for 10 days — 5 over their SLA. Finance has already approved. I can draft a polite chase.",
+      actions: [
+        { label:'Draft a chase to IT', key:'A' },
+        { label:'Show the ticket', key:'B' },
+        { label:'Wait one more day', key:'C' },
+      ],
+    },
+    // Manager
+    m4: {
+      text: "**Priya starts Monday** — onboarding plan is 62% ready. Laptop ordered, accounts provisioned, orientation booked. Two gaps: 1:1 schedule and a team intro post.",
+      actions: [
+        { label:'Set up the 1:1 cadence', key:'A' },
+        { label:'Draft the team intro post', key:'B' },
+        { label:'Show the full checklist', key:'C' },
       ],
     },
     m2: {
-      text: "Four engineers are slow on React 19 work — averaging 3.2 days per ticket vs 1.8 expected. There's a Masterclass Friday 2–4 PM with no calendar conflicts.\n\nWant me to enrol all four, or share the invite so they can opt in?",
+      text: "Four engineers are slow on **React 19** work — averaging 3.2 days per ticket vs 1.8 expected, three sprints in a row. A Masterclass on Friday 2–4 PM has no calendar conflicts.",
       actions: [
         { label:'Enrol all 4 engineers', key:'A' },
         { label:'Share invite, let them opt in', key:'B' },
@@ -1777,7 +1823,7 @@ function buildIntentOpening(item) {
       ],
     },
     m3: {
-      text: "Candidate A scored 94/100 — well clear of B (81) and C (79). Panels are aligned, budget is confirmed, and the offer draft (with $12k relocation) is ready.\n\nShall I send the offer, or do you want to review the candidate files first?",
+      text: "**Senior DevOps — 3 finalists.** Candidate A scored 94/100, well clear of B (81) and C (79). Panels are aligned, budget is confirmed, and the offer draft (with $12k relocation) is ready.",
       actions: [
         { label:'Send offer to Candidate A', key:'A' },
         { label:'Review all 3 candidate files', key:'B' },
@@ -1822,7 +1868,7 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
   const L2_DRAFTS = {
     leave_note: {
       subject: 'Handover while I\'m on parental leave (Jun 2 – Sep 1)',
-      body: "Hi Priya,\n\nI'm taking parental leave from Jun 2 through Sep 1. You've agreed to cover — thank you so much.\n\nA short handover:\n• Open calendar holds for my recurring 1:1s are delegated to you (view only).\n• Anything marked L4 in Jarvis routes to Liam while I'm out.\n• The Acme and CloudMetrics threads have full context pinned in OneDrive/Handover/.\n\nShout if anything is unclear — I'll be fully offline but can pop in for 30 min if it's genuinely urgent.\n\nAlex",
+      body: "Hi Priya,\n\nI'm taking parental leave from Jun 2 through Sep 1. You've agreed to cover — thank you so much.\n\nA short handover:\n• My recurring 1:1s and standing meetings are delegated to you (view only on the calendar).\n• Anything that needs sign-off while I'm out routes to Liam as backup approver.\n• Open work and context is pinned in OneDrive/Handover/ — start there.\n\nShout if anything is unclear — I'll be fully offline but can pop in for 30 min if it's genuinely urgent.\n\nAlex",
     },
   }
 
@@ -1963,174 +2009,193 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
   const T2 = window.__T
   const renderMsg = (text) => renderMsgText(text, T2)
 
+  // Title — prefer the intent headline, fall back to a friendly default.
+  const headerTitle = item?.headline
+    || (scenario === 'incident' ? 'P1: Auth Service Down'
+      : scenario === 'approvals' ? 'Approvals digest'
+      : scenario === 'burnout' ? 'Liam Davis — capacity warning'
+      : scenario === 'prep' ? 'QBR prep — SVP meeting'
+      : scenario === 'leave' ? 'Parental-leave plan — Jun 2 to Sep 1'
+      : 'New chat')
+
   return (
-    <div className="enter-r" style={{ position:'fixed', right:0, top:0, bottom:0, width:400, display:'flex', flexDirection:'column',
-      zIndex:50, background:T.surface,
-      borderLeft:`1px solid ${T.border}`, boxShadow:`-4px 0 12px rgba(0,0,0,0.08)` }}>
-      {/* Header */}
-      <div style={{ padding:'14px 16px', borderBottom:`1px solid ${T.border}`, flexShrink:0 }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <div style={{ width:32, height:32, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center',
-              background:T.coreGrad }}>
-              <Sparkles size={15} color="white" />
-            </div>
-            <div>
-              <p style={{ fontSize:15, fontWeight:700, color:T.text }}>Jarvis</p>
-              <p style={{ fontSize:14, color:T.textSoft }}>
-                {scenario==='incident'?'🔴 P1 Active':'Negotiation workspace'}
-              </p>
-            </div>
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+    <div className="enter-r" style={{ width:400, flexShrink:0, display:'flex', flexDirection:'column',
+      background:T.surface, borderLeft:`1px solid ${T.border}`,
+      boxShadow:`-4px 0 12px rgba(0,0,0,0.06)` }}>
+      {/* Chat view — sticky title (with Related + maximize + close) and a max-800 reading column.
+          Mirrors the Conversations chat pane exactly. */}
+      {activeTab === 'chat' && (
+        <div style={{ flex:1, overflowY:'auto', position:'relative' }}>
+          {/* Sticky title row — title on the extreme left, controls on the extreme right */}
+          <div style={{ position:'sticky', top:0, zIndex:5, background:T.surface,
+            padding:'14px 16px 12px',
+            display:'flex', alignItems:'center', gap:8 }}>
+            <h2 title={headerTitle}
+              style={{ flex:1, fontSize:14, fontWeight:700, color:T.text, margin:0,
+                overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1.3 }}>
+              {headerTitle}
+            </h2>
+            {/* Related */}
+            <button type="button" onClick={() => { SFX.tap(); setActiveTab('related') }}
+              aria-label="Show related"
+              style={{ display:'inline-flex', alignItems:'center', gap:6,
+                padding:'6px 12px', borderRadius:99, cursor:'pointer',
+                background:T.surface, border:`1px solid ${T.border}`,
+                color:T.textMid, fontSize:13, fontWeight:600, fontFamily:T.font,
+                transition:'all .12s', flexShrink:0 }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = T.core; e.currentTarget.style.color = T.core }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMid }}>
+              <Layers size={13} />
+              Related
+            </button>
+            {/* Maximize */}
             <button type="button" title="Open full screen" onClick={() => { SFX.tap(); onExpandFull?.() }}
-              style={{ width:28, height:28, borderRadius:4, display:'flex', alignItems:'center', justifyContent:'center',
+              style={{ width:28, height:28, borderRadius:4, flexShrink:0,
+                display:'flex', alignItems:'center', justifyContent:'center',
                 background:'none', border:'none', cursor:'pointer', color:T.textSoft, transition:'all .15s' }}
               onMouseEnter={e => { e.currentTarget.style.background=T.coreSoft; e.currentTarget.style.color=T.core }}
               onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color=T.textSoft }}>
               <Maximize2 size={13} />
             </button>
-            <Btn variant="ghost" icon={X} onClick={() => { SFX.close(); onClose() }} style={{ padding:6 }} />
+            {/* Close */}
+            <button type="button" title="Close" onClick={() => { SFX.close(); onClose() }}
+              style={{ width:28, height:28, borderRadius:4, flexShrink:0,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                background:'none', border:'none', cursor:'pointer', color:T.textSoft, transition:'all .15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background=T.coreSoft; e.currentTarget.style.color=T.core }}
+              onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color=T.textSoft }}>
+              <X size={13} />
+            </button>
           </div>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <div style={{ display:'flex', borderBottom:`1px solid ${T.border}`, flexShrink:0 }}>
-        {tabs.map(({ id, label, Icon }) => (
-          <button key={id} type="button" onClick={() => { SFX.tap(); setActiveTab(id) }}
-            style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:5, padding:'10px 4px',
-              fontSize:13, fontWeight:600, border:'none', borderRadius:0, background:'none', cursor:'pointer', position:'relative',
-              color: activeTab===id ? T.core : T.textSoft, transition:'color .15s' }}>
-            <Icon size={12} />{label}
-            {activeTab===id && <div style={{ position:'absolute', bottom:0, left:0, right:0, height:2,
-              background:T.core }} />}
-          </button>
-        ))}
-      </div>
-
-      {/* Context card — Chat tab only */}
-      {activeTab==='chat' && item && !scenario && (
-        <div style={{ margin:'12px 14px 0', padding:'11px 13px', borderRadius:4,
-          background:T.surfaceMid, border:`1px solid ${T.border}` }}>
-          <p style={{ fontSize:14, fontWeight:700, color:T.text, lineHeight:1.4, marginBottom:7 }}>{item.headline}</p>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-            <TierDot tier={item.tier} />
-            <Chip text={item.source} />
-          </div>
-          {item.evidence && (
-            <p style={{ fontFamily:'monospace', fontSize:13, marginTop:8, color:T.textSoft, lineHeight:1.5 }}>
-              <span style={{ display:'block', fontSize:13, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.15em', color:T.textXsoft, marginBottom:3 }}>Evidence</span>
-              {item.evidence}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Chat messages */}
-      {activeTab==='chat' && (
-        <div style={{ flex:1, overflowY:'auto', padding:'12px 14px', display:'flex', flexDirection:'column', gap:10 }}>
-          {messages.map((m,i) => {
-            // Render tier-aware blocks (done / preview / confirm)
-            if (m.role === 'block') {
-              if (m.consumed) return null
-              if (m.kind === 'done') {
-                return <div key={i} className="enter">
-                  <DoneWithUndo msg={m.label} rule={m.rule} onUndo={undoLastDone} />
-                </div>
+          {/* Centered reading column — max-width 800 */}
+          <div style={{ maxWidth:800, margin:'0 auto', padding:'4px 16px 16px',
+            display:'flex', flexDirection:'column', gap:18 }}>
+            {messages.map((m, i) => {
+              if (m.role === 'block') {
+                if (m.consumed) return null
+                if (m.kind === 'done') {
+                  return <div key={i} className="enter">
+                    <DoneWithUndo msg={m.label} rule={m.rule} onUndo={undoLastDone} />
+                  </div>
+                }
+                if (m.kind === 'preview') {
+                  return <div key={i} className="enter">
+                    <PreviewBlock draft={m.draft}
+                      onSend={() => sendPreview(m.actionKey, m.label)}
+                      onEdit={() => editPreview(m.actionKey)} />
+                  </div>
+                }
+                if (m.kind === 'confirm') {
+                  return <div key={i} className="enter">
+                    <ConfirmRow label={m.label + ' — continue?'}
+                      onConfirm={() => confirmInline(m.actionKey, m.label)}
+                      onCancel={() => cancelInline(m.actionKey)} />
+                  </div>
+                }
               }
-              if (m.kind === 'preview') {
-                return <div key={i} className="enter">
-                  <PreviewBlock draft={m.draft}
-                    onSend={() => sendPreview(m.actionKey, m.label)}
-                    onEdit={() => editPreview(m.actionKey)} />
-                </div>
-              }
-              if (m.kind === 'confirm') {
-                return <div key={i} className="enter">
-                  <ConfirmRow label={m.label + ' — continue?'}
-                    onConfirm={() => confirmInline(m.actionKey, m.label)}
-                    onCancel={() => cancelInline(m.actionKey)} />
-                </div>
-              }
-            }
-            const now = new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })
-            return (
-              <div key={i} className="enter" style={{ animationDelay:`${i*.04}s` }}>
-                <div style={{ display:'flex', justifyContent:m.role==='u'?'flex-end':'flex-start' }}>
-                  {m.role==='j' && (
-                    <div style={{ width:26, height:26, borderRadius:6, flexShrink:0, marginRight:8, marginTop:2,
-                      display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
-                      <Sparkles size={12} color="white" />
+              return (
+                <div key={i} className="enter" style={{ animationDelay:`${i*.04}s` }}>
+                  {m.role === 'u' ? (
+                    <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                      <div style={{ maxWidth:'84%', padding:'10px 16px',
+                        fontSize:14, lineHeight:1.55, borderRadius:18,
+                        background:T.surfaceMid, color:T.text }}>
+                        {renderMsg(m.text)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="j-msg" style={{ fontSize:14, lineHeight:1.65, color:T.text }}>
+                      {renderBubble(m, T, (label) => sendText(label), handleTieredClick)}
+                      <MessageFeedback msgIndex={i} />
                     </div>
                   )}
-                  <div style={{ maxWidth:'84%',
-                    padding:'10px 13px',
-                    fontSize:14, lineHeight:1.55,
-                    borderRadius:10,
-                    ...(m.role==='u'
-                      ? { background:T.core, color:'white', borderBottomRightRadius:2 }
-                      : { background:T.surface, color:T.text, border:`1px solid ${T.border}`, borderBottomLeftRadius:2,
-                          boxShadow:T.shadowSm }) }}>
-                    {m.role === 'j' && (
-                      <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:6 }}>
-                        <span style={{ fontSize:12, fontWeight:800, color:T.text }}>Jarvis</span>
-                        <span style={{ fontSize:11, color:T.textSoft }}>{now}</span>
-                      </div>
-                    )}
-                    {m.role==='j' ? renderBubble(m, T, (label) => sendText(label), handleTieredClick) : renderMsg(m.text)}
-                  </div>
                 </div>
-                {m.role==='j' && <MessageFeedback msgIndex={i} />}
-              </div>
-            )
-          })}
-          {thinking && (
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <div style={{ width:26, height:26, borderRadius:6, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
-                <Sparkles size={12} color="white" />
-              </div>
-              <div style={{ padding:'10px 14px', borderRadius:8, borderBottomLeftRadius:2, display:'flex', alignItems:'center', gap:5,
-                background:T.surfaceMid, border:`1px solid ${T.border}` }}>
+              )
+            })}
+            {thinking && (
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                 {[0,1,2].map(i => (
-                  <div key={i} style={{ width:6, height:6, borderRadius:'50%', background:T.core,
+                  <div key={i} style={{ width:6, height:6, borderRadius:'50%', background:T.coreMid,
                     animation:'breathe .9s ease-in-out infinite', animationDelay:`${i*.2}s` }} />
                 ))}
               </div>
-            </div>
-          )}
-          <div ref={endRef} />
+            )}
+            <div ref={endRef} />
+          </div>
         </div>
       )}
 
-      {/* Related tab — merged Docs + People + Channels */}
+      {/* Related view — Documents + People + Channels. Replaces the chat
+          when activated from the Related pill in the chat title row. */}
       {activeTab==='related' && (
-        <div style={{ flex:1, overflowY:'auto', padding:'14px 14px 20px', display:'flex', flexDirection:'column', gap:18 }}>
-          {/* Docs */}
+        <div style={{ flex:1, overflowY:'auto', position:'relative' }}>
+          {/* Sticky header — title left, Chat (back) button + maximize + close on the right */}
+          <div style={{ position:'sticky', top:0, zIndex:5, background:T.surface,
+            padding:'14px 16px 12px',
+            display:'flex', alignItems:'center', gap:8 }}>
+            <h2 style={{ flex:1, fontSize:14, fontWeight:700, color:T.text, margin:0,
+              overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', lineHeight:1.3 }}>
+              Related to {headerTitle}
+            </h2>
+            {/* Back to chat */}
+            <button type="button" onClick={() => { SFX.tap(); setActiveTab('chat') }}
+              aria-label="Back to chat"
+              style={{ display:'inline-flex', alignItems:'center', gap:6,
+                padding:'6px 12px', borderRadius:99, cursor:'pointer',
+                background:T.coreSoft, border:`1px solid ${T.core}`,
+                color:T.core, fontSize:13, fontWeight:600, fontFamily:T.font,
+                transition:'all .12s', flexShrink:0 }}>
+              <Layers size={13} />
+              Related
+            </button>
+            <button type="button" title="Open full screen" onClick={() => { SFX.tap(); onExpandFull?.() }}
+              style={{ width:28, height:28, borderRadius:4, flexShrink:0,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                background:'none', border:'none', cursor:'pointer', color:T.textSoft, transition:'all .15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background=T.coreSoft; e.currentTarget.style.color=T.core }}
+              onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color=T.textSoft }}>
+              <Maximize2 size={13} />
+            </button>
+            <button type="button" title="Close" onClick={() => { SFX.close(); onClose() }}
+              style={{ width:28, height:28, borderRadius:4, flexShrink:0,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                background:'none', border:'none', cursor:'pointer', color:T.textSoft, transition:'all .15s' }}
+              onMouseEnter={e => { e.currentTarget.style.background=T.coreSoft; e.currentTarget.style.color=T.core }}
+              onMouseLeave={e => { e.currentTarget.style.background='none'; e.currentTarget.style.color=T.textSoft }}>
+              <X size={13} />
+            </button>
+          </div>
+
+          <div style={{ padding:'4px 16px 20px', display:'flex', flexDirection:'column', gap:18 }}>
+          {/* Documents — full Related list (per spec, kept here on the chat panel) */}
           <div>
             <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em',
               color:T.textSoft, margin:'0 0 8px' }}>Documents</p>
             <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-              {CHAT_DOCS.map((doc, i) => (
-                <div key={i} className="enter" style={{ display:'flex', alignItems:'center', gap:10,
-                  padding:'10px 12px', borderRadius:8,
-                  background:T.surface, border:`1px solid ${T.border}`,
-                  cursor:'pointer', transition:'all .15s', animationDelay:`${i*.05}s` }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor=T.core }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor=T.border }}>
-                  <div style={{ width:32, height:32, borderRadius:6, flexShrink:0,
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    background:`${doc.color}14` }}>
-                    <doc.Icon size={14} color={doc.color} />
+              {CHAT_DOCS.map((doc, i) => {
+                const Icon = doc.Icon || FileText
+                return (
+                  <div key={i} className="enter" style={{ display:'flex', alignItems:'center', gap:10,
+                    padding:'10px 12px', borderRadius:8,
+                    background:T.surface, border:`1px solid ${T.border}`,
+                    cursor:'pointer', transition:'all .15s', animationDelay:`${i*.05}s` }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor=T.core }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor=T.border }}>
+                    <div style={{ width:32, height:32, borderRadius:6, flexShrink:0,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      background:`${doc.color || T.core}14` }}>
+                      <Icon size={14} color={doc.color || T.core} />
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0,
+                        overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{doc.name}</p>
+                      <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0' }}>{doc.type}{doc.edited ? ` · ${doc.edited}` : ''}</p>
+                    </div>
+                    <ExternalLink size={12} color={T.textSoft} />
                   </div>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0,
-                      overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{doc.name}</p>
-                    <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0' }}>{doc.type} · {doc.edited}</p>
-                  </div>
-                  <ExternalLink size={12} color={T.textSoft} />
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
@@ -2203,24 +2268,14 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
               ))}
             </div>
           </div>
+          </div>{/* /padded body */}
         </div>
       )}
 
-      {/* Whisper input — Chat tab */}
+      {/* Continue input — same hero pill used on Today and in Conversations */}
       {activeTab==='chat' && (
-        <div style={{ padding:'12px 14px', borderTop:`1px solid ${T.border}`, flexShrink:0 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:4,
-            background:T.surface, border:`1px solid ${T.border}`,
-            transition:'box-shadow .15s, border-color .15s' }}>
-            <input value={input} onChange={e=>setInput(e.target.value)}
-              onKeyDown={e=>e.key==='Enter'&&send()}
-              onFocus={e=>{ e.currentTarget.parentElement.style.borderColor=T.core; e.currentTarget.parentElement.style.boxShadow=`0 0 0 1px ${T.core}` }}
-              onBlur={e=>{ e.currentTarget.parentElement.style.borderColor=T.border; e.currentTarget.parentElement.style.boxShadow='none' }}
-              placeholder='Try "A", "remind me", "show details"…'
-              style={{ flex:1, fontSize:15, background:'none', border:'none', outline:'none', color:T.text, fontFamily:T.font }} />
-            <Btn variant="primary" icon={Send} onClick={send} style={{ padding:'6px 10px' }} />
-          </div>
-          <p style={{ fontSize:14, textAlign:'center', marginTop:7, color:T.textXsoft }}>All actions logged in Feed</p>
+        <div style={{ padding:'12px 14px', flexShrink:0 }}>
+          <ContinueBar value={input} onChange={setInput} onSubmit={send} placeholder="Reply…" />
         </div>
       )}
 
@@ -3268,7 +3323,7 @@ function FeedView() {
   ]
 
   return (
-    <PageLayout>
+    <PageLayout background={T.surface}>
       {/* Header — matches Skills page rhythm */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8, flexWrap:'wrap', gap:12 }}>
         <div>
@@ -3439,7 +3494,7 @@ function AgentsView({ onNew }) {
     </button>
   )
   return (
-    <PageLayout>
+    <PageLayout background={T.surface}>
       {/* Header — Skills: things Jarvis knows how to do on a schedule */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:8 }}>
         <div>
@@ -3784,6 +3839,7 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState, coreState, pe
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
+  const [relatedOpen, setRelatedOpen] = useState(false)
   const endRef = useRef(null)
 
   // When openConvId changes from outside (expand from overlay), open that conv
@@ -3860,8 +3916,8 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState, coreState, pe
 
   return (
     <div style={{ flex:1, display:'flex', overflow:'hidden', height:'100%' }}>
-      {/* Left: conversation list */}
-      <div style={{ width:280, flexShrink:0, borderRight:`1px solid ${T.border}`, display:'flex', flexDirection:'column', background:T.surface }}>
+      {/* Left: conversation list (grey rail) */}
+      <div style={{ width:280, flexShrink:0, borderRight:`1px solid ${T.border}`, display:'flex', flexDirection:'column', background:T.appBg }}>
         {/* Search at the top of the rail */}
         <div style={{ padding:'14px 12px 6px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:99,
@@ -3947,61 +4003,165 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState, coreState, pe
         </div>
       </div>
 
-      {/* Right: open conversation */}
+      {/* Right: open conversation — mirrors ChatPanel chat-pane design */}
       {currentConv ? (
         <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
-          {/* Messages column */}
-          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
-            {/* Messages */}
-            <div style={{ flex:1, overflowY:'auto', padding:'20px 24px', display:'flex', flexDirection:'column', gap:12 }}>
-              {messages.map((m, i) => (
-                <div key={i} className="enter" style={{ animationDelay:`${i*.04}s` }}>
-                  <div style={{ display:'flex', justifyContent:m.role==='u'?'flex-end':'flex-start' }}>
-                    {m.role==='j' && (
-                      <div style={{ width:28, height:28, borderRadius:7, flexShrink:0, marginRight:10, marginTop:2,
-                        display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
-                        <Sparkles size={13} color="white" />
+          {/* Messages column — white background, single scroll surface so the
+              centered title sticks while messages scroll behind it. */}
+          <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden',
+            background:T.surface, position:'relative' }}>
+
+            {/* Scrollable area: sticky full-width title + max-800 reading column */}
+            <div style={{ flex:1, overflowY:'auto', position:'relative' }}>
+              {/* Sticky title — full pane width: H2 on the extreme left, Related CTA on the extreme right */}
+              <div style={{ position:'sticky', top:0, zIndex:5, background:T.surface,
+                padding:'18px 24px 14px',
+                display:'flex', alignItems:'center', gap:12 }}>
+                <h2 title={currentConv.title}
+                  style={{ flex:1, fontSize:16, fontWeight:700, color:T.text, margin:0,
+                    overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+                    lineHeight:1.3 }}>
+                  {currentConv.title}
+                </h2>
+                <button type="button" onClick={() => { SFX.tap(); setRelatedOpen(o => !o) }}
+                  aria-label="Show related"
+                  style={{ display:'inline-flex', alignItems:'center', gap:6,
+                    padding:'6px 12px', borderRadius:99, cursor:'pointer',
+                    background: relatedOpen ? T.coreSoft : T.surface,
+                    border:`1px solid ${relatedOpen ? T.core : T.border}`,
+                    color: relatedOpen ? T.core : T.textMid,
+                    fontSize:13, fontWeight:600, fontFamily:T.font,
+                    transition:'all .12s', flexShrink:0 }}
+                  onMouseEnter={e => { if (!relatedOpen) { e.currentTarget.style.borderColor = T.core; e.currentTarget.style.color = T.core } }}
+                  onMouseLeave={e => { if (!relatedOpen) { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textMid } }}>
+                  <Layers size={13} />
+                  Related
+                </button>
+              </div>
+
+              {/* Centered reading column — max-width 800 */}
+              <div style={{ maxWidth:800, margin:'0 auto', padding:'0 24px 16px',
+                display:'flex', flexDirection:'column', gap:18 }}>
+                {messages.map((m, i) => (
+                  <div key={i} className="enter" style={{ animationDelay:`${i*.04}s` }}>
+                    {m.role === 'u' ? (
+                      // User bubble — right-aligned, soft surfaceMid
+                      <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                        <div style={{ maxWidth:'84%', padding:'10px 16px',
+                          fontSize:14, lineHeight:1.55, borderRadius:18,
+                          background:T.surfaceMid, color:T.text }}>
+                          {renderMsg(m.text)}
+                        </div>
+                      </div>
+                    ) : (
+                      // Jarvis prose — 14 px body, no bubble, hover-only feedback
+                      <div className="j-msg" style={{ fontSize:14, lineHeight:1.65, color:T.text }}>
+                        {renderBubble(m, T, (label) => sendText(label))}
+                        <MessageFeedback msgIndex={i} />
                       </div>
                     )}
-                    <div style={{ maxWidth:'72%', padding:'10px 14px', borderRadius:8, fontSize:14, lineHeight:1.6,
-                      ...(m.role==='u'
-                        ? { background:T.core, color:'white', borderBottomRightRadius:2 }
-                        : { background:T.surface, color:T.text, border:`1px solid ${T.border}`, borderBottomLeftRadius:2 }) }}>
-                      {m.role==='j' ? renderBubble(m, T, (label) => sendText(label)) : renderMsg(m.text)}
-                    </div>
                   </div>
-                  {m.role==='j' && <MessageFeedback msgIndex={i} />}
-                </div>
-              ))}
-              {thinking && (
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{ width:28, height:28, borderRadius:7, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
-                    <Sparkles size={13} color="white" />
-                  </div>
-                  <div style={{ padding:'10px 15px', borderRadius:8, borderBottomLeftRadius:2, display:'flex', alignItems:'center', gap:5,
-                    background:T.surface, border:`1px solid ${T.border}` }}>
+                ))}
+                {thinking && (
+                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                     {[0,1,2].map(i => (
-                      <div key={i} style={{ width:6, height:6, borderRadius:'50%', background:T.core,
+                      <div key={i} style={{ width:6, height:6, borderRadius:'50%', background:T.coreMid,
                         animation:'breathe .9s ease-in-out infinite', animationDelay:`${i*.2}s` }} />
                     ))}
                   </div>
-                </div>
-              )}
-              <div ref={endRef} />
+                )}
+                <div ref={endRef} />
+              </div>
             </div>
-            {/* Continue input — same compact pill as the Today WhisperBar */}
-            <div style={{ padding:'14px 20px 18px', borderTop:`1px solid ${T.border}`, flexShrink:0 }}>
+
+            {/* Continue input — same hero pill used on Today */}
+            <div style={{ padding:'14px 24px 18px', flexShrink:0 }}>
               <div style={{ maxWidth:720, margin:'0 auto' }}>
                 <ContinueBar value={input} onChange={setInput} onSubmit={send} />
               </div>
             </div>
           </div>
-          {/* Agent flow panel */}
-          <AgentFlowPanel conv={currentConv} />
+
+          {/* Related pane — slides in from the right when the title CTA is on */}
+          {relatedOpen && (
+            <div className="enter-r" style={{ width:340, flexShrink:0,
+              background:T.appBg, borderLeft:`1px solid ${T.border}`,
+              display:'flex', flexDirection:'column' }}>
+              <div style={{ padding:'14px 18px', display:'flex', alignItems:'center',
+                justifyContent:'space-between' }}>
+                <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0 }}>Related</p>
+                <button type="button" aria-label="Close related"
+                  onClick={() => { SFX.tap(); setRelatedOpen(false) }}
+                  style={{ width:24, height:24, borderRadius:4, cursor:'pointer',
+                    background:'none', border:'none', color:T.textSoft,
+                    display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <X size={13} />
+                </button>
+              </div>
+              <div style={{ flex:1, overflowY:'auto', padding:'4px 14px 16px',
+                display:'flex', flexDirection:'column', gap:14 }}>
+                {/* Documents */}
+                <div>
+                  <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em',
+                    color:T.textSoft, margin:'0 0 8px' }}>Documents</p>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    {CHAT_DOCS.map((doc, i) => {
+                      const Icon = doc.Icon || FileText
+                      return (
+                        <div key={i} style={{ display:'flex', alignItems:'center', gap:10,
+                          padding:'10px 12px', borderRadius:8,
+                          background:T.surface, border:`1px solid ${T.border}`, cursor:'pointer' }}>
+                          <div style={{ width:30, height:30, borderRadius:6, flexShrink:0,
+                            display:'flex', alignItems:'center', justifyContent:'center',
+                            background:`${doc.color || T.core}14` }}>
+                            <Icon size={13} color={doc.color || T.core} />
+                          </div>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0,
+                              overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{doc.name}</p>
+                            <p style={{ fontSize:11, color:T.textSoft, margin:'2px 0 0' }}>{doc.type}{doc.edited ? ` · ${doc.edited}` : ''}</p>
+                          </div>
+                          <ExternalLink size={12} color={T.textSoft} />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* People */}
+                <div>
+                  <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em',
+                    color:T.textSoft, margin:'0 0 8px' }}>People</p>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    {CHAT_PEOPLE.map((person, i) => (
+                      <div key={i} style={{ display:'flex', alignItems:'center', gap:10,
+                        padding:'10px 12px', borderRadius:8,
+                        background:T.surface, border:`1px solid ${T.border}` }}>
+                        <div style={{ position:'relative', flexShrink:0, width:32, height:32 }}>
+                          <img alt={person.name}
+                            src={`https://i.pravatar.cc/72?u=${encodeURIComponent(person.name)}`}
+                            style={{ width:32, height:32, borderRadius:'50%', objectFit:'cover',
+                              border:`1.5px solid ${T.border}` }} />
+                          <div style={{ position:'absolute', bottom:0, right:0, width:9, height:9, borderRadius:'50%',
+                            background:person.online ? T.green : T.amber,
+                            border:`2px solid ${T.surface}` }} />
+                        </div>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0 }}>{person.name}</p>
+                          <p style={{ fontSize:11, color:T.textSoft, margin:'2px 0 0' }}>{person.role}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        // Empty state — exact same WhisperBar hero used on the Today page.
-        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'24px' }}>
+        // Empty state — Today hero WhisperBar on a white surface
+        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center',
+          padding:'24px', background:T.surface }}>
           <div style={{ width:'100%', maxWidth:620 }}>
             <WhisperBar hero persona={persona} coreState={coreState} setCoreState={setCoreState}
               onCommand={(v) => startNewChat(v)} />
@@ -4291,9 +4451,10 @@ function ThemeToggle({ mode, onToggle }) {
 // Single source of truth for all in-app tab pages (Today, Feed, Routines,
 // Setup). Conversations is intentionally excluded — it has its own three-pane
 // chat layout that fills the viewport edge-to-edge.
-function PageLayout({ children, maxWidth = 1280 }) {
+function PageLayout({ children, maxWidth = 1280, background }) {
   return (
-    <div style={{ flex:1, overflowY:'auto', padding:'24px 0 60px' }}>
+    <div style={{ flex:1, overflowY:'auto', padding:'24px 0 60px',
+      ...(background ? { background } : {}) }}>
       <div style={{ maxWidth, margin:'0 auto', padding:'0 24px' }}>
         {children}
       </div>
@@ -4395,12 +4556,12 @@ export default function App() {
   const doneCount = doneIds.filter(id => allIntents.find(i => i.id===id)).length
   const overnightHandled = FEED_ITEMS.filter(f => f.status === 'done').length
 
-  // Proactive alert at 4s
-  useEffect(() => {
-    if (scene!=='app' || notifDone) return
-    const t = setTimeout(() => { SFX.alert(); HX.alert(); setShowNotif(true) }, 4000)
-    return () => clearTimeout(t)
-  }, [scene, notifDone])
+  // Proactive notification — fired on demand from the demo bar bell, never auto.
+  const triggerProactiveNotif = () => {
+    SFX.alert(); HX.alert()
+    setNotifDone(false)
+    setShowNotif(true)
+  }
 
   // Original "log in and show app" path — reused after Setup completes too.
   const runLoaderToApp = () => {
@@ -4618,6 +4779,20 @@ export default function App() {
           )}
         </div>
         <div style={{ flex:1 }} />
+        {/* Bell — manually fire the proactive Teams notification (demo only) */}
+        {scene === 'app' && (
+          <button type="button" aria-label="Trigger proactive notification"
+            onClick={triggerProactiveNotif}
+            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 10px',
+              borderRadius:4, border:'1px solid #2A2A2A', background:'#151515',
+              color:'#E5E5E5', fontSize:11, fontWeight:600, cursor:'pointer',
+              fontFamily:T.font, transition:'background .12s' }}
+            onMouseEnter={e=>{ e.currentTarget.style.background='#1E1E1E' }}
+            onMouseLeave={e=>{ e.currentTarget.style.background='#151515' }}>
+            <Bell size={11} />
+            Notify
+          </button>
+        )}
         <button type="button"
           onClick={() => { SFX.tap(); setMode(m => m==='light' ? 'dark' : 'light') }}
           style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 10px',
@@ -4810,9 +4985,9 @@ export default function App() {
           )}
         </div>
 
-        {/* Teams-style notification toast (bottom-right, outside app UI) */}
+        {/* Teams-style notification toast — anchored inside the app column */}
         {showNotif && !notifDone && (
-          <div className="enter" style={{ position:'fixed', bottom:20, right:20, zIndex:200, width:360,
+          <div className="enter" style={{ position:'absolute', bottom:20, right:20, zIndex:30, width:360,
             borderRadius:6, overflow:'hidden',
             background:'#292929', color:'#fff', fontFamily:T.font,
             boxShadow:'0 0 0 1px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.45)' }}>
@@ -4869,8 +5044,9 @@ export default function App() {
           </div>
         )}
 
-        {/* Page content */}
-        <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+        {/* Page content + (optional) inline chat panel — share height below top bar */}
+        <div style={{ flex:1, display:'flex', minHeight:0, overflow:'hidden' }}>
+        <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', minWidth:0 }}>
           {scene==='welcome' && <WelcomeScreen onLogin={handleLogin} onOpenBrief={handleOpenBrief} />}
           {scene==='setup' && (
             <SetupView
@@ -4881,7 +5057,7 @@ export default function App() {
           )}
 
           {scene==='app' && tab==='today' && (
-            <PageLayout>
+            <PageLayout background={T.surface}>
 
                 {/* ── Hero: Ask Jarvis — compact, single-row input; intent card below is the visual hero ── */}
                 <div style={{ maxWidth:620, margin:'8px auto 10px', position:'relative', zIndex:50 }}>
@@ -4895,7 +5071,7 @@ export default function App() {
 
                 {/* ── Brief banner — below prompt categories, above filters ── */}
                 <div style={{ display:'flex', alignItems:'flex-start', gap:12,
-                  padding:'14px 0', borderTop:`1px solid ${T.border}`, marginBottom:6 }}>
+                  padding:'14px 0', marginBottom:6 }}>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:'flex', alignItems:'baseline', gap:10, flexWrap:'wrap' }}>
                       <p style={{ fontSize:20, fontWeight:700, color:T.text, lineHeight:1.2, margin:0,
@@ -5132,17 +5308,19 @@ export default function App() {
           {scene==='app' && tab==='agents' && <AgentsView onNew={() => setShowWizard(true)} />}
         </div>
 
+        {/* Chat sidebar — sits side-by-side with the page content, inside the
+            app column. Does not overlap the Teams top bar or the demo bar. */}
+        {showChat && (
+          <ChatPanel item={chatItem} scenario={chatScenario} preselect={chatPreselect} setCoreState={setCoreState}
+            activeTab={chatTab} setActiveTab={setChatTab}
+            onExpandFull={expandToConversations}
+            onClose={() => { setShowChat(false); setChatItem(null); setChatScenario(null); setChatPreselect(null); setCoreState('idle') }} />
+        )}
+
+        </div>{/* /page-content + chat row */}
       </div>
 
       </div>{/* /main area (rail + column) */}
-
-      {/* Chat sidebar */}
-      {showChat && (
-        <ChatPanel item={chatItem} scenario={chatScenario} preselect={chatPreselect} setCoreState={setCoreState}
-          activeTab={chatTab} setActiveTab={setChatTab}
-          onExpandFull={expandToConversations}
-          onClose={() => { setShowChat(false); setChatItem(null); setChatScenario(null); setChatPreselect(null); setCoreState('idle') }} />
-      )}
 
       {showWizard && <AgentWizard onClose={() => setShowWizard(false)} />}
       {showAddMeeting && <AddMeetingModal onClose={() => setShowAddMeeting(false)} />}
