@@ -2790,33 +2790,9 @@ function TuningLoader({ prefs }) {
   )
 }
 
-function WelcomeScreen({ onLogin, onOpenBrief }) {
+function WelcomeScreen({ onLogin }) {
   const T = window.__T
   const isDark = T.appBg === '#1F1F1F'
-
-  // Animated counter hook
-  const useCount = (target, dur=1400) => {
-    const [val, setVal] = useState(0)
-    const [started, setStarted] = useState(false)
-    const ref = useRef(null)
-    useEffect(() => {
-      const obs = new IntersectionObserver(([e]) => { if(e.isIntersecting && !started) setStarted(true) }, { threshold:.3 })
-      if(ref.current) obs.observe(ref.current)
-      return () => obs.disconnect()
-    }, [])
-    useEffect(() => {
-      if(!started) return
-      let start = null
-      const step = ts => {
-        if(!start) start = ts
-        const p = Math.min((ts-start)/dur, 1)
-        setVal(Math.floor(p * target))
-        if(p < 1) requestAnimationFrame(step)
-      }
-      requestAnimationFrame(step)
-    }, [started, target])
-    return [val, ref]
-  }
 
   const ctaStyle = {
     display:'inline-flex', alignItems:'center', gap:10, padding:'13px 28px',
@@ -2826,12 +2802,6 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
   }
 
   const sectionBase = { maxWidth:1080, margin:'0 auto', padding:'0 32px' }
-
-  // Stats with animated counters
-  const [c1, r1] = useCount(94)
-  const [c2, r2] = useCount(3)
-  const [c3, r3] = useCount(41)
-  const [c4, r4] = useCount(87)
 
   return (
     <div style={{ flex:1, overflowY:'auto', background:T.appBg, fontFamily:T.font, position:'relative' }}>
@@ -2845,24 +2815,18 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
         <div style={{ ...sectionBase, width:'100%', zIndex:1, paddingTop:80, paddingBottom:80 }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:48 }}>
             <div style={{ flex:1, maxWidth:580 }}>
-              <div className="enter" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'6px 14px', borderRadius:99,
-                background:T.coreSoft, border:`1px solid ${T.core}30`, marginBottom:24 }}>
-                <div style={{ width:7, height:7, borderRadius:'50%', background:T.core, animation:'breathe 2s ease-in-out infinite' }} />
-                <span style={{ fontSize:13, fontWeight:700, color:T.core, letterSpacing:'0.04em' }}>Now available on Microsoft Teams</span>
-              </div>
-
               <h1 className="enter" style={{ fontSize:48, fontWeight:700, lineHeight:1.1, color:T.text,
                 letterSpacing:'-0.01em', marginBottom:20, animationDelay:'.05s' }}>
-                Your AI chief of staff,<br />
+                Meet Jarvis,<br />
                 <span style={{ background:`linear-gradient(135deg, ${T.core}, ${T.coreBright})`,
                   WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
-                  always one step ahead.
+                  your personal assistant at work.
                 </span>
               </h1>
 
               <p className="enter" style={{ fontSize:18, lineHeight:1.7, color:T.textMid, marginBottom:36,
                 maxWidth:480, animationDelay:'.1s' }}>
-                Jarvis watches your Salesforce, Outlook, Jira, and Workday — then surfaces the right action before you even know you need it.
+                Jarvis quietly handles the small stuff — emails, prep, PTO, training reminders — so you can focus on the rest. It asks before doing anything bigger.
               </p>
 
               <div className="enter" style={{ display:'flex', alignItems:'center', gap:12, flexWrap:'wrap', animationDelay:'.15s' }}>
@@ -2872,30 +2836,10 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
                   onMouseLeave={e => { e.currentTarget.style.background=T.core }}>
                   <Sparkles size={17} />Get my morning brief <ArrowRight size={16} />
                 </button>
-                <button type="button"
-                  style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'13px 24px', borderRadius:4, fontSize:15, fontWeight:600,
-                    background:'none', border:`1px solid ${T.border}`, color:T.text, cursor:'pointer', transition:'all .15s', fontFamily:T.font }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor=T.core; e.currentTarget.style.color=T.core }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor=T.borderMid; e.currentTarget.style.color=T.text }}>
-                  Watch 2-min demo <ExternalLink size={14} />
-                </button>
-              </div>
-
-              <div className="enter" style={{ marginTop:10, display:'flex', alignItems:'center', gap:10, animationDelay:'.18s' }}>
-                <button type="button"
-                  onClick={() => { SFX.tap(); onOpenBrief?.() }}
-                  style={{ display:'inline-flex', alignItems:'center', gap:6, padding:0,
-                    background:'none', border:'none', cursor:'pointer',
-                    color:T.core, fontSize:13, fontWeight:600, fontFamily:T.font,
-                    textDecoration:'underline', textUnderlineOffset:3, transition:'color .12s' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = T.coreMid }}
-                  onMouseLeave={e => { e.currentTarget.style.color = T.core }}>
-                  Already set up? Open my brief <ArrowRight size={12} />
-                </button>
               </div>
 
               <p className="enter" style={{ fontSize:13, color:T.textXsoft, marginTop:14, animationDelay:'.2s' }}>
-                OAuth 2.0 · No passwords stored · IT-approved
+                Always reversible · Asks before anything bigger
               </p>
             </div>
 
@@ -2920,9 +2864,9 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
                 </div>
                 <div style={{ padding:'16px', display:'flex', flexDirection:'column', gap:10 }}>
                   {[
-                    { role:'j', text:"Good morning, Alex. Your DPA case is SLA+2 days and Amy Torres is OOO. I've drafted an escalation to Legal.", delay:'0s' },
-                    { role:'u', text:'Send it.', delay:'.6s' },
-                    { role:'j', text:"Done ✓ Escalation sent. I'll update you when Amy's backup responds.", delay:'1.2s' },
+                    { role:'j', text:"Good morning, Alex. Your PTO request is still pending with Sarah — 3 days now. Want me to nudge her?", delay:'0s' },
+                    { role:'u', text:'Yes please.', delay:'.6s' },
+                    { role:'j', text:"Sent. I'll let you know when she responds.", delay:'1.2s' },
                   ].map((m,i) => (
                     <div key={i} className="enter" style={{ display:'flex', justifyContent:m.role==='u'?'flex-end':'flex-start', animationDelay:m.delay }}>
                       {m.role==='j' && (
@@ -2965,46 +2909,6 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
         </div>
       </div>
 
-      {/* ── SOCIAL PROOF BAR ──────────────────────────────────────────────────── */}
-      <div style={{ borderTop:`1px solid ${T.border}`, borderBottom:`1px solid ${T.border}`,
-        padding:'18px 0', background:isDark?'rgba(255,255,255,0.02)':'rgba(0,0,0,0.02)' }}>
-        <div style={{ ...sectionBase, display:'flex', alignItems:'center', justifyContent:'center', gap:48, flexWrap:'wrap' }}>
-          {['Microsoft Teams','Salesforce','Outlook','Workday','Jira','Slack'].map(app => (
-            <span key={app} style={{ fontSize:13, fontWeight:700, color:T.textXsoft, letterSpacing:'0.04em', whiteSpace:'nowrap' }}>{app}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* ── STATS ─────────────────────────────────────────────────────────────── */}
-      <div style={{ padding:'80px 0', background:isDark?'rgba(255,255,255,0.01)':T.surface }}>
-        <div style={{ ...sectionBase }}>
-          <div style={{ textAlign:'center', marginBottom:56 }}>
-            <p style={{ fontSize:13, fontWeight:700, color:T.core, textTransform:'uppercase', letterSpacing:'0.15em', marginBottom:10 }}>By the numbers</p>
-            <h2 style={{ fontSize:36, fontWeight:700, color:T.text, lineHeight:1.1 }}>
-              Real results, measurable impact.
-            </h2>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:24 }}>
-            {[
-              { ref:r1, val:c1, suffix:'%', label:'less time on admin tasks', sub:'Per employee, per week', color:T.core },
-              { ref:r2, val:c2, suffix:'hrs', label:'saved per employee weekly', sub:'Avg across all users', color:T.green },
-              { ref:r3, val:c3, suffix:'%', label:'faster decision-making', sub:'vs. no-AI baseline', color:T.teal },
-              { ref:r4, val:c4, suffix:'%', label:'of users recommend Jarvis', sub:'Internal NPS survey', color:T.amber },
-            ].map((s,i) => (
-              <div ref={s.ref} key={i} className="enter" style={{ padding:'28px 24px', borderRadius:8, textAlign:'center',
-                background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowSm,
-                animationDelay:`${i*.08}s` }}>
-                <p style={{ fontSize:48, fontWeight:700, color:s.color, lineHeight:1, marginBottom:6 }}>
-                  {s.val}{s.suffix}
-                </p>
-                <p style={{ fontSize:15, fontWeight:700, color:T.text, marginBottom:4, lineHeight:1.4 }}>{s.label}</p>
-                <p style={{ fontSize:13, color:T.textSoft }}>{s.sub}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* ── HOW IT WORKS ──────────────────────────────────────────────────────── */}
       <div style={{ padding:'96px 0' }}>
         <div style={{ ...sectionBase }}>
@@ -3022,21 +2926,21 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
             {[
               {
                 num:'01', Icon:Activity, color:T.core, bg:T.coreSoft,
-                title:'Connects your tools',
-                desc:'Jarvis reads across your Salesforce, Outlook, Jira, and Workday — nothing more than it needs — and builds one brief of what matters today.',
-                example:'Your DPA case is SLA+2 and go-live is Friday.',
+                title:'Watches what matters',
+                desc:'Jarvis keeps an eye on your inbox, calendar, HR system, and team tools — nothing more than it needs — and pulls together one short brief of what needs you today.',
+                example:'Your benefits enrolment closes Thursday.',
               },
               {
                 num:'02', Icon:Zap, color:T.green, bg:T.greenSoft,
                 title:'Handles the small stuff',
-                desc:"Routine work — reminders, meeting prep, PTO filing — Jarvis just does. You see it in your feed, always with one-click Undo.",
-                example:'Prepped your 10 AM QBR. Sent the training nudge.',
+                desc:'Routine work — reminders, meeting prep, filing PTO, training nudges — Jarvis just does. You see it in your feed, always with one-click Undo.',
+                example:'Prepped your 10 AM. Sent the training nudge.',
               },
               {
                 num:'03', Icon:ShieldCheck, color:T.amber, bg:T.amberSoft,
-                title:'Asks before anything big',
-                desc:'Anything that matters — a deploy, a legal escalation, a hiring decision — Jarvis prepares the plan and waits for your OK. No surprises.',
-                example:'Ready to arm deploy v3.8.2. Your call.',
+                title:'Asks before anything bigger',
+                desc:'Anything that affects other people — replies you send, requests you submit, anything over a limit — Jarvis prepares it and waits for your OK.',
+                example:'Drafted your reply to Priya. Send when you\'re ready.',
               },
             ].map((c,i) => (
               <div key={i} className="enter" style={{ padding:'24px', borderRadius:8, position:'relative', overflow:'hidden',
@@ -3059,69 +2963,6 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
         </div>
       </div>
 
-      {/* ── USE CASES ─────────────────────────────────────────────────────────── */}
-      <div style={{ padding:'96px 0', background:isDark?'rgba(255,255,255,0.015)':T.rail }}>
-        <div style={{ ...sectionBase }}>
-          <div style={{ textAlign:'center', marginBottom:64 }}>
-            <p style={{ fontSize:13, fontWeight:700, color:T.core, textTransform:'uppercase', letterSpacing:'0.15em', marginBottom:10 }}>Built for your real day</p>
-            <h2 style={{ fontSize:36, fontWeight:700, color:T.text, lineHeight:1.15 }}>
-              Every role. Every tool. One AI.
-            </h2>
-          </div>
-
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:20 }}>
-            {[
-              {
-                emoji:'⚖️', tag:'Legal & Compliance', color:T.amber,
-                title:'DPA stuck? SLA breached?',
-                body:"Jarvis detects when a review is overdue, identifies who's OOO, finds the backup, and drafts the escalation — so you're never the bottleneck.",
-                chips:['SalesforcePlugin','WorkdayPlugin','OutlookPlugin'],
-              },
-              {
-                emoji:'📊', tag:'Meetings & Prep', color:T.blue,
-                title:'Walk into every meeting ready.',
-                body:'30 minutes before each meeting, Jarvis assembles the deck, surfaces open actions from last time, and writes you a 3-point opener based on what the SVP cares about.',
-                chips:['OutlookPlugin','SharePointPlugin','SalesforcePlugin'],
-              },
-              {
-                emoji:'🚨', tag:'Incidents & Ops', color:T.red,
-                title:"P1 fires while you're in a meeting?",
-                body:'Jarvis detects it in Datadog, identifies the on-call engineer, assigns ownership in Salesforce, and sends the Teams message — all in under 90 seconds.',
-                chips:['DatadogPlugin','SalesforcePlugin','TeamsPlugin'],
-              },
-              {
-                emoji:'👥', tag:'People & Teams', color:T.green,
-                title:'Burnout before it becomes a problem.',
-                body:'Jarvis spots overwork patterns in Jira before sentiment shifts. It finds coverage, drafts the welfare check-in, and only asks you to confirm.',
-                chips:['JiraPlugin','SlackPlugin','WorkdayPlugin'],
-              },
-            ].map((u,i) => (
-              <div key={i} className="enter" style={{ padding:'24px', borderRadius:8,
-                background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowSm,
-                animationDelay:`${i*.08}s` }}>
-                <div style={{ display:'flex', alignItems:'flex-start', gap:14, marginBottom:14 }}>
-                  <span style={{ fontSize:28, flexShrink:0 }}>{u.emoji}</span>
-                  <div>
-                    <span style={{ fontSize:12, fontWeight:700, color:u.color, textTransform:'uppercase', letterSpacing:'0.1em' }}>{u.tag}</span>
-                    <h3 style={{ fontSize:18, fontWeight:800, color:T.text, lineHeight:1.3, marginTop:4 }}>{u.title}</h3>
-                  </div>
-                </div>
-                <p style={{ fontSize:15, color:T.textMid, lineHeight:1.7, marginBottom:16 }}>{u.body}</p>
-                <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                  {u.chips.map(ch => (
-                    <span key={ch} style={{ fontSize:12, fontWeight:600, padding:'3px 9px', borderRadius:4,
-                      background:`${u.color}12`, color:u.color, border:`1px solid ${T.border}`,
-                      display:'inline-flex', alignItems:'center', gap:4 }}>
-                      <Database size={10} />{ch}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* ── TRUST & PRIVACY ───────────────────────────────────────────────────── */}
       <div style={{ padding:'96px 0' }}>
         <div style={{ ...sectionBase }}>
@@ -3132,7 +2973,7 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
                 Jarvis sees a lot.<br />It never oversteps.
               </h2>
               <p style={{ fontSize:17, color:T.textMid, lineHeight:1.75, marginBottom:32 }}>
-                Every action Jarvis takes is logged in an auditable feed. Sensitive decisions — deploys, legal filings, salary changes — always require your explicit confirmation. We read signals, not secrets.
+                Every action Jarvis takes is logged with one-click Undo. Anything that affects other people — replies, requests, approvals — always waits for your OK. We read signals, not secrets.
               </p>
               <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
                 {[
@@ -3159,7 +3000,7 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
                 {[
                   { Icon:Zap,         label:'Acts on the small stuff',   desc:'Reminders, prep, filings. Undo sits right there.', color:T.green },
                   { Icon:FileText,    label:'Drafts, you decide',        desc:'Nothing sends without your eyes on it.',           color:T.blue },
-                  { Icon:ShieldCheck, label:'Pauses before anything big',desc:'Deploys, escalations, hires all wait for your OK.', color:T.amber },
+                  { Icon:ShieldCheck, label:'Pauses before anything bigger', desc:'Anything that leaves your account waits for your OK.', color:T.amber },
                   { Icon:History,     label:'Every action is reversible',desc:'One log, one Undo — no permanent surprises.',       color:T.core  },
                 ].map((d, i) => (
                   <div key={i} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:16, paddingBottom:16,
@@ -3178,117 +3019,25 @@ function WelcomeScreen({ onLogin, onOpenBrief }) {
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ── TESTIMONIALS ──────────────────────────────────────────────────────── */}
-      <div style={{ padding:'80px 0', background:isDark?'rgba(255,255,255,0.015)':T.rail }}>
-        <div style={{ ...sectionBase }}>
-          <div style={{ textAlign:'center', marginBottom:48 }}>
-            <p style={{ fontSize:13, fontWeight:700, color:T.core, textTransform:'uppercase', letterSpacing:'0.15em', marginBottom:10 }}>What your colleagues say</p>
-            <h2 style={{ fontSize:32, fontWeight:700, color:T.text }}>From the people using it every day.</h2>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:20 }}>
-            {[
-              { quote:"I used to spend 40 minutes every morning just figuring out what to do first. Jarvis does that in seconds and it's almost always right.", name:'Priya N.', role:'Sr. Product Manager', avatar:'PN', color:T.core },
-              { quote:"The burnout detection alone is worth it. Jarvis flagged Liam's hours before I even noticed. I authorised the wellness day in one click.", name:'Marcus T.', role:'Engineering Manager', avatar:'MT', color:T.green },
-              { quote:"When our P1 hit I was in a QBR. Jarvis assigned Raj, opened the war room, and told me about it after. I didn't miss a beat.", name:'Sarah C.', role:'VP Engineering', avatar:'SC', color:T.teal },
-            ].map((t,i) => (
-              <div key={i} className="enter" style={{ padding:'24px', borderRadius:8,
-                background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowSm,
-                animationDelay:`${i*.08}s` }}>
-                <div style={{ display:'flex', gap:2, marginBottom:14 }}>
-                  {[0,1,2,3,4].map(s => <Star key={s} size={15} fill={T.amber} color={T.amber} />)}
-                </div>
-                <p style={{ fontSize:15, color:T.text, lineHeight:1.75, marginBottom:20, fontStyle:'italic' }}>"{t.quote}"</p>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{ width:36, height:36, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
-                    background:`${t.color}20`, flexShrink:0 }}>
-                    <span style={{ fontSize:13, fontWeight:800, color:t.color }}>{t.avatar}</span>
-                  </div>
-                  <div>
-                    <p style={{ fontSize:14, fontWeight:700, color:T.text }}>{t.name}</p>
-                    <p style={{ fontSize:13, color:T.textSoft }}>{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+          {/* Inline final CTA — replaces the old Final CTA section */}
+          <div style={{ textAlign:'center', marginTop:64 }}>
+            <button type="button" onClick={() => { SFX.tap(); HX.tap(); onLogin() }}
+              style={{ ...ctaStyle, padding:'14px 32px', fontSize:16 }}
+              onMouseEnter={e => e.currentTarget.style.background=T.coreMid}
+              onMouseLeave={e => e.currentTarget.style.background=T.core}>
+              <Sparkles size={18} /> I'm ready — set me up <ArrowRight size={17} />
+            </button>
+            <p style={{ fontSize:13, color:T.textXsoft, marginTop:14 }}>3 steps · about 30 seconds</p>
           </div>
         </div>
       </div>
 
-      {/* ── FAQ ───────────────────────────────────────────────────────────────── */}
-      <div style={{ padding:'96px 0' }}>
-        <div style={{ ...sectionBase, maxWidth:720 }}>
-          <div style={{ textAlign:'center', marginBottom:56 }}>
-            <p style={{ fontSize:13, fontWeight:700, color:T.core, textTransform:'uppercase', letterSpacing:'0.15em', marginBottom:10 }}>Common questions</p>
-            <h2 style={{ fontSize:32, fontWeight:700, color:T.text }}>Everything you need to know.</h2>
-          </div>
-          {[
-            { q:"Does Jarvis read my emails?", a:"No. Jarvis reads metadata — subjects, senders, dates, flags — to surface the right actions. It never reads the body of emails or private messages." },
-            { q:"Can Jarvis act without my permission?", a:"Only for low-risk tasks you've explicitly enabled: meeting prep, compliance nudges, PTO verifications. All medium-to-high-stakes actions require your confirmation." },
-            { q:"What tools does it connect to?", a:"Out of the box: Salesforce, Outlook, Microsoft Teams, OneDrive/SharePoint, Workday. Jira, Datadog, Slack, Greenhouse, and ServiceNow available as add-ons." },
-            { q:"How do I undo something Jarvis did?", a:"Every action is logged in the Activity Feed with a one-click reverse option. Nothing is permanent without your knowledge." },
-            { q:"Is my data shared or used to train AI?", a:"No. Your data stays within your organisation's tenant. It is not used to train any external model." },
-          ].map((faq,i) => {
-            const [open, setOpen] = useState(false)
-            return (
-              <div key={i} style={{ borderBottom:`1px solid ${T.border}` }}>
-                <button type="button" onClick={() => { SFX.tap(); setOpen(o=>!o) }}
-                  style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 0',
-                    background:'none', border:'none', cursor:'pointer', textAlign:'left', fontFamily:T.font }}>
-                  <span style={{ fontSize:16, fontWeight:700, color:T.text }}>{faq.q}</span>
-                  <ChevronDown size={18} color={T.textSoft} style={{ flexShrink:0, marginLeft:16, transition:'transform .2s', transform:open?'rotate(180deg)':'none' }} />
-                </button>
-                {open && (
-                  <div className="expand-down" style={{ paddingBottom:20 }}>
-                    <p style={{ fontSize:15, color:T.textMid, lineHeight:1.75 }}>{faq.a}</p>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* ── FINAL CTA ─────────────────────────────────────────────────────────── */}
-      <div style={{ padding:'96px 0 112px', background:T.coreSoft, borderTop:`1px solid ${T.border}` }}>
-        <div style={{ ...sectionBase, textAlign:'center' }}>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'8px 18px', borderRadius:99,
-            background:T.coreSoft, border:`1px solid ${T.core}30`, marginBottom:28 }}>
-            <Sparkles size={14} color={T.core} />
-            <span style={{ fontSize:14, fontWeight:700, color:T.core }}>3 steps · 30 seconds</span>
-          </div>
-          <h2 style={{ fontSize:40, fontWeight:700, color:T.text, lineHeight:1.1, marginBottom:20 }}>
-            Your morning brief<br />
-            <span style={{ background:`linear-gradient(135deg, ${T.core}, ${T.coreBright})`,
-              WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
-              is already waiting.
-            </span>
-          </h2>
-          <p style={{ fontSize:18, color:T.textMid, marginBottom:40, maxWidth:460, margin:'0 auto 40px', lineHeight:1.7 }}>
-            Three small choices: what to watch, how to help, when to reach you.
-          </p>
-          <button type="button" onClick={() => { SFX.tap(); HX.tap(); onLogin() }}
-            style={{ ...ctaStyle, padding:'14px 32px', fontSize:16 }}
-            onMouseEnter={e => e.currentTarget.style.background=T.coreMid}
-            onMouseLeave={e => e.currentTarget.style.background=T.core}>
-            <Sparkles size={18} /> Get my morning brief <ArrowRight size={17} />
-          </button>
-          <p style={{ fontSize:13, color:T.textXsoft, marginTop:14 }}>OAuth 2.0 · IT-approved · SOC 2 aligned</p>
-        </div>
-      </div>
-
-      {/* ── FOOTER ─────────────────────────────────────────────────────────────── */}
-      <div style={{ borderTop:`1px solid ${T.border}`, padding:'24px 32px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{ width:24, height:24, borderRadius:7, background:T.coreGrad, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Sparkles size={12} color="white" />
-          </div>
-          <span style={{ fontSize:14, fontWeight:800, color:T.text }}>Jarvis</span>
-          <span style={{ fontSize:13, color:T.textXsoft }}>· Your AI chief of staff</span>
-        </div>
-        <p style={{ fontSize:13, color:T.textXsoft }}>Built on Salesforce Agentforce · Powered by Claude · © 2026 OrgFarm EPIC</p>
+      {/* ── FOOTER — minimal one-line ──────────────────────────────────────── */}
+      <div style={{ borderTop:`1px solid ${T.border}`, padding:'18px 32px', textAlign:'center' }}>
+        <p style={{ fontSize:12, color:T.textXsoft, margin:0 }}>
+          Built on Salesforce Agentforce · © 2026 OrgFarm EPIC
+        </p>
       </div>
 
     </div>
@@ -4581,9 +4330,6 @@ export default function App() {
       setScene('setup')
     }
   }
-  // Welcome "Already set up? Open my brief →" — bypasses setup.
-  const handleOpenBrief = () => { runLoaderToApp() }
-
   // Setup → complete (persist, show tuning loader, then loader → Today, then one-time toast).
   const [tuningPrefs, setTuningPrefs] = useState(null)
   const setupPendingToastRef = useRef(false)
@@ -5047,7 +4793,7 @@ export default function App() {
         {/* Page content + (optional) inline chat panel — share height below top bar */}
         <div style={{ flex:1, display:'flex', minHeight:0, overflow:'hidden' }}>
         <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column', minWidth:0 }}>
-          {scene==='welcome' && <WelcomeScreen onLogin={handleLogin} onOpenBrief={handleOpenBrief} />}
+          {scene==='welcome' && <WelcomeScreen onLogin={handleLogin} />}
           {scene==='setup' && (
             <SetupView
               initialPrefs={prefs}
