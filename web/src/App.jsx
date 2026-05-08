@@ -4622,17 +4622,19 @@ export default function App() {
       {/* ── Main area: left rail + content column ── */}
       <div style={{ display:'flex', flex:1, minHeight:0, overflow:'hidden' }}>
 
-      {/* Left rail — Teams-style 68px wide with icon + label */}
+      {/* Left rail — Teams-style 68px wide with icon + label.
+          Icons are the official MS Teams SVGs (see /web/public/teams-icons/),
+          rendered via CSS mask so they inherit currentColor for the hover state. */}
       <div style={{ width:68, display:'flex', flexDirection:'column', alignItems:'stretch', padding:'6px 0',
         flexShrink:0, background:T.rail, borderRight:`1px solid ${T.border}`, zIndex:10, transition:'background .3s' }}>
         {[
-          { Icon:Activity,      label:'Activity'  },
-          { Icon:MessageSquare, label:'Chat', badge:1 },
-          { Icon:Users,         label:'Teams'     },
-          { Icon:Calendar,      label:'Calendar'  },
-          { Icon:Phone,         label:'Calls'     },
-          { Icon:FileText,      label:'Files'     },
-        ].map(({ Icon, label, badge }, i) => (
+          { src:'/teams-icons/activity.svg', label:'Activity' },
+          { src:'/teams-icons/chat.svg',     label:'Chat', badge:1 },
+          { src:'/teams-icons/teams.svg',    label:'Teams' },
+          { src:'/teams-icons/calendar.svg', label:'Calendar' },
+          { src:'/teams-icons/calls.svg',    label:'Calls' },
+          { src:'/teams-icons/files.svg',    label:'Files' },
+        ].map(({ src, label, badge }, i) => (
           <button key={i} type="button"
             style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
               background:'none', border:'none', cursor:'pointer', transition:'color .15s',
@@ -4641,7 +4643,13 @@ export default function App() {
             onMouseLeave={e => { e.currentTarget.style.color=T.textSoft; e.currentTarget.querySelector('.rail-iconwrap').style.background='none' }}>
             <div className="rail-iconwrap" style={{ position:'relative', width:28, height:28, borderRadius:4,
               display:'flex', alignItems:'center', justifyContent:'center', transition:'background .15s' }}>
-              <Icon size={18} strokeWidth={1.75} />
+              <span aria-hidden="true" style={{
+                width:20, height:20, display:'inline-block', backgroundColor:'currentColor',
+                WebkitMaskImage:`url(${src})`, maskImage:`url(${src})`,
+                WebkitMaskRepeat:'no-repeat', maskRepeat:'no-repeat',
+                WebkitMaskPosition:'center', maskPosition:'center',
+                WebkitMaskSize:'contain', maskSize:'contain',
+              }} />
               {badge && (
                 <span style={{ position:'absolute', top:-3, right:-5, minWidth:14, height:14, padding:'0 4px',
                   borderRadius:99, background:T.red, color:'#fff', fontSize:9, fontWeight:700,
