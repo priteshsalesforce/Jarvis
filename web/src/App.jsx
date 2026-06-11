@@ -4730,58 +4730,64 @@ export default function App() {
       <div style={{ width:68, display:'flex', flexDirection:'column', alignItems:'stretch', padding:'6px 0',
         flexShrink:0, background:T.rail, borderRight:`1px solid ${T.border}`, zIndex:10, transition:'background .3s' }}>
         {[
-          { Icon: AlertRegular,      label:'Activity' },
-          { Icon: ChatRegular,       label:'Chat', badge:1 },
-          { Icon: PeopleTeamRegular, label:'Teams' },
-          { Icon: CalendarRegular,   label:'Calendar' },
-          { Icon: CallRegular,       label:'Calls' },
-          { Icon: DocumentRegular,   label:'Files' },
-        ].map(({ Icon, label, badge }, i) => (
+          { src:'/teams-icons/activity.svg', label:'Activity' },
+          { src:'/teams-icons/chat.svg',     label:'Chat', badge:1 },
+          { src:'/teams-icons/teams.svg',    label:'Teams' },
+          { src:'/teams-icons/calendar.svg', label:'Calendar' },
+          { src:'/teams-icons/calls.svg',    label:'Calls' },
+          { src:'/teams-icons/files.svg',    label:'Files' },
+        ].map(({ src, label, badge }, i) => (
           <button key={i} type="button"
-            style={{ width:'100%', padding:'4px 2px', minHeight:56, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
-              background:'none', border:'none', cursor:'pointer', transition:'color .15s, background .15s', borderRadius:4,
+            style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+              background:'none', border:'none', cursor:'pointer', transition:'color .15s',
               color:T.textSoft, position:'relative' }}
-            onMouseEnter={e => { e.currentTarget.style.color=T.core; e.currentTarget.style.background=T.coreSoft }}
-            onMouseLeave={e => { e.currentTarget.style.color=T.textSoft; e.currentTarget.style.background='none' }}>
-            <div className="rail-iconwrap" style={{ position:'relative', width:24, height:24,
-              display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <Icon size={22} />
+            onMouseEnter={e => { e.currentTarget.style.color=T.core; e.currentTarget.querySelector('.rail-iconwrap').style.background=T.coreSoft }}
+            onMouseLeave={e => { e.currentTarget.style.color=T.textSoft; e.currentTarget.querySelector('.rail-iconwrap').style.background='none' }}>
+            <div className="rail-iconwrap" style={{ position:'relative', width:28, height:28, borderRadius:4,
+              display:'flex', alignItems:'center', justifyContent:'center', transition:'background .15s' }}>
+              <span aria-hidden="true" style={{
+                width:20, height:20, display:'inline-block', backgroundColor:'currentColor',
+                WebkitMaskImage:`url(${src})`, maskImage:`url(${src})`,
+                WebkitMaskRepeat:'no-repeat', maskRepeat:'no-repeat',
+                WebkitMaskPosition:'center', maskPosition:'center',
+                WebkitMaskSize:'contain', maskSize:'contain',
+              }} />
               {badge && (
-                <span style={{ position:'absolute', top:-4, right:-6, minWidth:16, height:16, padding:'0 4px',
-                  borderRadius:8, background:T.red, color:'#fff', fontSize:10, fontWeight:700,
-                  display:'inline-flex', alignItems:'center', justifyContent:'center', lineHeight:1,
-                  boxShadow:`0 0 0 2px ${T.rail}` }}>{badge}</span>
+                <span style={{ position:'absolute', top:-3, right:-5, minWidth:14, height:14, padding:'0 4px',
+                  borderRadius:99, background:T.red, color:'#fff', fontSize:9, fontWeight:700,
+                  display:'inline-flex', alignItems:'center', justifyContent:'center', lineHeight:1 }}>{badge}</span>
               )}
             </div>
-            <span style={{ fontSize:10, fontWeight:500, lineHeight:'14px' }}>{label}</span>
+            <span style={{ fontSize:11, fontWeight:500, lineHeight:1 }}>{label}</span>
           </button>
         ))}
 
         {/* JARVIS (selected app) */}
         <button type="button"
-          style={{ width:'100%', padding:'4px 2px', minHeight:56, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+          style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
             background:'none', border:'none', cursor:'pointer', color:T.core, position:'relative' }}>
-          {/* Selected accent bar — matches real Teams rail (top/bottom 12px inset) */}
-          <div style={{ position:'absolute', left:0, top:12, bottom:12, width:3, borderRadius:'0 2px 2px 0', background:T.core }} />
-          <div style={{ width:24, height:24, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center',
+          {/* Selected accent bar */}
+          <div style={{ position:'absolute', left:0, top:6, bottom:6, width:3, borderRadius:'0 2px 2px 0', background:T.core }} />
+          <div style={{ width:28, height:28, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center',
             background:T.coreGrad }}>
             <Sparkles size={15} color="#fff" />
           </div>
-          <span style={{ fontSize:10, fontWeight:700, lineHeight:'14px', color:T.core }}>Jarvis</span>
+          <span style={{ fontSize:11, fontWeight:700, lineHeight:1, color:T.core }}>Jarvis</span>
         </button>
 
         <div style={{ flex:1 }} />
 
-        {/* Apps at bottom — official Teams Apps glyph */}
+        {/* Apps (+) at bottom */}
         <button type="button"
-          style={{ width:'100%', padding:'4px 2px', minHeight:56, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
-            background:'none', border:'none', cursor:'pointer', transition:'color .15s, background .15s', borderRadius:4, color:T.textSoft }}
-          onMouseEnter={e => { e.currentTarget.style.color=T.core; e.currentTarget.style.background=T.coreSoft }}
-          onMouseLeave={e => { e.currentTarget.style.color=T.textSoft; e.currentTarget.style.background='none' }}>
-          <div style={{ width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <AppsRegular size={22} />
+          style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+            background:'none', border:'none', cursor:'pointer', transition:'color .15s', color:T.textSoft }}
+          onMouseEnter={e => { e.currentTarget.style.color=T.core }}
+          onMouseLeave={e => { e.currentTarget.style.color=T.textSoft }}>
+          <div style={{ width:28, height:28, borderRadius:4, border:`1px solid ${T.border}`,
+            display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Plus size={14} strokeWidth={2} />
           </div>
-          <span style={{ fontSize:10, fontWeight:500, lineHeight:'14px' }}>Apps</span>
+          <span style={{ fontSize:11, fontWeight:500, lineHeight:1 }}>Apps</span>
         </button>
       </div>
 
