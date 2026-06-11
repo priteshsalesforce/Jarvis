@@ -15,6 +15,11 @@ import {
   Cloud, Mail, Briefcase, Layers, LifeBuoy, GitBranch, Hash as HashIcon,
   Pin, PinOff,
 } from 'lucide-react'
+// Official Microsoft Teams (Fluent) rail icons — ported from the real Teams shell.
+import {
+  ChatRegular, PeopleTeamRegular, CalendarRegular, CallRegular,
+  DocumentRegular, AlertRegular, AppsRegular,
+} from '@/components/icons/teams'
 
 // ─── Sound engine ─────────────────────────────────────────────────────────────
 // Tiny Web Audio API helpers — graceful no-op if AudioContext unavailable
@@ -111,12 +116,12 @@ const THEMES = {
     textMid:     'rgba(255,255,255,0.78)',
     textSoft:    'rgba(255,255,255,0.5)',
     textXsoft:   'rgba(255,255,255,0.36)',
-    // Borders — Fluent dark colorNeutralStroke (solid)
-    border:      '#666666',   // colorNeutralStroke1 dark
-    borderMid:   '#525252',   // colorNeutralStroke2 dark
-    // Shadows — darker two-layer
-    shadowSm:    '0 1px 2px rgba(0,0,0,0.20), 0 1px 1px rgba(0,0,0,0.16)',
-    shadowMd:    '0 2px 6px rgba(0,0,0,0.22), 0 1px 2px rgba(0,0,0,0.18)',
+    // Borders — softened for dark mode (reduce visual line weight)
+    border:      '#3A3A3A',
+    borderMid:   '#454545',
+    // Shadows — keep subtle to avoid stacked heavy edges
+    shadowSm:    '0 1px 2px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.10)',
+    shadowMd:    '0 2px 6px rgba(0,0,0,0.16), 0 1px 2px rgba(0,0,0,0.12)',
     shadowPurple:'0 2px 8px rgba(155,110,200,0.18), 0 1px 2px rgba(155,110,200,0.14)',
     font: '"Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif',
   },
@@ -176,6 +181,12 @@ const INTENTS = [
     source:'Workday · Life event',
     evidence:'Leave starts Jun 2 · Backfill lead time 3 weeks',
     chatScenario:'leave' },
+  { id:'resch', tier:'L3', cat:'Just landed · needs you now',
+    headline:'Marc made the 2 PM product review mandatory — clears with 1 tap',
+    why:'Marc (SVP) outranks everything on your afternoon. I worked out the reshuffle and drafted every message — 4 on Teams, 3 emails. One approval sends them all and clears your 2 PM.',
+    action:'Review the reshuffle', source:'Teams + Outlook · 11:40 AM',
+    evidence:'Sender outranks 3 conflicting meetings · 7 messages drafted',
+    chatScenario:'reschedule' },
   { id:'y1', tier:'L2', cat:'Yesterday',
     headline:'PTO request pending with your manager — 3 days',
     why:'Submitted Apr 29 for May 14–16. Manager SLA is 2 business days. I can draft a light nudge on your behalf.',
@@ -251,6 +262,9 @@ const TODAY_EVENTS = [
 ]
 
 const FEED_ITEMS = [
+  { id:'fd0', time:'11:41', status:'done', emoji:'🗓️', title:'Cleared your afternoon for Marc\'s review',
+    body:'Marc (SVP) made the 2 PM mandatory. Ranked the sender, reshuffled 3 conflicts, and sent 7 messages in your name — after your approval.',
+    steps:['Ranked sender: SVP, outranks the afternoon','Drafted 4 Teams messages + 3 emails','You approved all in one tap','Sent ✓ · 1:1 moved to 4 PM, Acme rescheduled'] },
   { id:'fd1', time:'08:47', status:'done', emoji:'🧠', title:'Morning brief compiled',
     body:'Ranked 8 items from Workday, Outlook, Jira by deadline × impact.',
     steps:['Fetch Outlook flagged emails → 4 surfaced','Fetch Workday approvals → 3 items','Fetch Jira overdue → 3/9 surfaced','Score and rank'] },
@@ -392,6 +406,43 @@ const CHAT_SCENARIOS = {
       { label:'Block calendar with OOO + auto-reply',   key:'leave_ooo',    tier:'L1' },
       { label:'Draft handover note to Priya',            key:'leave_note',   tier:'L2' },
       { label:'Nominate Liam as backup approver',        key:'leave_backup', tier:'L4' },
+    ],
+  }],
+  // Killer use case — the "ideal EA". A higher-ranking person (Marc, SVP) drops a
+  // mandatory meeting that collides with the afternoon. Jarvis ranks the sender,
+  // works out the reshuffle, and drafts every message across Teams + email — then
+  // hands the user ONE batch-approval card. One tap clears the calendar.
+  // Embodies Alex's brief: don't add to the noise, always merit the time, taste + tact.
+  reschedule:[{
+    role:'j',
+    text:"**Marc made the 2 PM product review mandatory.** It collides with 3 things on your calendar.\n\nHere's the fix I worked out to clear 2–3 PM:\n• Move your **1:1 with Sarah** to 4 PM\n• Step out of **sprint sync** — Raj can cover\n• **Reschedule the Acme check-in** to tomorrow\n\nTo make it happen I'm ready to send **4 Teams messages and 3 emails** in your name. Take a look — edit anything, then approve all at once.",
+    trace:{
+      summary:'Read 1 invite, ranked the sender, found 3 conflicts',
+      steps:[
+        { label:'Read Marc\'s invite + Teams message', plugin:'OutlookPlugin',
+          bullets:['"Mandatory product review" · today 2:00–3:00 PM','Keyword match: "mandatory"','From: Marc T. (SVP, Product)'] },
+        { label:'Checked sender rank against your org', plugin:'WorkdayPlugin',
+          bullets:['Marc = SVP · 2 levels above you','Outranks every meeting on your afternoon'] },
+        { label:'Found 3 calendar conflicts, 2–3 PM', plugin:'OutlookPlugin',
+          bullets:['1:1 with Sarah — your report, movable','Sprint sync — Raj can cover','Acme check-in — external, needs a reschedule note'] },
+      ]
+    },
+    table:{
+      headers:['To','Channel','Message'],
+      rows:[
+        ['Sarah','Teams','Push our 1:1 to 4 PM — Marc called a mandatory review'],
+        ['Raj','Teams','Will miss sprint sync — you\'ve got it? Notes after?'],
+        ['Priya','Teams','Heads-up: you\'ll join the 2 PM review'],
+        ['#product-platform','Teams','FYI — offline 2–3 PM'],
+        ['Acme (Maria)','Email','Reschedule today\'s check-in — two new slots offered'],
+        ['Marc\'s EA','Email','Confirming attendance at 2 PM'],
+        ['Finance','Email','Expense sign-off will land by EOD instead'],
+      ]
+    },
+    actions:[
+      { label:'Approve all & send', key:'reschedule_send', tier:'L4' },
+      { label:'Review each message', key:'reschedule_review', tier:'L1' },
+      { label:'Don\'t reschedule', key:'reschedule_cancel', tier:'L1' },
     ],
   }],
 }
@@ -1863,6 +1914,11 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
     leave_backup: 'Within parental-leave policy v3 · Backup approver must be same level or above and have team overlap.',
     approve_all:  'Within $5k single-approver limit · All 3 items pass expense-policy checks.',
     reject_all:   'You are declining all 3 items. Submitters will be notified with reason prompt.',
+    reschedule_send: 'These 7 messages send in your name across Teams and email. One reschedules an external meeting — sending on your behalf needs your OK.',
+  }
+  // Custom "Done" copy for actions where the chip label isn't a good past-tense line.
+  const DONE_LABELS = {
+    reschedule_send: 'Sent. Your 2 PM is clear for Marc — 7 messages delivered, calendar updated.',
   }
   // Drafts shown for L2 "review-first" actions.
   const L2_DRAFTS = {
@@ -1870,7 +1926,28 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
       subject: 'Handover while I\'m on parental leave (Jun 2 – Sep 1)',
       body: "Hi Priya,\n\nI'm taking parental leave from Jun 2 through Sep 1. You've agreed to cover — thank you so much.\n\nA short handover:\n• My recurring 1:1s and standing meetings are delegated to you (view only on the calendar).\n• Anything that needs sign-off while I'm out routes to Liam as backup approver.\n• Open work and context is pinned in OneDrive/Handover/ — start there.\n\nShout if anything is unclear — I'll be fully offline but can pop in for 30 min if it's genuinely urgent.\n\nAlex",
     },
+    // Per-message drafts for the batch-reschedule "Review each message" path.
+    resch_sarah: {
+      subject: null,
+      body: "Hi Sarah — really sorry for the short notice. Marc just called a mandatory product review at 2 PM and I need to be there. Could we push our 1:1 to 4 PM today? Same agenda, I'll come prepped. Thank you!",
+    },
+    resch_acme: {
+      subject: "Rescheduling today's check-in",
+      body: "Hi Maria,\n\nApologies for the late change — something's come up on my side this afternoon. Could we move today's check-in? Two slots that work on my end:\n• Tomorrow 11:00 AM\n• Tomorrow 2:30 PM\n\nWhichever suits you best. Sorry again for the short notice.\n\nBest,\nAlex",
+    },
+    resch_ea: {
+      subject: "Confirming attendance — 2 PM product review",
+      body: "Hi — confirming Alex will join Marc's product review at 2 PM today. Please send any pre-read across when you have a moment.\n\nThanks!",
+    },
   }
+  // Sub-actions surfaced when the user chooses to review the batch message-by-message.
+  // The three most human-sensitive notes get an editable preview; the rest send with them.
+  const RESCHEDULE_REVIEW_ACTIONS = [
+    { label:'Note to Sarah (Teams)',   key:'resch_sarah', tier:'L2' },
+    { label:'Email to Acme',           key:'resch_acme',  tier:'L2' },
+    { label:'Email to Marc\'s EA',     key:'resch_ea',    tier:'L2' },
+    { label:'Looks good — approve all & send', key:'reschedule_send', tier:'L4' },
+  ]
 
   // Rule strings shown under "Done ✓" for L1 actions.
   const L1_RULES = {
@@ -1912,10 +1989,29 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
     if (prefs?.alwaysAsk?.[action.key]) return 'L4'
     return action.tier || 'L1'
   }
-  const doneReplyFor = (action) => ({ role:'block', kind:'done', actionKey:action.key, label:action.label, rule:L1_RULES[action.key] })
+  const doneReplyFor = (action) => ({ role:'block', kind:'done', actionKey:action.key, label:DONE_LABELS[action.key] || action.label, rule:L1_RULES[action.key] })
   const runAction = (action, { skipConfirm = false } = {}) => {
     const tier = effectiveTier(action)
     setMessages(p => [...p, { role:'u', text:action.label }])
+    // Batch-reschedule — review path: surface each message as an editable preview chip.
+    if (action.key === 'reschedule_review') {
+      setMessages(p => [...p, {
+        role:'j',
+        text:"Here's each message — open any to tweak the wording before it goes, then approve all at once.",
+        actions: RESCHEDULE_REVIEW_ACTIONS,
+      }])
+      setCoreState('confirming')
+      return
+    }
+    // Batch-reschedule — decline path: leave the calendar untouched, offer a graceful out.
+    if (action.key === 'reschedule_cancel') {
+      setMessages(p => [...p, {
+        role:'j',
+        text:"No problem — I'll leave your calendar as is and let Marc's invite sit in your inbox. Want me to draft a short note to Marc instead?",
+      }])
+      setCoreState('idle')
+      return
+    }
     if (tier === 'L1') {
       SFX.done(); HX.done()
       setCoreState('executing')
@@ -2016,6 +2112,7 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
       : scenario === 'burnout' ? 'Liam Davis — capacity warning'
       : scenario === 'prep' ? 'QBR prep — SVP meeting'
       : scenario === 'leave' ? 'Parental-leave plan — Jun 2 to Sep 1'
+      : scenario === 'reschedule' ? 'Marc\'s 2 PM review — clearing your afternoon'
       : 'New chat')
 
   return (
@@ -3098,14 +3195,19 @@ function FeedView() {
         style={{ display:'flex', gap:8, margin:'18px 0 18px', flexWrap:'wrap' }}>
         {filterPills.map(f => {
           const active = filter === f.key
+          const activeBg = active ? f.color : T.surface
+          const activeIsLight = active && f.color === T.text
+          const activeFg = active ? (activeIsLight ? T.appBg : '#fff') : T.textMid
+          const activeCountBg = active ? (activeIsLight ? T.surfaceMid : 'rgba(255,255,255,0.22)') : T.surfaceMid
+          const activeCountFg = active ? (activeIsLight ? T.text : '#fff') : T.textSoft
           return (
             <button key={f.key} role="tab" aria-selected={active} type="button"
               onClick={() => { SFX.tap(); HX.tap(); setFilter(f.key) }}
               style={{ display:'inline-flex', alignItems:'center', gap:8,
                 padding:'8px 14px', borderRadius:99, cursor:'pointer',
-                background: active ? f.color : T.surface,
+                background: activeBg,
                 border: `1px solid ${active ? f.color : T.border}`,
-                color: active ? '#fff' : T.textMid,
+                color: activeFg,
                 fontSize:13, fontWeight:600, fontFamily:T.font,
                 boxShadow: active ? T.shadowSm : 'none',
                 transition:'all .12s' }}
@@ -3114,8 +3216,8 @@ function FeedView() {
               <span>{f.label}</span>
               <span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center',
                 minWidth:20, height:18, padding:'0 6px', borderRadius:99,
-                background: active ? 'rgba(255,255,255,0.22)' : T.surfaceMid,
-                color: active ? '#fff' : T.textSoft,
+                background: activeCountBg,
+                color: activeCountFg,
                 fontSize:11, fontWeight:700, lineHeight:1 }}>{f.count}</span>
             </button>
           )
@@ -4628,64 +4730,58 @@ export default function App() {
       <div style={{ width:68, display:'flex', flexDirection:'column', alignItems:'stretch', padding:'6px 0',
         flexShrink:0, background:T.rail, borderRight:`1px solid ${T.border}`, zIndex:10, transition:'background .3s' }}>
         {[
-          { src:'/teams-icons/activity.svg', label:'Activity' },
-          { src:'/teams-icons/chat.svg',     label:'Chat', badge:1 },
-          { src:'/teams-icons/teams.svg',    label:'Teams' },
-          { src:'/teams-icons/calendar.svg', label:'Calendar' },
-          { src:'/teams-icons/calls.svg',    label:'Calls' },
-          { src:'/teams-icons/files.svg',    label:'Files' },
-        ].map(({ src, label, badge }, i) => (
+          { Icon: AlertRegular,      label:'Activity' },
+          { Icon: ChatRegular,       label:'Chat', badge:1 },
+          { Icon: PeopleTeamRegular, label:'Teams' },
+          { Icon: CalendarRegular,   label:'Calendar' },
+          { Icon: CallRegular,       label:'Calls' },
+          { Icon: DocumentRegular,   label:'Files' },
+        ].map(({ Icon, label, badge }, i) => (
           <button key={i} type="button"
-            style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-              background:'none', border:'none', cursor:'pointer', transition:'color .15s',
+            style={{ width:'100%', padding:'4px 2px', minHeight:56, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+              background:'none', border:'none', cursor:'pointer', transition:'color .15s, background .15s', borderRadius:4,
               color:T.textSoft, position:'relative' }}
-            onMouseEnter={e => { e.currentTarget.style.color=T.core; e.currentTarget.querySelector('.rail-iconwrap').style.background=T.coreSoft }}
-            onMouseLeave={e => { e.currentTarget.style.color=T.textSoft; e.currentTarget.querySelector('.rail-iconwrap').style.background='none' }}>
-            <div className="rail-iconwrap" style={{ position:'relative', width:28, height:28, borderRadius:4,
-              display:'flex', alignItems:'center', justifyContent:'center', transition:'background .15s' }}>
-              <span aria-hidden="true" style={{
-                width:20, height:20, display:'inline-block', backgroundColor:'currentColor',
-                WebkitMaskImage:`url(${src})`, maskImage:`url(${src})`,
-                WebkitMaskRepeat:'no-repeat', maskRepeat:'no-repeat',
-                WebkitMaskPosition:'center', maskPosition:'center',
-                WebkitMaskSize:'contain', maskSize:'contain',
-              }} />
+            onMouseEnter={e => { e.currentTarget.style.color=T.core; e.currentTarget.style.background=T.coreSoft }}
+            onMouseLeave={e => { e.currentTarget.style.color=T.textSoft; e.currentTarget.style.background='none' }}>
+            <div className="rail-iconwrap" style={{ position:'relative', width:24, height:24,
+              display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <Icon size={22} />
               {badge && (
-                <span style={{ position:'absolute', top:-3, right:-5, minWidth:14, height:14, padding:'0 4px',
-                  borderRadius:99, background:T.red, color:'#fff', fontSize:9, fontWeight:700,
-                  display:'inline-flex', alignItems:'center', justifyContent:'center', lineHeight:1 }}>{badge}</span>
+                <span style={{ position:'absolute', top:-4, right:-6, minWidth:16, height:16, padding:'0 4px',
+                  borderRadius:8, background:T.red, color:'#fff', fontSize:10, fontWeight:700,
+                  display:'inline-flex', alignItems:'center', justifyContent:'center', lineHeight:1,
+                  boxShadow:`0 0 0 2px ${T.rail}` }}>{badge}</span>
               )}
             </div>
-            <span style={{ fontSize:11, fontWeight:500, lineHeight:1 }}>{label}</span>
+            <span style={{ fontSize:10, fontWeight:500, lineHeight:'14px' }}>{label}</span>
           </button>
         ))}
 
         {/* JARVIS (selected app) */}
         <button type="button"
-          style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+          style={{ width:'100%', padding:'4px 2px', minHeight:56, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
             background:'none', border:'none', cursor:'pointer', color:T.core, position:'relative' }}>
-          {/* Selected accent bar */}
-          <div style={{ position:'absolute', left:0, top:6, bottom:6, width:3, borderRadius:'0 2px 2px 0', background:T.core }} />
-          <div style={{ width:28, height:28, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center',
+          {/* Selected accent bar — matches real Teams rail (top/bottom 12px inset) */}
+          <div style={{ position:'absolute', left:0, top:12, bottom:12, width:3, borderRadius:'0 2px 2px 0', background:T.core }} />
+          <div style={{ width:24, height:24, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center',
             background:T.coreGrad }}>
             <Sparkles size={15} color="#fff" />
           </div>
-          <span style={{ fontSize:11, fontWeight:700, lineHeight:1, color:T.core }}>Jarvis</span>
+          <span style={{ fontSize:10, fontWeight:700, lineHeight:'14px', color:T.core }}>Jarvis</span>
         </button>
 
         <div style={{ flex:1 }} />
 
-        {/* Apps (+) at bottom */}
+        {/* Apps at bottom — official Teams Apps glyph */}
         <button type="button"
-          style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-            background:'none', border:'none', cursor:'pointer', transition:'color .15s', color:T.textSoft }}
-          onMouseEnter={e => { e.currentTarget.style.color=T.core }}
-          onMouseLeave={e => { e.currentTarget.style.color=T.textSoft }}>
-          <div style={{ width:28, height:28, borderRadius:4, border:`1px solid ${T.border}`,
-            display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Plus size={14} strokeWidth={2} />
+          style={{ width:'100%', padding:'4px 2px', minHeight:56, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2,
+            background:'none', border:'none', cursor:'pointer', transition:'color .15s, background .15s', borderRadius:4, color:T.textSoft }}
+          onMouseEnter={e => { e.currentTarget.style.color=T.core; e.currentTarget.style.background=T.coreSoft }}
+          onMouseLeave={e => { e.currentTarget.style.color=T.textSoft; e.currentTarget.style.background='none' }}>
+          <div style={{ width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <AppsRegular size={22} />
           </div>
-          <span style={{ fontSize:11, fontWeight:500, lineHeight:1 }}>Apps</span>
+          <span style={{ fontSize:10, fontWeight:500, lineHeight:'14px' }}>Apps</span>
         </button>
       </div>
 
@@ -4946,14 +5042,19 @@ export default function App() {
                     { key:'followups',  val: notDismissed.filter(INTENT_FILTERS.followups).length,  label:'Follow-ups',    color:T.teal,  dot:T.teal  },
                   ].map((f, i) => {
                     const active = todayFilter === f.key
+                    const activeBg = active ? f.color : T.surface
+                    const activeIsLight = active && f.color === T.text
+                    const activeFg = active ? (activeIsLight ? T.appBg : '#fff') : T.textMid
+                    const activeCountBg = active ? (activeIsLight ? T.surfaceMid : 'rgba(255,255,255,0.22)') : T.surfaceMid
+                    const activeCountFg = active ? (activeIsLight ? T.text : '#fff') : T.textSoft
                     return (
                       <button key={i} role="tab" aria-selected={active} type="button"
                         onClick={() => { SFX.tap(); HX.tap(); setTodayFilter(f.key) }}
                         style={{ display:'inline-flex', alignItems:'center', gap:8,
                           padding:'8px 14px', borderRadius:99, cursor:'pointer',
-                          background: active ? f.color : T.surface,
+                          background: activeBg,
                           border: `1px solid ${active ? f.color : T.border}`,
-                          color: active ? '#fff' : T.textMid,
+                          color: activeFg,
                           fontSize:13, fontWeight:600, fontFamily:T.font,
                           boxShadow: active ? T.shadowSm : 'none',
                           transition:'all .12s' }}
@@ -4963,8 +5064,8 @@ export default function App() {
                         <span style={{
                           display:'inline-flex', alignItems:'center', justifyContent:'center',
                           minWidth:20, height:18, padding:'0 6px', borderRadius:99,
-                          background: active ? 'rgba(255,255,255,0.22)' : T.surfaceMid,
-                          color: active ? '#fff' : T.textSoft,
+                          background: activeCountBg,
+                          color: activeCountFg,
                           fontSize:11, fontWeight:700, lineHeight:1,
                         }}>{f.val}</span>
                       </button>

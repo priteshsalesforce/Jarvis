@@ -1,0 +1,1911 @@
+/*
+ * Microsoft Teams design tokens (light theme).
+ *
+ * Sourced from the official "Microsoft Teams App Templates v2.0" design
+ * system file (Figma). Values match the spec exactly; do not change
+ * without updating the spec reference.
+ */
+
+:root {
+  /* Surfaces */
+  --teams-bg-app: #F7F7F7;        /* Light Background 2 — app shell */
+  --teams-bg-canvas: #FFFFFF;     /* White — primary message canvas */
+  --teams-bg-sidebar: #F2F6F9;    /* Cool light blue-grey */
+  --teams-bg-rail: #E4EDF3;       /* Slightly darker than sidebar */
+  --teams-bg-titlebar: #E4EDF3;
+  --teams-bg-titlebar-search: #FFFFFF;
+  --teams-bg-hover: rgba(91, 95, 199, 0.06);    /* Brand 6% */
+  --teams-bg-selected: rgba(91, 95, 199, 0.12); /* Brand 12% */
+  --teams-bg-card: #FFFFFF;
+  --teams-bg-card-elevated: #FFFFFF;
+  --teams-bg-message-incoming: #F5F5F5;         /* Light grey bubble */
+  --teams-bg-message-outgoing: #E8EBFA;         /* Brand tint bubble */
+  --teams-bg-overlay: rgba(0, 0, 0, 0.4);
+
+  /* Borders */
+  --teams-border-subtle: #E1DFDD;
+  --teams-border-strong: #DCDCDC;
+  --teams-border-card: #EDEBE9;
+  --teams-divider: #DCDCDC;
+
+  /* Foreground */
+  --teams-text: #242424;          /* Near Black — primary text */
+  --teams-text-secondary: #616161;
+  --teams-text-tertiary: #686868;
+  --teams-text-inverse: #FFFFFF;
+  --teams-text-link: #5B5FC7;
+
+  /* Brand (Fluent / Teams purple) */
+  --teams-brand: #5B5FC7;         /* Teams Purple (Primary) */
+  --teams-brand-blue-purple: #5059C9; /* Brand identity, logo */
+  --teams-brand-light: #7B83EB;
+  --teams-brand-lightest: #7F85F5;
+  --teams-brand-secondary: #6264A7;
+  --teams-brand-hover: #4B53BC;
+  --teams-brand-pressed: #444791;
+  --teams-brand-tint: #E8EBFA;
+  --teams-brand-shade: #3D3E78;
+  --teams-brand-dark-badge: #464775;
+
+  /* Status */
+  --teams-status-online: #6BB700;
+  --teams-status-away: #FCD116;
+  --teams-status-busy: #C4314B;
+  --teams-status-dnd: #C4314B;
+  --teams-status-offline: #8A8886;
+
+  /* Semantic */
+  --teams-error: #C4314B;
+  --teams-error-bg: #FCF4F6;
+  --teams-error-border: #F3D6D8;
+
+  /* Channel marker / @mention pill */
+  --teams-mention-bg: #e8ebfa;
+  --teams-mention-text: #5b5fc7;
+
+  /* Elevation */
+  --teams-shadow-2: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.132), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.108);
+  --teams-shadow-4: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.18), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.12);
+  --teams-shadow-8: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.18), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.12);
+
+  /* Radii (4px base, matches Fluent 2) */
+  --teams-radius-2: 2px;
+  --teams-radius-4: 4px;
+  --teams-radius-6: 6px;
+  --teams-radius-8: 8px;
+  --teams-radius-pill: 9999px;
+
+  /* Spacing */
+  --teams-space-2: 2px;
+  --teams-space-4: 4px;
+  --teams-space-6: 6px;
+  --teams-space-8: 8px;
+  --teams-space-12: 12px;
+  --teams-space-16: 16px;
+  --teams-space-20: 20px;
+  --teams-space-24: 24px;
+  --teams-space-32: 32px;
+
+  /* Type ramp — Segoe UI (Windows/Desktop) */
+  --teams-font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+  --teams-font-size-caption: 12px;  /* line-height 16 */
+  --teams-font-size-body: 14px;     /* line-height 20 — body, section title, button */
+  --teams-font-size-page: 18px;     /* line-height 24 — page/dialog title */
+  /* Numbered aliases (preserved for compatibility with existing class rules) */
+  --teams-font-size-100: 10px;
+  --teams-font-size-200: 12px;
+  --teams-font-size-300: 14px;
+  --teams-font-size-400: 16px;
+  --teams-font-size-500: 18px;
+  --teams-font-size-600: 24px;
+
+  /* Chrome dimensions */
+  --teams-titlebar-height: 48px;
+  --teams-rail-width: 68px;
+  --teams-sidebar-width: 288px;
+}
+
+/* Apply Segoe to anything inside the Teams shell. `.teams-scope` mirrors
+ * the same font-family rule so Teams components previewed outside the
+ * full chrome (design system page, embedded showcases) still pick up
+ * Segoe UI — matching how `.slack-scope` already mirrors Lato. */
+.teams-chrome,
+.teams-chrome *,
+.teams-scope,
+.teams-scope * {
+  font-family: var(--teams-font-family);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.teams-chrome {
+  background-color: var(--teams-bg-app);
+  color: var(--teams-text);
+}
+
+/*
+ * Teams chat scope - remap the neutral global tokens (`--app-*`) defined in
+ * global.css to Teams (Fluent) brand values. Shared UI that consumes
+ * --app-* automatically picks up Teams styling when rendered under
+ * `.teams-chrome` (the real chat surface) or `.teams-scope` (a Teams
+ * component previewed elsewhere).
+ */
+.teams-chrome,
+.teams-scope {
+  --focus-ring-color: var(--teams-brand);
+  --focus-ring-offset: 2px;
+
+  --app-text: var(--teams-text);
+  --app-text-secondary: var(--teams-text-secondary);
+  --app-text-muted: var(--teams-text-tertiary);
+  --app-bg: var(--teams-bg-app);
+  --app-surface: var(--teams-bg-canvas);
+  --app-surface-muted: var(--teams-bg-rail);
+  --app-surface-hover: var(--teams-bg-hover);
+  --app-border: var(--teams-border-subtle);
+  --app-border-strong: var(--teams-border-strong);
+
+  --app-accent: var(--teams-brand);
+  --app-accent-hover: var(--teams-brand-hover);
+  --app-accent-soft: var(--teams-brand-tint);
+
+  --app-btn-primary-bg: var(--teams-brand);
+  --app-btn-primary-bg-hover: var(--teams-brand-hover);
+  --app-btn-primary-text: var(--teams-text-inverse);
+  --app-btn-secondary-bg: var(--teams-bg-canvas);
+  --app-btn-secondary-bg-hover: var(--teams-bg-hover);
+  --app-btn-secondary-text: var(--teams-text);
+  --app-btn-secondary-border: var(--teams-border-strong);
+  --app-btn-danger-bg: var(--teams-error);
+  --app-btn-danger-bg-hover: var(--teams-error);
+  --app-btn-danger-text: var(--teams-text-inverse);
+}
+
+/* Shared "global style" buttons (PrimaryButton, SecondaryButton, etc.) emit
+   `data-app-btn="..."`. Globally those render as 50px rounded-full pills.
+   Inside the Teams chrome we re-tune them to Fluent-native geometry —
+   shorter, modestly rounded (4px), denser type — so embedded Teams demo
+   content keeps feeling like real Teams instead of the shell. Color tokens
+   are already remapped to --teams-* in the scope above; this block only
+   re-tunes geometry + density. !important is required because the React
+   components set height / font-size / border-radius via inline style. */
+.teams-chrome [data-app-btn],
+.teams-scope [data-app-btn] {
+  height: 32px !important;
+  font-size: 14px !important;
+  border-radius: 4px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+}
+
+/* ================================================================
+ * Title bar (Windows-style, matches new Teams desktop)
+ *
+ * Layout: [logo] [back/fwd] [centered search] [overflow/profile/win-controls]
+ * ============================================================== */
+.teams-titlebar {
+  height: var(--teams-titlebar-height);
+  background-color: var(--teams-bg-titlebar);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
+  align-items: center;
+  padding: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* Left: just the brand logo. Per Figma 1522:35142 the back/forward chevrons
+ * live in the center group next to the search pill, not on the left. */
+.teams-titlebar__left {
+  display: flex;
+  align-items: center;
+  padding-left: 22px;
+}
+.teams-titlebar__logo {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.teams-titlebar__logo img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* Center: [back/forward] [search pill] */
+.teams-titlebar__center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--teams-space-16);
+  padding: 0 var(--teams-space-12);
+}
+.teams-titlebar__nav-stack {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-4);
+}
+.teams-titlebar__nav-btn {
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  border-radius: var(--teams-radius-4);
+  border: none;
+  background: transparent;
+  color: var(--teams-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 80ms ease;
+}
+.teams-titlebar__nav-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Search pill — white surface with subtle Fluent shadow per Figma. */
+.teams-titlebar__search {
+  width: clamp(320px, 50vw, 468px);
+  height: 32px;
+  background-color: var(--teams-bg-titlebar-search);
+  border: 1px solid transparent;
+  border-radius: var(--teams-radius-4);
+  padding: 0 var(--teams-space-12);
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-4);
+  font-size: var(--teams-font-size-body);
+  color: var(--teams-text-secondary);
+  cursor: text;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.12), 0 1px 1px rgba(0, 0, 0, 0.14);
+}
+.teams-titlebar__search:hover {
+  border-color: var(--teams-border-subtle);
+}
+.teams-titlebar__search-label {
+  color: var(--teams-text-secondary);
+  line-height: 20px;
+}
+
+/* Right: overflow + profile + Windows controls */
+.teams-titlebar__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--teams-space-8);
+  padding-right: 2px;
+  padding-top: 0px;
+  height: 32px;
+}
+.teams-titlebar__icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--teams-radius-4);
+  border: none;
+  background: transparent;
+  color: var(--teams-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 80ms ease;
+}
+.teams-titlebar__icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.teams-titlebar__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--teams-brand);
+  color: var(--teams-text-inverse);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--teams-font-size-caption);
+  overflow: visible;
+  position: relative;
+  cursor: pointer;
+}
+.teams-titlebar__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.teams-titlebar__avatar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--teams-status-online);
+  border: 2px solid var(--teams-bg-titlebar-search);
+}
+
+/* Windows window controls (right side) — 40px wide each, full title-bar
+ * height, with 16×16 thin-stroke glyphs to match the Figma spec. */
+.teams-titlebar__wincontrols {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: 40px;
+  margin-left: var(--teams-space-4);
+}
+.teams-titlebar__wincontrol {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--teams-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 80ms ease;
+}
+.teams-titlebar__wincontrol:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.teams-titlebar__wincontrol--close:hover {
+  background-color: #C42B1C;
+  color: #FFFFFF;
+}
+
+/* Body grid: rail + sidebar + main */
+.teams-body {
+  display: grid;
+  grid-template-columns: var(--teams-rail-width) var(--teams-sidebar-width) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+
+/* ================================================================
+ * Left app rail (new Teams desktop)
+ * ============================================================== */
+.teams-rail {
+  background-color: var(--teams-bg-rail);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--teams-space-4) 2px;
+  gap: 2px;
+}
+.teams-rail__item {
+  width: 100%;
+  min-height: 56px;
+  border-radius: var(--teams-radius-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--teams-text-secondary);
+  cursor: pointer;
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+}
+.teams-rail__item:hover {
+  background-color: var(--teams-bg-hover);
+  color: var(--teams-text);
+}
+.teams-rail__item--active {
+  color: var(--teams-brand);
+  background-color: transparent;
+}
+.teams-rail__item--active .teams-rail__label {
+  font-weight: 600;
+}
+.teams-rail__item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background-color: var(--teams-brand);
+}
+.teams-rail__icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.teams-rail__brand-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}
+.teams-rail__label {
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.teams-rail__divider {
+  width: 24px;
+  height: 1px;
+  background-color: var(--teams-divider);
+  margin: var(--teams-space-4) 0;
+}
+.teams-rail__spacer {
+  flex: 1;
+}
+.teams-rail__badge {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background-color: var(--teams-status-busy);
+  color: var(--teams-text-inverse);
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--teams-bg-rail);
+}
+
+/* ================================================================
+ * Secondary sidebar
+ * ============================================================== */
+.teams-sidebar {
+  background-color: var(--teams-bg-sidebar);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+}
+.teams-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--teams-space-16) var(--teams-space-16) var(--teams-space-8) var(--teams-space-24);
+  gap: var(--teams-space-8);
+  flex-shrink: 0;
+}
+.teams-sidebar__title {
+  font-size: var(--teams-font-size-page); /* 18px Segoe UI bold */
+  font-weight: 700;
+  color: var(--teams-text);
+  line-height: 24px;
+}
+.teams-sidebar__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.teams-sidebar__icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--teams-radius-4);
+  border: none;
+  background: transparent;
+  color: var(--teams-text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.teams-sidebar__icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+.teams-sidebar__searchbox {
+  margin: 0 var(--teams-space-12) var(--teams-space-8);
+  height: 32px;
+  background-color: var(--teams-bg-canvas);
+  border: 1px solid var(--teams-border-subtle);
+  border-radius: var(--teams-radius-4);
+  padding: 0 var(--teams-space-12);
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-8);
+  color: var(--teams-text-tertiary);
+  font-size: var(--teams-font-size-caption);
+  flex-shrink: 0;
+}
+.teams-sidebar__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--teams-space-12);
+  margin-left: var(--teams-space-8);
+  margin-right: var(--teams-space-8);
+}
+.teams-sidebar__section {
+  padding: var(--teams-space-4) var(--teams-space-6);
+}
+.teams-sidebar__section-label {
+  font-size: var(--teams-font-size-caption);
+  font-weight: 600;
+  color: var(--teams-text-secondary);
+  padding: var(--teams-space-12) var(--teams-space-8) var(--teams-space-4) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-4);
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0;
+}
+.teams-sidebar__section-label:hover {
+  color: var(--teams-text);
+}
+.teams-sidebar__section-caret {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.teams-sidebar__section-caret svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Chat row (Pinned / Recent items) */
+.teams-sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-8);
+  padding: 0 var(--teams-space-12) 0 16px;
+  border-radius: var(--teams-radius-4);
+  cursor: pointer;
+  color: var(--teams-text);
+  font-size: var(--teams-font-size-body);
+  position: relative;
+  margin: 1px 0;
+  min-height: 34px;
+}
+.teams-sidebar__item:hover {
+  background-color: var(--teams-bg-hover);
+}
+.teams-sidebar__item--selected {
+  background-color: var(--teams-bg-canvas);
+  box-shadow: inset 0 0 0 1px var(--teams-border-card);
+}
+.teams-sidebar__item-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--teams-brand-secondary);
+  color: var(--teams-text-inverse);
+  font-weight: 600;
+  font-size: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: visible;
+  position: relative;
+}
+.teams-sidebar__item-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.teams-sidebar__item-avatar-status {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--teams-status-online);
+  border: 1.5px solid var(--teams-bg-sidebar);
+}
+.teams-sidebar__item--selected .teams-sidebar__item-avatar-status {
+  border-color: var(--teams-bg-canvas);
+}
+.teams-sidebar__item-name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--teams-font-size-body);
+  font-weight: 400;
+  color: var(--teams-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 20px;
+}
+
+/* Channel team-group icon (rounded square w/ initial) */
+.teams-sidebar__item-channel-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--teams-radius-2);
+  background-color: var(--teams-brand-tint);
+  color: var(--teams-brand);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 9px;
+  flex-shrink: 0;
+}
+
+/* Teams tree (Pinned + Your teams sections) */
+.teams-sidebar__team {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-8);
+  padding: var(--teams-space-6) var(--teams-space-8) var(--teams-space-6) 0;
+  border-radius: var(--teams-radius-4);
+  cursor: pointer;
+  font-size: var(--teams-font-size-body);
+  font-weight: 400;
+  color: var(--teams-text);
+  position: relative;
+  margin: 1px 0;
+}
+.teams-sidebar__team:hover {
+  background-color: var(--teams-bg-hover);
+}
+.teams-sidebar__channel {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-8);
+  padding: var(--teams-space-6) var(--teams-space-8) var(--teams-space-6) 48px;
+  border-radius: var(--teams-radius-4);
+  cursor: pointer;
+  font-size: var(--teams-font-size-body);
+  color: var(--teams-text);
+  position: relative;
+  margin: 1px 0;
+}
+.teams-sidebar__channel:hover {
+  background-color: var(--teams-bg-hover);
+}
+.teams-sidebar__channel--unread {
+  font-weight: 700;
+}
+.teams-sidebar__channel--active {
+  background-color: var(--teams-bg-selected);
+  color: var(--teams-brand);
+  font-weight: 600;
+}
+.teams-sidebar__channel--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background-color: var(--teams-brand);
+}
+.teams-sidebar__see-all {
+  padding: var(--teams-space-6) var(--teams-space-8) var(--teams-space-6) 48px;
+  font-size: var(--teams-font-size-body);
+  color: var(--teams-brand);
+  cursor: pointer;
+}
+.teams-sidebar__see-all:hover {
+  text-decoration: underline;
+}
+
+/* ================================================================
+ * Main canvas (chat / channel area)
+ * ============================================================== */
+.teams-main {
+  background-color: var(--teams-bg-canvas);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Conversation header — title + inline tabs + right actions in a single row */
+.teams-conv-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--teams-space-8) var(--teams-space-20);
+  border-bottom: 1px solid var(--teams-border-subtle);
+  gap: var(--teams-space-16);
+  background-color: var(--teams-bg-canvas);
+  flex-shrink: 0;
+  min-height: 56px;
+}
+.teams-conv-header__title {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-12);
+  min-width: 0;
+  flex-shrink: 0;
+}
+.teams-conv-header__avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: var(--teams-brand-secondary);
+  color: var(--teams-text-inverse);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--teams-font-size-caption);
+  position: relative;
+}
+.teams-conv-header__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.teams-conv-header__avatar-status {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--teams-status-online);
+  border: 2px solid var(--teams-bg-canvas);
+}
+.teams-conv-header__channel-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--teams-radius-4);
+  background-color: var(--teams-brand-tint);
+  color: var(--teams-brand);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: var(--teams-font-size-body);
+}
+.teams-conv-header__name-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0;
+}
+.teams-conv-header__name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-8);
+  min-width: 0;
+}
+.teams-conv-header__name {
+  font-size: var(--teams-font-size-page);
+  font-weight: 700;
+  color: var(--teams-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 24px;
+}
+.teams-conv-header__sub {
+  font-size: var(--teams-font-size-caption);
+  color: var(--teams-text-secondary);
+  line-height: 16px;
+}
+
+/* Inline tabs sit immediately after the title in the same row */
+.teams-conv-header__tabs {
+  display: flex;
+  align-items: stretch;
+  gap: var(--teams-space-16);
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  margin-left: var(--teams-space-4);
+}
+.teams-conv-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.teams-conv-header__icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--teams-radius-4);
+  border: none;
+  background: transparent;
+  color: #424242;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+.teams-conv-header__icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.teams-conv-header__icon-btn:hover {
+  background-color: var(--teams-bg-hover);
+  color: var(--teams-text);
+}
+
+/* Inline tabs (Chat | Files | + ; Posts | Files | OneNote | +) */
+.teams-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--teams-space-4);
+  padding: 0 var(--teams-space-4);
+  height: 100%;
+  min-height: 40px;
+  font-size: var(--teams-font-size-body);
+  font-weight: 600;
+  color: var(--teams-text-secondary);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+.teams-tab:hover {
+  color: var(--teams-text);
+}
+.teams-tab--active {
+  color: var(--teams-text);
+}
+.teams-tab--active::after {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--teams-brand);
+  border-radius: 1px;
+}
+
+/* ================================================================
+ * Message stream (Teams bubble layout)
+ *
+ * Layout:
+ *   .teams-msg                — single message row
+ *     .teams-msg--incoming    — left-aligned, light grey bubble + avatar
+ *     .teams-msg--outgoing    — right-aligned, purple-tint bubble, no avatar
+ *   Consecutive messages from same author share the same group:
+ *     .teams-msg--first       — shows avatar + header (name + time)
+ *     .teams-msg--continued   — hides avatar + header, tighter spacing
+ * ============================================================== */
+.teams-stream {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--teams-space-16) var(--teams-space-24) var(--teams-space-16);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background-color: var(--teams-bg-canvas);
+}
+.teams-stream--copilot {
+  gap: 16px;
+}
+.teams-stream__spacer {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Day divider — "Today" centered between thin horizontal lines */
+.teams-date-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-12);
+  margin: var(--teams-space-16) 0;
+}
+.teams-date-divider__line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--teams-divider);
+}
+.teams-date-divider__label {
+  font-size: var(--teams-font-size-caption);
+  color: var(--teams-text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* "New" divider — red double-line band */
+.teams-new-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-12);
+  padding: var(--teams-space-8) 0;
+}
+.teams-new-divider__line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--teams-status-busy);
+}
+.teams-new-divider__label {
+  font-size: var(--teams-font-size-caption);
+  color: var(--teams-status-busy);
+  font-weight: 700;
+}
+
+/* Message row */
+.teams-msg {
+  display: flex;
+  gap: var(--teams-space-12);
+  position: relative;
+  padding: 0;
+}
+.teams-msg--incoming {
+  justify-content: flex-start;
+  margin-top: 2px;
+}
+.teams-msg--outgoing {
+  /* time column hugs the left edge; bubble cluster hugs the right edge */
+  justify-content: space-between;
+  margin-top: 2px;
+}
+.teams-msg--first {
+  margin-top: var(--teams-space-12);
+}
+
+.teams-msg__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+  background-color: var(--teams-brand-secondary);
+  color: var(--teams-text-inverse);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--teams-font-size-caption);
+}
+.teams-msg__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Spacer that keeps subsequent messages aligned with the bubble of the first */
+.teams-msg__avatar-spacer {
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.teams-msg__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: min(720px, 70%);
+}
+.teams-msg--outgoing .teams-msg__body {
+  align-items: flex-end;
+}
+
+.teams-msg__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--teams-space-6);
+  margin-bottom: var(--teams-space-2);
+  padding: 0 2px;
+}
+.teams-msg__name {
+  font-size: var(--teams-font-size-body);
+  font-weight: 600;
+  color: var(--teams-text);
+  line-height: 18px;
+}
+.teams-msg__time {
+  font-size: 11px;
+  color: var(--teams-text-tertiary);
+  line-height: 16px;
+  font-weight: 400;
+}
+.teams-msg__app-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background-color: #F0EFFF;       /* Brand tint */
+  color: var(--teams-brand);
+  text-transform: uppercase;
+  line-height: 14px;
+  border: 1px solid #E0DFFF;
+}
+
+/* The bubble itself */
+.teams-msg__bubble {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: var(--teams-font-size-body);
+  line-height: 20px;
+  color: var(--teams-text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
+  position: relative;
+  max-width: 100%;
+}
+.teams-msg--incoming .teams-msg__bubble {
+  background-color: var(--teams-bg-message-incoming);
+  border-radius: 2px 6px 6px 6px;
+}
+.teams-msg--outgoing .teams-msg__bubble {
+  background-color: var(--teams-bg-message-outgoing);
+  border-radius: 6px 2px 6px 6px;
+}
+.teams-msg__bubble + .teams-msg__bubble {
+  margin-top: 2px;
+}
+
+/* Adaptive Card slot — render outside the bubble, full body width */
+.teams-msg__card {
+  margin-top: var(--teams-space-4);
+  min-width: 320px;
+  max-width: 100%;
+}
+
+/* Choice buttons (inline, after bubble) */
+.teams-msg__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--teams-space-8);
+  margin-top: var(--teams-space-8);
+  padding: 0 4px;
+}
+
+/* Reactions hover above the bubble */
+.teams-msg__reactions {
+  position: absolute;
+  top: -16px;
+  background-color: var(--teams-bg-canvas);
+  border: 1px solid var(--teams-border-subtle);
+  border-radius: var(--teams-radius-pill);
+  padding: 3px 4px;
+  box-shadow: var(--teams-shadow-4);
+  display: none;
+  align-items: center;
+  gap: 2px;
+  z-index: 5;
+}
+.teams-msg--incoming .teams-msg__reactions {
+  left: 56px;
+}
+.teams-msg--outgoing .teams-msg__reactions {
+  right: 12px;
+}
+.teams-msg:hover .teams-msg__reactions {
+  display: inline-flex;
+}
+.teams-msg__reaction-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: var(--teams-text-secondary);
+  padding: 0;
+}
+.teams-msg__reaction-btn:hover {
+  background-color: var(--teams-bg-hover);
+  color: var(--teams-text);
+}
+/* Colored 3D Fluent Emoji reactions — bigger glyph, no color tint on hover
+ * (the PNGs are full-color so the `color` change would be a no-op anyway). */
+.teams-msg__reaction-btn--emoji img {
+  width: 20px;
+  height: 20px;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+.teams-msg__reaction-divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--teams-border-subtle);
+  margin: 0 2px;
+}
+.teams-action-btn {
+  height: 32px;
+  padding: 0 var(--teams-space-16);
+  border-radius: var(--teams-radius-4);
+  background-color: var(--teams-brand);
+  color: var(--teams-text-inverse);
+  border: 1px solid var(--teams-brand);
+  font-size: var(--teams-font-size-300);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--teams-space-6);
+  transition: background-color 80ms ease;
+}
+.teams-action-btn:hover {
+  background-color: var(--teams-brand-hover);
+}
+.teams-action-btn--secondary {
+  background-color: var(--teams-bg-canvas);
+  color: var(--teams-text);
+  border-color: var(--teams-border-strong);
+}
+.teams-action-btn--secondary:hover {
+  background-color: var(--teams-bg-hover);
+}
+
+/* ================================================================
+ * Adaptive Card (rendered inside / under an incoming message)
+ * ============================================================== */
+.teams-adaptive-card {
+  margin-top: var(--teams-space-4);
+  background-color: var(--teams-bg-card);
+  border: 1px solid var(--teams-border-card);
+  border-radius: 8px;
+  padding: var(--teams-space-12) var(--teams-space-16);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.teams-adaptive-card .ac-actionSet {
+  margin-top: var(--teams-space-12) !important;
+}
+
+/* Tighten Fluent text + heading spec inside the card */
+.teams-adaptive-card .ac-textBlock {
+  font-family: var(--teams-font-family) !important;
+  color: var(--teams-text) !important;
+  font-size: var(--teams-font-size-body) !important;
+  line-height: 20px !important;
+}
+.teams-adaptive-card .ac-container {
+  font-family: var(--teams-font-family) !important;
+}
+
+.teams-adaptive-card .ac-pushButton,
+.teams-adaptive-card button.ac-pushButton {
+  height: 32px !important;
+  padding: 0 var(--teams-space-12) !important;
+  border-radius: var(--teams-radius-4) !important;
+  font-family: var(--teams-font-family) !important;
+  font-size: var(--teams-font-size-body) !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+  cursor: pointer !important;
+}
+
+/* Markdown output inside Adaptive Card TextBlocks */
+.teams-adaptive-card p {
+  margin: 0 0 8px 0;
+  font-size: var(--teams-font-size-body);
+  line-height: 20px;
+  color: var(--teams-text);
+}
+.teams-adaptive-card p:last-child {
+  margin-bottom: 0;
+}
+.teams-adaptive-card strong {
+  font-weight: 600;
+  color: var(--teams-text);
+}
+.teams-adaptive-card em {
+  font-style: italic;
+}
+.teams-adaptive-card a {
+  color: var(--teams-text-link);
+  text-decoration: none;
+}
+.teams-adaptive-card a:hover {
+  text-decoration: underline;
+}
+.teams-adaptive-card ul,
+.teams-adaptive-card .teams-ac-list {
+  margin: 4px 0 8px 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+.teams-adaptive-card li {
+  font-size: var(--teams-font-size-body);
+  line-height: 20px;
+  color: var(--teams-text);
+  margin-bottom: 2px;
+}
+.teams-adaptive-card .ac-pushButton.style-default {
+  background-color: var(--teams-bg-canvas) !important;
+  color: var(--teams-text) !important;
+  border: 1px solid var(--teams-border-strong) !important;
+}
+.teams-adaptive-card .ac-pushButton.style-default:hover {
+  background-color: var(--teams-bg-hover) !important;
+}
+.teams-adaptive-card .ac-pushButton.style-positive {
+  background-color: var(--teams-brand) !important;
+  color: var(--teams-text-inverse) !important;
+  border: 1px solid var(--teams-brand) !important;
+}
+.teams-adaptive-card .ac-pushButton.style-positive:hover {
+  background-color: var(--teams-brand-hover) !important;
+}
+.teams-adaptive-card .ac-pushButton.style-destructive {
+  background-color: var(--teams-bg-canvas) !important;
+  color: var(--teams-status-busy) !important;
+  border: 1px solid var(--teams-status-busy) !important;
+}
+.teams-adaptive-card .ac-pushButton.style-destructive:hover {
+  background-color: rgba(196, 49, 75, 0.08) !important;
+}
+.teams-adaptive-card .ac-factset {
+  font-family: var(--teams-font-family) !important;
+}
+
+/* ================================================================
+ * Composer (matches new Teams desktop)
+ *
+ * Layout (two rows — text on top wraps freely, action row pinned to
+ * the bottom-right of the rounded container):
+ *
+ *   .teams-composer
+ *     .teams-composer__box       — rounded container, column flex
+ *       .teams-composer__input   — full-width text area, wraps
+ *       .teams-composer__actions — emoji/attach/image/loop/+ | send
+ * ============================================================== */
+.teams-composer {
+  flex-shrink: 0;
+  padding: var(--teams-space-8) var(--teams-space-24) var(--teams-space-16);
+  background-color: var(--teams-bg-canvas);
+}
+.teams-composer__box {
+  border: 1px solid var(--teams-border-strong);
+  border-radius: var(--teams-radius-6);
+  background-color: var(--teams-bg-canvas);
+  display: flex;
+  flex-direction: column;
+  min-height: 70px;
+}
+.teams-composer__box:focus-within {
+  border-color: var(--teams-brand);
+  box-shadow: 0 0 0 1px var(--teams-brand);
+}
+.teams-composer__input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px var(--teams-space-16) 4px;
+  font-size: var(--teams-font-size-body);
+  color: var(--teams-text);
+  line-height: 20px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.teams-composer__input--placeholder {
+  color: var(--teams-text-tertiary);
+}
+.teams-composer__caret {
+  display: inline-block;
+  width: 1px;
+  height: 1.1em;
+  background-color: var(--teams-text);
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  animation: teamsCaretBlink 1s steps(2) infinite;
+}
+@keyframes teamsCaretBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.teams-composer__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 4px 6px 6px;
+}
+.teams-composer__divider {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background-color: var(--teams-divider);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+ * Copilot panel scope
+ *
+ * The new Teams desktop renders a dedicated Microsoft Copilot panel
+ * with a distinct chrome: inline "Copilot" heading instead of an
+ * avatar+App-tag combo, plain-text markdown replies (no bubble, no
+ * Adaptive Card), an action toolbar under each reply, and a rounded
+ * pill composer with a round purple arrow send button + "AI-generated
+ * content may be incorrect" footer.
+ *
+ * Only the rules below activate when the chat is in Copilot panel
+ * mode; the regular chat / channel render path is untouched.
+ * ============================================================== */
+
+/* Copilot reply ---------------------------------------------------- */
+.teams-msg--copilot-reply {
+  /* width:100% is required — without it, `margin:0 auto` makes this flex
+     child shrink to content width, so the typing animation appears to
+     grow from the center until it hits max-width and snaps left. */
+  display: block;
+  grid-template-columns: none;
+  padding: var(--teams-space-12) var(--teams-space-24) 0 var(--teams-space-24);
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+}
+.teams-msg--copilot-reply + .teams-msg--copilot-reply {
+  margin-top: var(--teams-space-8);
+}
+.teams-msg__copilot-head {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-8);
+  margin-bottom: var(--teams-space-8);
+  color: var(--teams-text);
+}
+.teams-msg__copilot-name {
+  font-size: var(--teams-font-size-body);
+  font-weight: 600;
+  color: var(--teams-text);
+  line-height: 20px;
+}
+.teams-msg__copilot-body {
+  font-size: var(--teams-font-size-body);
+  color: var(--teams-text);
+  line-height: 22px;
+}
+.teams-msg__copilot-p {
+  margin: 0 0 var(--teams-space-12) 0;
+}
+.teams-msg__copilot-p:last-child {
+  margin-bottom: 0;
+}
+.teams-msg__copilot-p strong {
+  font-weight: 600;
+  color: var(--teams-text);
+}
+.teams-msg__copilot-list {
+  margin: 0 0 var(--teams-space-12) 0;
+  padding-left: 22px;
+  list-style: disc;
+}
+.teams-msg__copilot-list li {
+  margin-bottom: 4px;
+  line-height: 22px;
+}
+.teams-msg__copilot-list li:last-child {
+  margin-bottom: 0;
+}
+.teams-msg__choices--copilot {
+  margin-top: var(--teams-space-8);
+}
+
+/* Reply toolbar (copy / 👍 / 👎 / share / edit / more) */
+.teams-msg__copilot-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: var(--teams-space-24);
+  margin-bottom: var(--teams-space-4);
+  color: var(--teams-text-tertiary);
+}
+.teams-msg__copilot-tool-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--teams-radius-4);
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+.teams-msg__copilot-tool-btn:hover {
+  background-color: var(--teams-bg-hover);
+  color: var(--teams-text);
+}
+.teams-msg__copilot-tool-btn--combo {
+  width: auto;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+/* Outgoing user bubble in Copilot panel — drop the timestamp column so
+   the bubble hugs the right edge of the centered 820px panel and use
+   symmetric corners (no "tail" pointing at the missing avatar). */
+.teams-msg--copilot-out {
+  justify-content: flex-end;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 var(--teams-space-24);
+  width: 100%;
+}
+.teams-msg--copilot-out .teams-msg__bubble {
+  border-radius: var(--teams-radius-6);
+  background-color: var(--teams-bg-message-outgoing);
+}
+
+/* Copilot composer ------------------------------------------------- */
+.teams-composer--copilot {
+  padding: var(--teams-space-8) var(--teams-space-24) var(--teams-space-8);
+  background-color: var(--teams-bg-canvas);
+}
+.teams-composer__copilot-box {
+  border: 1px solid var(--teams-border-strong);
+  border-radius: 26px;
+  background-color: var(--teams-bg-canvas);
+  display: flex;
+  flex-direction: column;
+  min-height: 84px;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 820px;
+  width: 100%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.teams-composer__copilot-box:focus-within {
+  border-color: var(--teams-brand);
+  box-shadow: 0 0 0 1px var(--teams-brand);
+}
+.teams-composer__input--copilot {
+  padding: 14px var(--teams-space-20) 6px;
+}
+.teams-composer__copilot-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 8px;
+  margin-top: auto;
+}
+.teams-composer__copilot-spacer {
+  flex: 1;
+}
+.teams-composer__copilot-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--teams-text-tertiary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+.teams-composer__copilot-icon-btn:hover {
+  background-color: var(--teams-bg-hover);
+  color: var(--teams-text);
+}
+.teams-composer__copilot-send {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  background-color: var(--teams-brand);
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.teams-composer__copilot-send--ready:hover {
+  background-color: var(--teams-brand-hover);
+}
+.teams-composer__copilot-send--idle {
+  background-color: var(--teams-brand);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.teams-composer__copilot-send:disabled {
+  cursor: not-allowed;
+}
+.teams-composer__copilot-footer {
+  text-align: center;
+  font-size: var(--teams-font-size-caption);
+  color: var(--teams-text-tertiary);
+  padding: 6px 0 var(--teams-space-8);
+  line-height: 16px;
+}
+.teams-composer__fmt-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--teams-radius-4);
+  border: none;
+  background: transparent;
+  color: #616161;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+.teams-composer__fmt-btn:hover {
+  background-color: var(--teams-bg-hover);
+  color: var(--teams-text);
+}
+.teams-composer__send {
+  width: 30px;
+  height: 30px;
+  margin-left: 2px;
+  padding: 0;
+  border-radius: var(--teams-radius-4);
+  background-color: transparent;
+  color: #616161;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.teams-composer__send--ready {
+  color: var(--teams-brand);
+}
+.teams-composer__send--ready:hover {
+  background-color: var(--teams-bg-hover);
+}
+.teams-composer__send--idle {
+  color: #BCBCBC;
+  cursor: not-allowed;
+}
+.teams-composer__send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Typing indicator */
+.teams-typing {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-6);
+  padding: var(--teams-space-8) var(--teams-space-4);
+  font-size: var(--teams-font-size-200);
+  color: var(--teams-text-secondary);
+}
+.teams-typing__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--teams-text-secondary);
+  animation: teamsDot 1.4s infinite ease-in-out;
+}
+.teams-typing__dot:nth-child(2) { animation-delay: 0.18s; }
+.teams-typing__dot:nth-child(3) { animation-delay: 0.36s; }
+@keyframes teamsDot {
+  0%, 60%, 100% { transform: scale(0.6); opacity: 0.5; }
+  30% { transform: scale(1); opacity: 1; }
+}
+
+/* Dialog (modal) */
+.teams-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: var(--teams-bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--teams-space-20);
+  z-index: 50;
+}
+.teams-dialog {
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--teams-bg-canvas);
+  border-radius: var(--teams-radius-8);
+  box-shadow: var(--teams-shadow-8);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.teams-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--teams-space-20) var(--teams-space-24) var(--teams-space-12);
+}
+.teams-dialog__title {
+  font-size: var(--teams-font-size-500);
+  font-weight: 700;
+  color: var(--teams-text);
+}
+.teams-dialog__body {
+  padding: 0 var(--teams-space-24) var(--teams-space-20);
+  display: flex;
+  flex-direction: column;
+  gap: var(--teams-space-16);
+}
+.teams-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--teams-space-4);
+}
+.teams-dialog__label {
+  font-size: var(--teams-font-size-200);
+  font-weight: 600;
+  color: var(--teams-text);
+}
+.teams-dialog__input {
+  height: 32px;
+  border: 1px solid var(--teams-border-strong);
+  border-radius: var(--teams-radius-4);
+  padding: 0 var(--teams-space-12);
+  font-size: var(--teams-font-size-300);
+  color: var(--teams-text);
+  background-color: var(--teams-bg-canvas);
+  font-family: var(--teams-font-family);
+}
+.teams-dialog__input:focus {
+  border-color: var(--teams-brand);
+  outline: none;
+}
+.teams-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--teams-space-8);
+  padding: var(--teams-space-12) var(--teams-space-24) var(--teams-space-20);
+  border-top: 1px solid var(--teams-divider);
+  background-color: #fafafa;
+}
+
+/* Persona bar dark strip already styled by demo bar; nothing here */
+
+/* ================================================================
+ * Sidebar — chat filter pills (Unread / Chats / Meeting chats)
+ *
+ * The new Teams desktop renders three pill-shaped tab buttons under the
+ * "Chat" header. Only the active pill carries a brand-tinted fill; the
+ * other two are outlined.
+ * ============================================================== */
+.teams-sidebar__pills {
+  display: flex;
+  gap: 6px;
+  padding: 0 var(--teams-space-12) var(--teams-space-8) var(--teams-space-24);
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.teams-sidebar__pill {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 13px;
+  border: 1px solid var(--teams-border-strong);
+  background: transparent;
+  color: var(--teams-text-secondary);
+  font-family: var(--teams-font-family);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.teams-sidebar__pill:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+.teams-sidebar__pill--active {
+  background-color: var(--teams-brand-tint);
+  border-color: transparent;
+  color: var(--teams-brand);
+}
+
+/* ================================================================
+ * Sidebar — fixed pinned rows (Copilot / Mentions)
+ *
+ * These two rows are always shown at the top of the Chat sidebar in the
+ * new Teams desktop, between the filter pills and the Favorites/Chats
+ * sections. Smaller density than a regular chat row.
+ * ============================================================== */
+.teams-sidebar__section--pinned {
+  padding: 2px var(--teams-space-6) var(--teams-space-8);
+}
+.teams-sidebar__pinned-row {
+  display: flex;
+  align-items: center;
+  gap: var(--teams-space-8);
+  padding: 6px var(--teams-space-12) 6px 16px;
+  border-radius: var(--teams-radius-4);
+  cursor: pointer;
+  color: var(--teams-text);
+  min-height: 34px;
+  position: relative;
+}
+.teams-sidebar__pinned-row:hover {
+  background-color: var(--teams-bg-hover);
+}
+.teams-sidebar__pinned-row--selected {
+  background-color: var(--teams-bg-canvas);
+  box-shadow: inset 0 0 0 1px var(--teams-border-card);
+}
+.teams-sidebar__pinned-row--selected .teams-sidebar__pinned-label {
+  color: var(--teams-text);
+}
+.teams-sidebar__pinned-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+.teams-sidebar__pinned-mention {
+  background-color: var(--teams-brand-tint);
+  color: var(--teams-text);
+}
+.teams-sidebar__pinned-label {
+  font-size: var(--teams-font-size-body);
+  font-weight: 400;
+  color: var(--teams-text);
+  line-height: 18px;
+}
+
+/* ================================================================
+ * Outgoing message — far-left timestamp column + read receipt
+ *
+ * In the new Teams desktop, outgoing messages have:
+ *   - A timestamp printed flush to the left margin (where an incoming
+ *     avatar would be), separated from the bubble by whitespace.
+ *   - A small "read" indicator hung off the bottom-right of the most
+ *     recent outgoing bubble in the conversation.
+ * ============================================================== */
+.teams-msg__time-col {
+  font-size: var(--teams-font-size-caption);
+  color: var(--teams-text-tertiary);
+  align-self: flex-end;
+  flex-shrink: 0;
+  padding-bottom: 6px;
+  min-width: 60px;
+  line-height: 16px;
+}
+.teams-msg__time-col--placeholder {
+  visibility: hidden;
+}
+.teams-msg__read-receipt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--teams-text-tertiary);
+  margin-top: 4px;
+  margin-right: 0;
+  width: 14px;
+  height: 14px;
+  align-self: flex-end;
+}
+
+/* ================================================================
+ * Conversation header — split call button + AI chevron
+ *
+ * The audio-call icon in the conversation header is a small split button:
+ * the call glyph plus a tiny down chevron that opens the "call as..." menu.
+ * ============================================================== */
+.teams-conv-header__icon-btn--split {
+  width: 44px;
+  position: relative;
+  padding-right: 8px;
+}
+.teams-conv-header__icon-chevron {
+  position: absolute;
+  right: 4px;
+  bottom: 6px;
+  color: var(--teams-text-tertiary);
+}
+
+/* ================================================================
+ * Conversation header — Copilot panel variant
+ *
+ * The Copilot panel does not show an avatar / name / tabs / call chrome.
+ * Instead it shows:
+ *   - A small green "protected data" shield on the far left.
+ *   - Two right-aligned brand-purple action buttons: a split compose
+ *     button (new chat with chevron-down history menu) and an
+ *     "open in new window" icon.
+ * ============================================================== */
+.teams-conv-header--copilot {
+  /* Drop the title block + tabs + 7-icon action cluster; keep the same
+   * padding so the chrome height matches a standard chat header. */
+  justify-content: flex-start;
+  gap: 0;
+  padding: var(--teams-space-8) var(--teams-space-20);
+}
+
+.teams-conv-header__copilot-shield {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  /* Green = Microsoft "data protected" indicator (Fluent online green) */
+  color: var(--teams-status-online);
+}
+
+.teams-conv-header__copilot-spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.teams-conv-header__copilot-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.teams-conv-header__copilot-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  min-width: 32px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--teams-radius-4);
+  background-color: transparent;
+  color: var(--teams-brand);
+  cursor: pointer;
+  transition: background-color 80ms ease;
+}
+.teams-conv-header__copilot-btn:hover {
+  background-color: var(--teams-brand-tint);
+}
+
+/* Split button — compose icon + thin divider + chevron-down.
+ * In the live Teams desktop this button is the *primary* action in the
+ * Copilot header, so it is filled solid brand-purple with white glyphs;
+ * the divider is a translucent-white hairline to separate the two halves. */
+.teams-conv-header__copilot-btn--split {
+  gap: 4px;
+  padding-left: 10px;
+  padding-right: 8px;
+  background-color: var(--teams-brand);
+  color: #ffffff;
+}
+.teams-conv-header__copilot-btn--split:hover {
+  background-color: var(--teams-brand-hover);
+}
+.teams-conv-header__copilot-btn--split:active {
+  background-color: var(--teams-brand-pressed);
+}
+.teams-conv-header__copilot-split-divider {
+  width: 1px;
+  height: 16px;
+  background-color: rgba(255, 255, 255, 0.55);
+  margin: 0 2px;
+}
+

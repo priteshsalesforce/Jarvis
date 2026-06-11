@@ -10,9 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "adaptivecards": "^3.0.6",
     "lucide-react": "^1.14.0",
+    "node-emoji": "^2.2.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-router-dom": "^7.16.0",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
