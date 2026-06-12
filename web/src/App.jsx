@@ -15,35 +15,22 @@ import {
   Cloud, Mail, Briefcase, Layers, LifeBuoy, GitBranch, Hash as HashIcon,
   Pin, PinOff,
 } from 'lucide-react'
-// Official Microsoft Teams (Fluent) rail icons — ported from the real Teams shell.
+// Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
-  ChatRegular, PeopleTeamRegular, CalendarRegular, CallRegular,
-  DocumentRegular, AlertRegular, AppsRegular,
+  ChatRegular, PeopleTeamRegular, VideoCameraSmallRegular, BookContactsRegular,
+  CalendarRegular, CopilotBrand, AlertRegular, AppsRegular,
+  ChevronLeftRegular, ChevronRightRegular, SearchRegular, MoreHorizontalRegular,
 } from '@/components/icons/teams'
 
 // ─── Sound engine ─────────────────────────────────────────────────────────────
-// Tiny Web Audio API helpers — graceful no-op if AudioContext unavailable
-function createBeep(freq = 440, dur = 0.08, vol = 0.04, type = 'sine') {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain); gain.connect(ctx.destination)
-    osc.type = type; osc.frequency.value = freq
-    gain.gain.setValueAtTime(vol, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur)
-    osc.start(); osc.stop(ctx.currentTime + dur)
-    setTimeout(() => ctx.close(), (dur + 0.1) * 1000)
-  } catch (_) {}
-}
-
+// UI sounds disabled — all SFX are no-ops so the demo stays silent everywhere.
 const SFX = {
-  tap:      () => createBeep(660, 0.05, 0.035),
-  done:     () => { createBeep(523, 0.06, 0.04); setTimeout(() => createBeep(659, 0.09, 0.04), 70) },
-  open:     () => createBeep(480, 0.07, 0.03, 'triangle'),
-  close:    () => createBeep(360, 0.07, 0.025, 'triangle'),
-  alert:    () => { createBeep(520, 0.08, 0.04); setTimeout(() => createBeep(440, 0.12, 0.03), 90) },
-  whisper:  () => createBeep(880, 0.04, 0.02, 'sine'),
+  tap:      () => {},
+  done:     () => {},
+  open:     () => {},
+  close:    () => {},
+  alert:    () => {},
+  whisper:  () => {},
 }
 
 // ─── Haptics ──────────────────────────────────────────────────────────────────
@@ -207,6 +194,11 @@ const INTENTS = [
     why:'Last updated Oct 2023. HR flagged it during the annual audit. One-field update.',
     action:'Update contact', source:'Workday · Profile',
     evidence:'Last updated Oct 2023 · Single-field edit', chatScenario:null },
+  { id:'c1', tier:'L1', cat:'Follow-up needed',
+    headline:'Asset attestation + GIS security survey due in 4 days',
+    why:'GIS sent the annual asset attestation and security survey. I cross-checked the asset register — both devices assigned to you are still active, so attestation is one tap. The survey is ~8 min. Non-completion locks VPN access.',
+    action:'Review & confirm assets', source:'ServiceNow · GIS',
+    evidence:'Deadline May 12 · 2 assets to attest · ~8 min', chatScenario:null },
   { id:'e1', tier:'L2', cat:'In 90 minutes',
     headline:'QBR with SVP — prep bundle ready',
     why:'Deck found, 3 open actions surfaced, SVP context compiled.',
@@ -264,7 +256,7 @@ const TODAY_EVENTS = [
 const FEED_ITEMS = [
   { id:'fd0', time:'11:41', status:'done', emoji:'🗓️', title:'Cleared your afternoon for Marc\'s review',
     body:'Marc (SVP) made the 2 PM mandatory. Ranked the sender, reshuffled 3 conflicts, and sent 7 messages in your name — after your approval.',
-    steps:['Ranked sender: SVP, outranks the afternoon','Drafted 4 Teams messages + 3 emails','You approved all in one tap','Sent ✓ · 1:1 moved to 4 PM, Acme rescheduled'] },
+    steps:['Ranked sender: SVP, outranks the afternoon','Drafted 4 Teams messages + 3 emails','You approved all in one tap','Sent ✓ · 1:1 moved to 4 PM, Acme rescheduled, calendar cleared, Salesforce case noted'] },
   { id:'fd1', time:'08:47', status:'done', emoji:'🧠', title:'Morning brief compiled',
     body:'Ranked 8 items from Workday, Outlook, Jira by deadline × impact.',
     steps:['Fetch Outlook flagged emails → 4 surfaced','Fetch Workday approvals → 3 items','Fetch Jira overdue → 3/9 surfaced','Score and rank'] },
@@ -415,7 +407,7 @@ const CHAT_SCENARIOS = {
   // Embodies Alex's brief: don't add to the noise, always merit the time, taste + tact.
   reschedule:[{
     role:'j',
-    text:"**Marc made the 2 PM product review mandatory.** It collides with 3 things on your calendar.\n\nHere's the fix I worked out to clear 2–3 PM:\n• Move your **1:1 with Sarah** to 4 PM\n• Step out of **sprint sync** — Raj can cover\n• **Reschedule the Acme check-in** to tomorrow\n\nTo make it happen I'm ready to send **4 Teams messages and 3 emails** in your name. Take a look — edit anything, then approve all at once.",
+    text:"**Marc made the 2 PM product review mandatory.** It collides with 3 things on your calendar.\n\nHere's the fix I worked out to clear 2–3 PM:\n• Move your **1:1 with Sarah** to 4 PM\n• Step out of **sprint sync** — Priya will send notes\n• **Reschedule the Acme check-in** to tomorrow\n\nTo make it happen I'm ready to send **4 Teams messages and 3 emails**, clear your 2 PM, and add a note to the Salesforce case. Take a look — edit anything, then approve all at once.",
     trace:{
       summary:'Read 1 invite, ranked the sender, found 3 conflicts',
       steps:[
@@ -424,19 +416,21 @@ const CHAT_SCENARIOS = {
         { label:'Checked sender rank against your org', plugin:'WorkdayPlugin',
           bullets:['Marc = SVP · 2 levels above you','Outranks every meeting on your afternoon'] },
         { label:'Found 3 calendar conflicts, 2–3 PM', plugin:'OutlookPlugin',
-          bullets:['1:1 with Sarah — your report, movable','Sprint sync — Raj can cover','Acme check-in — external, needs a reschedule note'] },
+          bullets:['1:1 with Sarah — your report, movable','Sprint sync — Priya will send notes','Acme check-in — external, needs a reschedule note'] },
       ]
     },
     table:{
-      headers:['To','Channel','Message'],
+      headers:['To','Channel','Purpose','Status'],
       rows:[
-        ['Sarah','Teams','Push our 1:1 to 4 PM — Marc called a mandatory review'],
-        ['Raj','Teams','Will miss sprint sync — you\'ve got it? Notes after?'],
-        ['Priya','Teams','Heads-up: you\'ll join the 2 PM review'],
-        ['#product-platform','Teams','FYI — offline 2–3 PM'],
-        ['Acme (Maria)','Email','Reschedule today\'s check-in — two new slots offered'],
-        ['Marc\'s EA','Email','Confirming attendance at 2 PM'],
-        ['Finance','Email','Expense sign-off will land by EOD instead'],
+        ['Sarah','Teams','Move 1:1 to 4 PM','Ready'],
+        ['Sprint team','Teams','You\'ll miss sync — Priya to send notes','Ready'],
+        ['Priya','Teams','Heads-up + request meeting notes','Ready'],
+        ['#product-platform','Teams','FYI — offline 2–3 PM','Ready'],
+        ['Acme (vendor)','Email','Decline check-in — two new slots offered','Ready'],
+        ['Marc\'s attendees','Email','Confirm you\'ll attend at 2 PM','Ready'],
+        ['Finance','Email','Expense sign-off lands by EOD','Ready'],
+        ['Your calendar','Outlook','Clear & hold 2–3 PM for Marc','Ready'],
+        ['Salesforce case','Salesforce','Add note: review bridge scheduled','Ready'],
       ]
     },
     actions:[
@@ -782,6 +776,20 @@ const CHAT_CHANNELS = [
 
 
 // ─── Shared mini-components ────────────────────────────────────────────────────
+// Jarvis identity mark — the robot avatar shown everywhere Jarvis is represented.
+// Uses a transparent-background robot on a theme-adaptive tile: white in light
+// mode, black in dark mode. `radius` accepts px or '50%'.
+function JarvisMark({ size = 28, radius = 6, style = {} }) {
+  const T = window.__T
+  const isDark = T?.appBg === '#1F1F1F'
+  return (
+    <img src="/jarvis-icon-transparent.png" alt="Jarvis"
+      style={{ width:size, height:size, borderRadius:radius, objectFit:'cover',
+        background: isDark ? '#000' : '#fff',
+        display:'block', flexShrink:0, ...style }} />
+  )
+}
+
 function GlassCard({ children, style = {}, hover = true, onClick, className = '' }) {
   const T = window.__T
   const [hov, setHov] = useState(false)
@@ -865,10 +873,7 @@ function NeuralCore({ state, onClick }) {
     <button type="button" onClick={() => { SFX.tap(); onClick?.() }}
       style={{ display:'flex', alignItems:'center', gap:10, background:'none', border:'none', cursor:'pointer', padding:'4px 8px', borderRadius:4 }}>
       <div style={{ position:'relative', width:32, height:32 }}>
-        <div style={{ width:32, height:32, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center',
-          background:T.coreGrad, animation:c.anim }}>
-          <Sparkles size={15} color="white" />
-        </div>
+        <JarvisMark size={32} radius={8} />
       </div>
       <div style={{ lineHeight:1 }}>
         <p style={{ fontSize:14, fontWeight:700, letterSpacing:'0.06em', color:T.text }}>JARVIS</p>
@@ -1479,10 +1484,7 @@ function DoneWithUndo({ msg, rule, onUndo }) {
   const now = new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })
   return (
     <div className="enter" style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
-      <div style={{ width:26, height:26, borderRadius:6, flexShrink:0, marginTop:2,
-        display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
-        <Sparkles size={12} color="#fff" />
-      </div>
+      <JarvisMark size={26} radius={6} style={{ marginTop:2 }} />
       <div style={{ maxWidth:'84%', padding:'10px 13px', background:T.surfaceMid,
         border:`1px solid ${T.border}`, borderRadius:8, borderBottomLeftRadius:2, fontSize:14 }}>
         <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:4 }}>
@@ -1840,6 +1842,14 @@ function buildIntentOpening(item) {
         { label:'Remind me later', key:'C' },
       ],
     },
+    c1: {
+      text: "GIS sent your annual **asset attestation + security survey**, due **May 12**. I checked the asset register: both devices assigned to you — *MacBook Pro (M3)* and *iPhone 15* — are still active and in your possession, so attestation is one tap. The survey is 10 questions, about 8 minutes. Heads up: missing the deadline locks VPN access.",
+      actions: [
+        { label:'Confirm both assets as held', key:'A' },
+        { label:'Start the 8-min security survey', key:'B' },
+        { label:'Block 10 min tomorrow morning', key:'C' },
+      ],
+    },
     e2: {
       text: "Your $4,200 travel reimbursement is **over your single-approver limit** — Finance needs explicit confirmation before it routes to the VP. The trip and policy line check out.",
       actions: [
@@ -1914,11 +1924,11 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
     leave_backup: 'Within parental-leave policy v3 · Backup approver must be same level or above and have team overlap.',
     approve_all:  'Within $5k single-approver limit · All 3 items pass expense-policy checks.',
     reject_all:   'You are declining all 3 items. Submitters will be notified with reason prompt.',
-    reschedule_send: 'These 7 messages send in your name across Teams and email. One reschedules an external meeting — sending on your behalf needs your OK.',
+    reschedule_send: 'One of these declines an external meeting with the vendor (Acme). Sending it in your name needs your OK before the batch goes out.',
   }
   // Custom "Done" copy for actions where the chip label isn't a good past-tense line.
   const DONE_LABELS = {
-    reschedule_send: 'Sent. Your 2 PM is clear for Marc — 7 messages delivered, calendar updated.',
+    reschedule_send: 'Done. Your 2 PM is clear for Marc — sent 4 Teams messages and 3 emails, updated your calendar, and added a note to the Salesforce case.',
   }
   // Drafts shown for L2 "review-first" actions.
   const L2_DRAFTS = {
@@ -2125,7 +2135,7 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
         <div style={{ flex:1, overflowY:'auto', position:'relative' }}>
           {/* Sticky title row — title on the extreme left, controls on the extreme right */}
           <div style={{ position:'sticky', top:0, zIndex:5, background:T.surface,
-            padding:'14px 16px 12px',
+            padding:'14px 16px 12px', borderBottom:`1px solid ${T.border}`,
             display:'flex', alignItems:'center', gap:8 }}>
             <h2 title={headerTitle}
               style={{ flex:1, fontSize:14, fontWeight:700, color:T.text, margin:0,
@@ -2459,10 +2469,7 @@ function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
         {/* Header */}
         <div style={{ padding:'16px 20px', borderBottom:`1px solid ${T.border}`,
           display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
-          <div style={{ width:32, height:32, borderRadius:8, background:T.coreGrad,
-            display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Sparkles size={14} color="#fff" />
-          </div>
+          <JarvisMark size={32} radius={8} />
           <div>
             <p style={{ fontSize:15, fontWeight:800, color:T.text, margin:0 }}>What I can do</p>
             <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0' }}>Here's where I'm helping — tell me to adjust.</p>
@@ -2482,10 +2489,7 @@ function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
             <div key={i} style={{ display:'flex', justifyContent: m.role==='u' ? 'flex-end' : 'flex-start',
               marginBottom:8 }}>
               {m.role === 'j' && (
-                <div style={{ width:22, height:22, borderRadius:5, flexShrink:0, marginRight:6, marginTop:2,
-                  display:'flex', alignItems:'center', justifyContent:'center', background:T.coreGrad }}>
-                  <Sparkles size={10} color="#fff" />
-                </div>
+                <JarvisMark size={22} radius={5} style={{ marginRight:6, marginTop:2 }} />
               )}
               <div style={{ maxWidth:'86%', padding:'8px 12px', fontSize:13, lineHeight:1.5,
                 borderRadius:8,
@@ -2678,10 +2682,7 @@ function SetupView({ initialPrefs, onComplete, onSkip, onBack }) {
     <PageLayout maxWidth={720}>
       <div style={{ maxWidth:640, margin:'8px auto 0' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
-          <div style={{ width:32, height:32, borderRadius:8, background:T.coreGrad,
-            display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Sparkles size={15} color="#fff" />
-          </div>
+          <JarvisMark size={32} radius={8} />
           <div>
             <p style={{ fontSize:15, fontWeight:800, color:T.text, margin:0 }}>Let's get you set up</p>
             <p style={{ fontSize:13, color:T.textSoft, margin:'2px 0 0' }}>Three small choices. Takes a minute.</p>
@@ -2871,10 +2872,7 @@ function TuningLoader({ prefs }) {
       <style>{CSS}</style>
       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:18 }}>
         <div style={{ position:'relative', width:72, height:72 }}>
-          <div style={{ width:72, height:72, borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center',
-            background:T.coreGrad, boxShadow:T.shadowPurple, animation:'breathe 2s ease-in-out infinite' }}>
-            <Sparkles size={30} color="white" />
-          </div>
+          <JarvisMark size={72} radius={18} style={{ boxShadow:T.shadowPurple, animation:'breathe 2s ease-in-out infinite' }} />
         </div>
         <p style={{ fontSize:18, fontWeight:800, color:T.text }}>Tuning your brief…</p>
         <div style={{ fontSize:13, color:T.textSoft, textAlign:'center', lineHeight:1.8 }}>
@@ -2950,10 +2948,7 @@ function WelcomeScreen({ onLogin }) {
                 background:T.surfaceBlur, backdropFilter:'blur(20px)', position:'relative' }}>
                 <div style={{ padding:'12px 16px', borderBottom:`1px solid ${T.border}`,
                   display:'flex', alignItems:'center', gap:10, background:T.topBar }}>
-                  <div style={{ width:28, height:28, borderRadius:'50%', background:T.coreGrad,
-                    display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                    <Sparkles size={13} color="white" />
-                  </div>
+                  <JarvisMark size={28} radius="50%" />
                   <div>
                     <p style={{ fontSize:13, fontWeight:700, color:T.text }}>Jarvis</p>
                     <p style={{ fontSize:12, color:T.green }}>● Active · 9:04 AM</p>
@@ -2967,10 +2962,7 @@ function WelcomeScreen({ onLogin }) {
                   ].map((m,i) => (
                     <div key={i} className="enter" style={{ display:'flex', justifyContent:m.role==='u'?'flex-end':'flex-start', animationDelay:m.delay }}>
                       {m.role==='j' && (
-                        <div style={{ width:22, height:22, borderRadius:6, background:T.coreGrad,
-                          display:'flex', alignItems:'center', justifyContent:'center', marginRight:8, flexShrink:0, marginTop:2 }}>
-                          <Sparkles size={10} color="white" />
-                        </div>
+                        <JarvisMark size={22} radius={6} style={{ marginRight:8, marginTop:2 }} />
                       )}
                       <div style={{ maxWidth:'85%', padding:'9px 13px', borderRadius:8, fontSize:13, lineHeight:1.6,
                         ...(m.role==='u'
@@ -2981,10 +2973,7 @@ function WelcomeScreen({ onLogin }) {
                     </div>
                   ))}
                   <div className="enter" style={{ display:'flex', alignItems:'center', gap:8, animationDelay:'1.8s' }}>
-                    <div style={{ width:22, height:22, borderRadius:6, background:T.coreGrad,
-                      display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      <Sparkles size={10} color="white" />
-                    </div>
+                    <JarvisMark size={22} radius={6} />
                     <div style={{ padding:'9px 14px', borderRadius:8, background:T.surfaceMid, border:`1px solid ${T.border}`,
                       display:'flex', gap:4, alignItems:'center' }}>
                       {[0,1,2].map(i => (
@@ -3634,10 +3623,7 @@ function AgentFlowPanel({ conv }) {
         color:T.textXsoft, marginBottom:20 }}>Agent trace</p>
       {/* Start node */}
       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', marginBottom:0 }}>
-        <div style={{ width:32, height:32, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center',
-          background:T.coreGrad }}>
-          <Sparkles size={13} color="white" />
-        </div>
+        <JarvisMark size={32} radius={8} />
         <div style={{ width:1, height:20, borderLeft:`1.5px dashed ${T.borderMid}`, margin:'0 auto' }} />
       </div>
       {/* Steps */}
@@ -4347,6 +4333,23 @@ export default function App() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [personaOpen])
+  // Demo-mode Docs dropdown
+  const [docsOpen, setDocsOpen] = useState(false)
+  const DOCS = [
+    {
+      label: '[Product Draft] Employee’s Personal AI Assistant (aka Jarvis)',
+      url: 'https://docs.google.com/document/d/1lKEbUC-SdBnmUJA86j3lVgxz2fCzuWaxjCRqVYZdLNM/edit?tab=t.m0vigb9mrgxn#heading=h.jz7vz7a4sial',
+    },
+    // add more docs links here as the demo grows
+  ]
+  useEffect(() => {
+    if (!docsOpen) return
+    const handler = (e) => {
+      if (!e.target.closest?.('.docs-dd')) setDocsOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [docsOpen])
   const [coreState, setCoreState] = useState('idle')
   const [chatItem, setChatItem] = useState(null)
   const [chatScenario, setChatScenario] = useState(null)
@@ -4532,7 +4535,7 @@ export default function App() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [handledOpen])
-  const handleNotifAct = () => { setShowNotif(false); setNotifDone(true); openChat(null,'incident') }
+  const handleNotifAct = () => { setShowNotif(false); setNotifDone(true); openChat(null,'reschedule') }
   const handleEventClick = ev => openChat({
     headline:ev.title, tier:'L2', source:ev.location,
     evidence:`${ev.time}–${ev.end} · ${ev.attendees.join(', ')}`,
@@ -4557,10 +4560,7 @@ export default function App() {
       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:20, zIndex:1 }}>
         <div style={{ position:'relative', width:72, height:72 }}>
           <div className="ripple-ring" style={{ position:'absolute', inset:0, borderRadius:'50%', border:`1.5px solid ${T.core}50` }} />
-          <div style={{ width:72, height:72, borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center',
-            background:T.coreGrad, boxShadow:T.shadowPurple, animation:'breathe 2s ease-in-out infinite' }}>
-            <Sparkles size={30} color="white" />
-          </div>
+          <JarvisMark size={72} radius={16} style={{ boxShadow:T.shadowPurple, animation:'breathe 2s ease-in-out infinite' }} />
         </div>
         <p style={{ color:T.text, fontWeight:700, fontSize:17 }}>Connecting to Salesforce…</p>
         <p style={{ fontSize:14, color:T.textSoft }}>Pulling your morning brief</p>
@@ -4627,6 +4627,41 @@ export default function App() {
           )}
         </div>
         <div style={{ flex:1 }} />
+        {/* Docs — quick links to demo reference docs */}
+        <div className="docs-dd" style={{ position:'relative' }}>
+          <button type="button"
+            aria-haspopup="menu" aria-expanded={docsOpen}
+            onClick={() => { SFX.tap(); setDocsOpen(o => !o) }}
+            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 10px',
+              borderRadius:4, border:'1px solid #2A2A2A', background:'#151515',
+              color:'#E5E5E5', fontSize:11, fontWeight:600, cursor:'pointer',
+              fontFamily:T.font, transition:'background .12s' }}
+            onMouseEnter={e=>{ e.currentTarget.style.background='#1E1E1E' }}
+            onMouseLeave={e=>{ e.currentTarget.style.background='#151515' }}>
+            <FileText size={11} />
+            Docs
+            <ChevronDown size={11} style={{ transform: docsOpen ? 'rotate(180deg)' : 'rotate(0)', transition:'transform .15s' }} />
+          </button>
+          {docsOpen && (
+            <div role="menu" className="expand-down" style={{ position:'absolute', top:'calc(100% + 4px)', right:0,
+              minWidth:300, maxWidth:380, background:'#151515', border:'1px solid #2A2A2A', borderRadius:6,
+              boxShadow:'0 8px 20px rgba(0,0,0,0.6)', padding:4, zIndex:40, fontFamily:T.font }}>
+              {DOCS.map(d => (
+                <a key={d.url} role="menuitem" href={d.url} target="_blank" rel="noopener noreferrer"
+                  onClick={() => { SFX.tap(); setDocsOpen(false) }}
+                  style={{ display:'flex', alignItems:'flex-start', gap:10, width:'100%',
+                    padding:'8px 10px', borderRadius:4, background:'none', textDecoration:'none',
+                    color:'#fff', transition:'background .1s' }}
+                  onMouseEnter={e=>{ e.currentTarget.style.background='rgba(255,255,255,0.05)' }}
+                  onMouseLeave={e=>{ e.currentTarget.style.background='none' }}>
+                  <FileText size={13} style={{ flexShrink:0, marginTop:2, color:'#8A8A8A' }} />
+                  <span style={{ flex:1, minWidth:0, fontSize:12, fontWeight:500, lineHeight:1.35, color:'#fff' }}>{d.label}</span>
+                  <ExternalLink size={11} style={{ flexShrink:0, marginTop:2, color:'#6A6A6A' }} />
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
         {/* Bell — manually fire the proactive Teams notification (demo only) */}
         {scene === 'app' && (
           <button type="button" aria-label="Trigger proactive notification"
@@ -4657,66 +4692,48 @@ export default function App() {
         </span>
       </div>
 
-      {/* ── Teams-style chrome: top search bar ── */}
-      <div style={{ height:48, flexShrink:0, display:'flex', alignItems:'center', gap:8,
-        padding:'0 12px', background:T.rail, borderBottom:`1px solid ${T.border}`, zIndex:20 }}>
-        {/* Teams logo */}
-        <img src="/teams-logo.svg" alt="Microsoft Teams"
-          style={{ width:32, height:32, flexShrink:0, display:'block' }} />
-        {/* Back / forward */}
-        <div style={{ display:'flex', alignItems:'center', gap:2, marginLeft:'auto', marginRight:'auto' }}>
-          <button type="button" style={{ width:28, height:28, borderRadius:4,
-            background:'none', border:'none', cursor:'pointer', color:T.textSoft,
-            display:'flex', alignItems:'center', justifyContent:'center', transition:'background .12s' }}
-            onMouseEnter={e=>{ e.currentTarget.style.background=T.surfaceMid }}
-            onMouseLeave={e=>{ e.currentTarget.style.background='none' }}>
-            <ChevronLeft size={16} />
-          </button>
-          <button type="button" style={{ width:28, height:28, borderRadius:4,
-            background:'none', border:'none', cursor:'pointer', color:T.textSoft,
-            display:'flex', alignItems:'center', justifyContent:'center', transition:'background .12s' }}
-            onMouseEnter={e=>{ e.currentTarget.style.background=T.surfaceMid }}
-            onMouseLeave={e=>{ e.currentTarget.style.background='none' }}>
-            <ChevronRight size={16} />
-          </button>
-          {/* Search field */}
-          <div style={{ marginLeft:16, display:'flex', alignItems:'center', gap:8,
-            width:560, maxWidth:'40vw', padding:'6px 14px', borderRadius:6,
-            background:T.surface, border:`1px solid ${T.border}` }}>
-            <Search size={14} color={T.textSoft} />
-            <input type="text" placeholder="Search"
-              style={{ flex:1, fontSize:13, background:'none', border:'none', outline:'none',
-                color:T.text, fontFamily:T.font }} />
+      {/* ── Teams titlebar — exact MS Teams shell (teams.css .teams-titlebar) ── */}
+      <div className="teams-titlebar teams-scope" role="toolbar" aria-label="Teams window">
+        <div className="teams-titlebar__left">
+          <span className="teams-titlebar__logo" aria-hidden="true">
+            <img src="/assets/teams-logo.svg" alt="" />
+          </span>
+        </div>
+        <div className="teams-titlebar__center">
+          <div className="teams-titlebar__nav-stack" aria-hidden="true">
+            <button className="teams-titlebar__nav-btn" type="button" tabIndex={-1} aria-label="Back">
+              <ChevronLeftRegular size={20} />
+            </button>
+            <button className="teams-titlebar__nav-btn" type="button" tabIndex={-1} aria-label="Forward">
+              <ChevronRightRegular size={20} />
+            </button>
+          </div>
+          <div className="teams-titlebar__search" aria-hidden="true">
+            <SearchRegular size={20} />
+            <span className="teams-titlebar__search-label">Search</span>
           </div>
         </div>
-        {/* Right chrome: more, avatar, window controls */}
-        <div style={{ display:'flex', alignItems:'center', gap:6, marginLeft:'auto' }}>
-          <button type="button" style={{ width:28, height:28, borderRadius:4,
-            background:'none', border:'none', cursor:'pointer', color:T.textSoft,
-            display:'flex', alignItems:'center', justifyContent:'center', transition:'background .12s' }}
-            onMouseEnter={e=>{ e.currentTarget.style.background=T.surfaceMid }}
-            onMouseLeave={e=>{ e.currentTarget.style.background='none' }}>
-            <MoreHorizontal size={16} />
+        <div className="teams-titlebar__right">
+          <button className="teams-titlebar__icon-btn" type="button" tabIndex={-1} aria-label="More">
+            <MoreHorizontalRegular size={20} />
           </button>
-          {/* Avatar with presence dot */}
-          <div style={{ position:'relative', width:28, height:28, borderRadius:'50%',
-            background:'#F4A79D', display:'flex', alignItems:'center', justifyContent:'center',
-            color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer', marginLeft:6 }}>
-            A
-            <span style={{ position:'absolute', right:-1, bottom:-1, width:10, height:10, borderRadius:'50%',
-              background:T.green, border:`2px solid ${T.rail}` }} />
-          </div>
-          {/* Window controls */}
-          <div style={{ display:'flex', alignItems:'center', gap:2, marginLeft:6 }}>
-            {[Minus, Square, X].map((Ico, i) => (
-              <button key={i} type="button" style={{ width:28, height:28, borderRadius:4,
-                background:'none', border:'none', cursor:'pointer', color:T.textSoft,
-                display:'flex', alignItems:'center', justifyContent:'center', transition:'background .12s' }}
-                onMouseEnter={e=>{ e.currentTarget.style.background=i===2?T.red:T.surfaceMid; e.currentTarget.style.color=i===2?'#fff':T.textSoft }}
-                onMouseLeave={e=>{ e.currentTarget.style.background='none'; e.currentTarget.style.color=T.textSoft }}>
-                <Ico size={i===1?11:14} />
-              </button>
-            ))}
+          <div className="teams-titlebar__avatar" aria-label="My account"><span>A</span></div>
+          <div className="teams-titlebar__wincontrols" aria-hidden="true">
+            <button className="teams-titlebar__wincontrol" type="button" tabIndex={-1} aria-label="Minimize">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+                <path d="M3 8h10" stroke="currentColor" strokeWidth="1" strokeLinecap="square" />
+              </svg>
+            </button>
+            <button className="teams-titlebar__wincontrol" type="button" tabIndex={-1} aria-label="Maximize">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+                <rect x="3" y="3" width="10" height="10" stroke="currentColor" strokeWidth="1" fill="none" />
+              </svg>
+            </button>
+            <button className="teams-titlebar__wincontrol teams-titlebar__wincontrol--close" type="button" tabIndex={-1} aria-label="Close">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false">
+                <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" strokeWidth="1" strokeLinecap="square" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -4724,72 +4741,39 @@ export default function App() {
       {/* ── Main area: left rail + content column ── */}
       <div style={{ display:'flex', flex:1, minHeight:0, overflow:'hidden' }}>
 
-      {/* Left rail — Teams-style 68px wide with icon + label.
-          Icons are the official MS Teams SVGs (see /web/public/teams-icons/),
-          rendered via CSS mask so they inherit currentColor for the hover state. */}
-      <div style={{ width:68, display:'flex', flexDirection:'column', alignItems:'stretch', padding:'6px 0',
-        flexShrink:0, background:T.rail, borderRight:`1px solid ${T.border}`, zIndex:10, transition:'background .3s' }}>
+      {/* Left rail — exact MS Teams shell (teams.css .teams-rail) */}
+      <nav className="teams-rail teams-scope" aria-label="Teams app rail" style={{ width:68, flexShrink:0, zIndex:10 }}>
         {[
-          { src:'/teams-icons/activity.svg', label:'Activity' },
-          { src:'/teams-icons/chat.svg',     label:'Chat', badge:1 },
-          { src:'/teams-icons/teams.svg',    label:'Teams' },
-          { src:'/teams-icons/calendar.svg', label:'Calendar' },
-          { src:'/teams-icons/calls.svg',    label:'Calls' },
-          { src:'/teams-icons/files.svg',    label:'Files' },
-        ].map(({ src, label, badge }, i) => (
-          <button key={i} type="button"
-            style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-              background:'none', border:'none', cursor:'pointer', transition:'color .15s',
-              color:T.textSoft, position:'relative' }}
-            onMouseEnter={e => { e.currentTarget.style.color=T.core; e.currentTarget.querySelector('.rail-iconwrap').style.background=T.coreSoft }}
-            onMouseLeave={e => { e.currentTarget.style.color=T.textSoft; e.currentTarget.querySelector('.rail-iconwrap').style.background='none' }}>
-            <div className="rail-iconwrap" style={{ position:'relative', width:28, height:28, borderRadius:4,
-              display:'flex', alignItems:'center', justifyContent:'center', transition:'background .15s' }}>
-              <span aria-hidden="true" style={{
-                width:20, height:20, display:'inline-block', backgroundColor:'currentColor',
-                WebkitMaskImage:`url(${src})`, maskImage:`url(${src})`,
-                WebkitMaskRepeat:'no-repeat', maskRepeat:'no-repeat',
-                WebkitMaskPosition:'center', maskPosition:'center',
-                WebkitMaskSize:'contain', maskSize:'contain',
-              }} />
-              {badge && (
-                <span style={{ position:'absolute', top:-3, right:-5, minWidth:14, height:14, padding:'0 4px',
-                  borderRadius:99, background:T.red, color:'#fff', fontSize:9, fontWeight:700,
-                  display:'inline-flex', alignItems:'center', justifyContent:'center', lineHeight:1 }}>{badge}</span>
-              )}
-            </div>
-            <span style={{ fontSize:11, fontWeight:500, lineHeight:1 }}>{label}</span>
+          { Icon: ChatRegular,             label:'Chat' },
+          { Icon: PeopleTeamRegular,       label:'Communities' },
+          { Icon: VideoCameraSmallRegular, label:'Call to meet' },
+          { Icon: BookContactsRegular,     label:'People' },
+          { Icon: CalendarRegular,         label:'Calendar' },
+          { Brand: CopilotBrand,           label:'Copilot' },
+          { Icon: AlertRegular,            label:'Activity' },
+        ].map(({ Icon, Brand, label }, i) => (
+          <button key={i} type="button" tabIndex={-1} className="teams-rail__item" aria-label={label}>
+            <span className="teams-rail__icon">{Brand ? <Brand size={22} /> : <Icon size={22} />}</span>
+            <span className="teams-rail__label">{label}</span>
           </button>
         ))}
 
-        {/* JARVIS (selected app) */}
-        <button type="button"
-          style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-            background:'none', border:'none', cursor:'pointer', color:T.core, position:'relative' }}>
-          {/* Selected accent bar */}
-          <div style={{ position:'absolute', left:0, top:6, bottom:6, width:3, borderRadius:'0 2px 2px 0', background:T.core }} />
-          <div style={{ width:28, height:28, borderRadius:6, display:'flex', alignItems:'center', justifyContent:'center',
-            background:T.coreGrad }}>
-            <Sparkles size={15} color="#fff" />
-          </div>
-          <span style={{ fontSize:11, fontWeight:700, lineHeight:1, color:T.core }}>Jarvis</span>
+        {/* Jarvis — the selected app */}
+        <button type="button" className="teams-rail__item teams-rail__item--active" aria-current="page" aria-label="Jarvis">
+          <span className="teams-rail__icon"><JarvisMark size={24} radius={6} /></span>
+          <span className="teams-rail__label">Jarvis</span>
         </button>
 
-        <div style={{ flex:1 }} />
+        <div className="teams-rail__spacer" />
 
-        {/* Apps (+) at bottom */}
-        <button type="button"
-          style={{ width:'100%', padding:'8px 4px', display:'flex', flexDirection:'column', alignItems:'center', gap:3,
-            background:'none', border:'none', cursor:'pointer', transition:'color .15s', color:T.textSoft }}
-          onMouseEnter={e => { e.currentTarget.style.color=T.core }}
-          onMouseLeave={e => { e.currentTarget.style.color=T.textSoft }}>
-          <div style={{ width:28, height:28, borderRadius:4, border:`1px solid ${T.border}`,
-            display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Plus size={14} strokeWidth={2} />
-          </div>
-          <span style={{ fontSize:11, fontWeight:500, lineHeight:1 }}>Apps</span>
+        <button type="button" tabIndex={-1} className="teams-rail__item" aria-label="More">
+          <span className="teams-rail__icon"><MoreHorizontalRegular size={22} /></span>
         </button>
-      </div>
+        <button type="button" tabIndex={-1} className="teams-rail__item" aria-label="Apps">
+          <span className="teams-rail__icon"><AppsRegular size={22} /></span>
+          <span className="teams-rail__label">Apps</span>
+        </button>
+      </nav>
 
       {/* Main column */}
       <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0, overflow:'hidden', position:'relative', zIndex:1 }}>
@@ -4850,11 +4834,7 @@ export default function App() {
             {/* Header — Teams app badge + dismiss */}
             <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px 8px',
               borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ width:28, height:28, borderRadius:6, flexShrink:0,
-                background:'linear-gradient(135deg,#5C2E91,#7C4EAE)',
-                display:'flex', alignItems:'center', justifyContent:'center' }}>
-                <Sparkles size={14} color="#fff" />
-              </div>
+              <JarvisMark size={28} radius={6} />
               <div style={{ flex:1, minWidth:0 }}>
                 <p style={{ fontSize:12, fontWeight:600, color:'#fff', margin:0, lineHeight:1.2 }}>Jarvis</p>
                 <p style={{ fontSize:11, color:'rgba(255,255,255,0.55)', margin:'1px 0 0', lineHeight:1 }}>now</p>
@@ -4872,10 +4852,10 @@ export default function App() {
             {/* Body */}
             <div style={{ padding:'10px 12px 12px' }}>
               <p style={{ fontSize:13, fontWeight:600, color:'#fff', margin:'0 0 3px', lineHeight:1.35 }}>
-                P1 incident — Auth Service down
+                Marc made the 2 PM product review mandatory
               </p>
               <p style={{ fontSize:12, color:'rgba(255,255,255,0.7)', margin:'0 0 12px', lineHeight:1.45 }}>
-                EU-West-1 returning 503s on /v1/auth. 3 enterprise customers impacted · owner unassigned
+                It conflicts with 3 meetings on your calendar. I worked out a fix — want to review it?
               </p>
               <div style={{ display:'flex', gap:6 }}>
                 <button type="button" onClick={handleNotifAct}
@@ -4884,7 +4864,7 @@ export default function App() {
                     fontFamily:T.font, transition:'background .12s' }}
                   onMouseEnter={e=>{ e.currentTarget.style.background=T.coreMid }}
                   onMouseLeave={e=>{ e.currentTarget.style.background=T.core }}>
-                  Open in Jarvis
+                  Review plan
                 </button>
                 <button type="button"
                   onClick={() => { setShowNotif(false); setNotifDone(true) }}
@@ -5090,10 +5070,7 @@ export default function App() {
                         background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowMd,
                         backgroundImage:`radial-gradient(60% 90% at 50% -10%, ${T.coreSoft}, transparent 70%)` }}>
                         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-                          <div style={{ width:36, height:36, borderRadius:10, background:T.coreGrad,
-                            display:'flex', alignItems:'center', justifyContent:'center', animation:'breathe 2s ease-in-out infinite' }}>
-                            <Sparkles size={16} color="#fff" />
-                          </div>
+                          <JarvisMark size={36} radius={10} style={{ animation:'breathe 2s ease-in-out infinite' }} />
                           <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:T.core, margin:0 }}>
                             Day cleared
                           </p>
