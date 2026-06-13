@@ -53,11 +53,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'theming',
     label: 'Theming (Default / Dark / High Contrast)',
     weight: 10,
-    score: 75,
+    score: 95,
     summary:
-      'The Jarvis pages support Default and Dark themes (token-driven via the T palette, now synced to the Teams chrome).',
+      'All three Teams themes ship for the app — Default, Dark and High Contrast (black/white/yellow) — selectable from the demo switcher, synced to the Teams chrome; a coreText token keeps buttons readable on the accent.',
     recommendation:
-      'Add the third required Teams theme — High Contrast — to the app palette, and align the brand ramp with a documented Teams-compatible brand (currently Jarvis purple #5C2E91 vs Teams #5B5FC7).',
+      'Optionally align the brand ramp with a documented Teams-compatible brand (Jarvis purple #5C2E91 vs Teams #5B5FC7) where strict brand conformance is required.',
   },
   {
     id: 'typography',
