@@ -22,6 +22,7 @@ import {
   PeopleTeamFilled,
   PersonAddRegular,
   SearchRegular,
+  ShieldCheckmarkRegular,
   SparkleCircleRegular,
   VideoCameraSmallRegular,
   VideoRegular,
@@ -676,7 +677,7 @@ function CopilotConversationHeader() {
         aria-label="Your data is protected"
         title="Your data is protected"
       >
-        <ShieldCheckmarkInline />
+        <ShieldCheckmarkRegular size={18} />
       </span>
 
       <div className="teams-conv-header__copilot-spacer" />
@@ -702,40 +703,6 @@ function CopilotConversationHeader() {
         </button>
       </div>
     </div>
-  )
-}
-
-/* Inline shield-with-checkmark glyph. Approximates Fluent
- * `ShieldCheckmarkRegular` so the Copilot header doesn't need a new entry
- * in the icon library. Stroke-based (not filled) so it reads as outline-
- * style at 16–18px. Color comes from the parent via `currentColor`. */
-function ShieldCheckmarkInline() {
-  return (
-    <svg
-      width={18}
-      height={18}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-      focusable="false"
-    >
-      <path
-        d="M12 2.5L4.5 5.25v6c0 4.7 3.2 8.6 7.5 9.75 4.3-1.15 7.5-5.05 7.5-9.75v-6L12 2.5z"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinejoin="round"
-        fill="none"
-      />
-      <path
-        d="M9 12.25l2.25 2.25L15.5 10"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </svg>
   )
 }
 

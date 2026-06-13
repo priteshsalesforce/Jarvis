@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+// Microsoft Fluent UI System Icons (Teams design system) via a thin adapter
+// that preserves the Lucide `size`/`color` prop API. Swapped from lucide-react
+// so the Jarvis app surface uses the same icon family as Teams.
 import {
   Bell, CheckCircle2, MessageCircle, ExternalLink, Plus, Settings, Users,
   AlertTriangle, Calendar, Clock, ArrowRight, Send, Mic, X, Check,
@@ -14,13 +17,14 @@ import {
   Compass, Wand2, PenSquare, Lightbulb,
   Cloud, Mail, Briefcase, Layers, LifeBuoy, GitBranch, Hash as HashIcon,
   Pin, PinOff,
-} from 'lucide-react'
+} from '@/components/icons/fluent'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
   ChatRegular, PeopleTeamRegular, VideoCameraSmallRegular, BookContactsRegular,
   CalendarRegular, CopilotBrand, AlertRegular, AppsRegular,
   ChevronLeftRegular, ChevronRightRegular, SearchRegular, MoreHorizontalRegular,
 } from '@/components/icons/teams'
+import { TeamsComplianceReport } from '@/components/demo/TeamsComplianceReport.tsx'
 
 // ─── Sound engine ─────────────────────────────────────────────────────────────
 // UI sounds disabled — all SFX are no-ops so the demo stays silent everywhere.
@@ -73,8 +77,8 @@ const THEMES = {
     border:      '#D1D1D1',   // colorNeutralStroke1
     borderMid:   '#C7C7C7',   // colorNeutralStroke2
     // Shadows — Fluent two-layer elevation formula
-    shadowSm:    '0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03)',
-    shadowMd:    '0 2px 6px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04)',
+    shadowSm:    '0 0.3px 0.9px 0 rgba(0,0,0,0.07), 0 1.6px 3.6px 0 rgba(0,0,0,0.11)',   // Fluent shadow-4 (Teams card)
+    shadowMd:    '0 0.3px 0.9px 0 rgba(0,0,0,0.10), 0 3.2px 7.2px 0 rgba(0,0,0,0.13)',   // Fluent shadow-8 (Teams card hover)
     shadowPurple:'0 2px 8px rgba(92,46,145,0.10), 0 1px 2px rgba(92,46,145,0.06)',
     font: '"Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif',
   },
@@ -154,6 +158,14 @@ input, textarea, select { font-family: inherit; }
 .j-msg .j-feedback { opacity: 0; transition: opacity .15s; }
 .j-msg:hover .j-feedback,
 .j-feedback:focus-within { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  *, .enter, .enter-r, .pop, .done, .fade, .expand-down {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 `
 
 
@@ -796,8 +808,8 @@ function GlassCard({ children, style = {}, hover = true, onClick, className = ''
   return (
     <div onClick={onClick} onMouseEnter={() => hover && setHov(true)} onMouseLeave={() => setHov(false)}
       className={className}
-      style={{ borderRadius:8, background:T.surface, border:`1px solid ${hov ? T.borderMid : T.border}`,
-        boxShadow: hov ? T.shadowMd : T.shadowSm,
+      style={{ borderRadius:4, background:T.surface, border:`1px solid ${hov ? T.borderMid : T.border}`,
+        boxShadow: T.shadowSm,
         transition:'box-shadow .15s, border-color .15s', cursor: onClick ? 'pointer' : 'default', ...style }}>
       {children}
     </div>
@@ -1017,9 +1029,9 @@ function HeroCard({ intent, onAct, onDone, onDismiss, onRemind, isDone }) {
       aria-label={intent.headline}
       onClick={() => { SFX.tap(); HX.tap(); onAct(intent) }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); SFX.tap(); HX.tap(); onAct(intent) } }}
-      onMouseEnter={e => { setHover(true); e.currentTarget.style.boxShadow=T.shadowMd }}
-      onMouseLeave={e => { setHover(false); e.currentTarget.style.boxShadow=T.shadowSm }}
-      style={{ marginBottom:10, borderRadius:8, overflow:'hidden', position:'relative', cursor:'pointer',
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ marginBottom:10, borderRadius:4, overflow:'hidden', position:'relative', cursor:'pointer',
         background:T.surface, border:`1px solid ${T.border}`,
         boxShadow:T.shadowSm, transition:'box-shadow .15s' }}>
       <CardActionRow size={26} visible={hover}
@@ -1089,9 +1101,9 @@ function IntentCard({ intent, idx, onAct, onDone, onDismiss, onRemind, isDone })
       aria-label={intent.headline}
       onClick={() => { SFX.tap(); HX.tap(); onAct(intent) }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); SFX.tap(); HX.tap(); onAct(intent) } }}
-      onMouseEnter={e => { setHover(true); e.currentTarget.style.boxShadow=T.shadowMd }}
-      onMouseLeave={e => { setHover(false); e.currentTarget.style.boxShadow=T.shadowSm }}
-      style={{ marginBottom:10, borderRadius:8, overflow:'hidden', animationDelay:`${idx*.05}s`, cursor:'pointer',
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ marginBottom:10, borderRadius:4, overflow:'hidden', animationDelay:`${idx*.05}s`, cursor:'pointer',
         background:T.surface, border:`1px solid ${T.border}`,
         boxShadow:T.shadowSm, transition:'box-shadow .15s' }}>
       <div style={{ padding:'11px 13px 12px', position:'relative' }}>
@@ -1386,8 +1398,8 @@ function AddMeetingModal({ onClose }) {
     backdropFilter:'blur(8px)', transition:'border-color .15s' }
   const lbl = { display:'block', fontSize:13, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:T.textSoft, marginBottom:5 }
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.3)', zIndex:300,
-      display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(6px)' }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:300,
+      display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div className="pop" style={{ width:'100%', maxWidth:440, borderRadius:8, overflow:'hidden',
         background:T.surface, border:`1px solid ${T.border}`, boxShadow:'0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14)' }}>
         <div style={{ padding:'18px 22px 14px', borderBottom:`1px solid ${T.border}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -1580,8 +1592,8 @@ function GateModal({ action, policy, onRun, onCancel }) {
   const [confirmed, setConfirmed] = useState(false)
   return (
     <div role="dialog" aria-label="Gated action"
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', zIndex:500,
-        display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:500,
+        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
       onClick={onCancel}>
       <div className="pop" onClick={e => e.stopPropagation()}
         style={{ width:'100%', maxWidth:460, borderRadius:8,
@@ -2460,7 +2472,7 @@ function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
   return (
     <div role="dialog" aria-label="What Jarvis can do"
       style={{ position:'fixed', inset:0, zIndex:400, display:'flex', justifyContent:'flex-end',
-        background:'rgba(0,0,0,0.28)', backdropFilter:'blur(2px)' }}
+        background:'rgba(0,0,0,0.4)' }}
       onClick={onClose}>
       <div className="enter-r" onClick={e => e.stopPropagation()}
         style={{ width:440, maxWidth:'96vw', height:'100%', background:T.surface,
@@ -2902,7 +2914,7 @@ function WelcomeScreen({ onLogin }) {
     <div style={{ flex:1, overflowY:'auto', background:T.appBg, fontFamily:T.font, position:'relative' }}>
 
       {/* ── HERO ──────────────────────────────────────────────────────────────── */}
-      <div style={{ position:'relative', overflow:'hidden', minHeight:'92vh', display:'flex', alignItems:'center' }}>
+      <div style={{ position:'relative', overflow:'hidden', minHeight:'92vh', display:'flex', alignItems:'center', backgroundColor:T.surface }}>
         <div style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
           <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:`linear-gradient(90deg, ${T.core}, ${T.coreMid}, transparent)` }} />
         </div>
@@ -3507,7 +3519,7 @@ function AgentWizard({ onClose }) {
     background:T.surfaceMid, border:`1px solid ${T.border}`, color:T.text }
   const lbl = { display:'block', fontSize:13, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:T.textSoft, marginBottom:5 }
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.25)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(8px)' }}>
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div className="pop" style={{ width:'100%', maxWidth:600, maxHeight:'88vh', borderRadius:8, overflow:'hidden', display:'flex', flexDirection:'column',
         background:T.surface, border:`1px solid ${T.border}`, boxShadow:'0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14)' }}>
         <div style={{ padding:'18px 22px', borderBottom:`1px solid ${T.border}`, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -4124,13 +4136,9 @@ function WhisperBar({ persona, coreState, setCoreState, onCommand, hero }) {
     ]
 
     return (
-      <div className="enter" style={{ marginBottom: 12, position:'relative', zIndex: openCat ? 200 : 'auto' }}>
+      <div className="enter" style={{ marginTop: 16, marginBottom: 64, position:'relative', zIndex: openCat ? 200 : 'auto' }}>
         {/* Warm, inviting greeting — strong visual hierarchy, two lines */}
         <div style={{ textAlign:'center', marginBottom:14 }}>
-          <p style={{ fontSize:18, fontWeight:500, color:T.textSoft, margin:'0 0 4px',
-            fontFamily:T.font, lineHeight:1.3, letterSpacing:'-0.005em' }}>
-            {greetingLead}
-          </p>
           <p style={{
             fontSize:30, fontWeight:700, margin:0, lineHeight:1.2,
             fontFamily:T.font, letterSpacing:'-0.02em',
@@ -4292,7 +4300,7 @@ function PageLayout({ children, maxWidth = 1280, background }) {
   return (
     <div style={{ flex:1, overflowY:'auto', padding:'24px 0 60px',
       ...(background ? { background } : {}) }}>
-      <div style={{ maxWidth, margin:'0 auto', padding:'0 24px' }}>
+      <div style={{ maxWidth, margin:'0 auto', padding:'20px 24px 48px' }}>
         {children}
       </div>
     </div>
@@ -4309,6 +4317,13 @@ export default function App() {
   useEffect(() => {
     try { document.documentElement.style.setProperty('--focus-ring', T.core) } catch {}
   }, [T.core])
+  // Mirror the in-app theme onto the Teams chrome (title bar, app rail, and any
+  // embedded Teams surfaces). Those use the --teams-* tokens in teams.css, which
+  // are themed via [data-teams-theme]; without this, dark mode would only repaint
+  // the Jarvis-branded pages and the Teams chrome would stay light.
+  useEffect(() => {
+    try { document.documentElement.setAttribute('data-teams-theme', mode === 'dark' ? 'dark' : 'light') } catch {}
+  }, [mode])
 
   const [scene, setScene] = useState('welcome') // welcome | setup | tuning | app
   const [tab, setTab] = useState('today')
@@ -4676,17 +4691,21 @@ export default function App() {
             Notify
           </button>
         )}
-        <button type="button"
-          onClick={() => { SFX.tap(); setMode(m => m==='light' ? 'dark' : 'light') }}
-          style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 10px',
-            borderRadius:4, border:'1px solid #2A2A2A', background:'#151515',
-            color:'#E5E5E5', fontSize:11, fontWeight:600, cursor:'pointer',
-            fontFamily:T.font, transition:'background .12s' }}
-          onMouseEnter={e=>{ e.currentTarget.style.background='#1E1E1E' }}
-          onMouseLeave={e=>{ e.currentTarget.style.background='#151515' }}>
-          {mode==='light' ? <Moon size={11} /> : <Sun size={11} />}
-          {mode==='light' ? 'Dark' : 'Light'}
-        </button>
+        <TeamsComplianceReport />
+        <label style={{ display:'inline-flex', alignItems:'center', gap:6, fontSize:11, fontWeight:600, color:'#A0A0A0', fontFamily:T.font }}>
+          {mode==='dark' ? <Sun size={11} /> : <Moon size={11} />}
+          <span>Theme</span>
+          <select
+            value={mode}
+            onChange={e => { SFX.tap(); setMode(e.target.value) }}
+            aria-label="Theme"
+            style={{ background:'#151515', border:'1px solid #2A2A2A', borderRadius:4,
+              color:'#E5E5E5', fontSize:11, fontWeight:600, padding:'4px 8px', cursor:'pointer',
+              fontFamily:T.font }}>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
         <span style={{ fontSize:11, color:'#6A6A6A', marginLeft:12 }}>
           Jarvis demo · not a Microsoft product surface
         </span>
@@ -4758,6 +4777,10 @@ export default function App() {
           </button>
         ))}
 
+        {/* Divider — Microsoft Teams' own functions sit above; installed apps
+            (like Jarvis) sit below, matching the new Teams desktop rail. */}
+        <div className="teams-rail__divider" role="separator" aria-hidden="true" />
+
         {/* Jarvis — the selected app */}
         <button type="button" className="teams-rail__item teams-rail__item--active" aria-current="page" aria-label="Jarvis">
           <span className="teams-rail__icon"><JarvisMark size={24} radius={6} /></span>
@@ -4784,15 +4807,12 @@ export default function App() {
           <NeuralCore state={coreState} onClick={() => setCoreState('idle')} />
           <div style={{ width:1, height:24, background:T.border, flexShrink:0 }} />
           <nav style={{ display:'flex' }}>
-            {navItems.map(({ id, label, Icon }) => (
+            {navItems.map(({ id, label }) => (
               <button key={id} type="button" onClick={() => { SFX.tap(); setTab(id); if(scene!=='app') setScene('app') }}
                 style={{ display:'flex', alignItems:'center', gap:6, padding:'0 12px', height:52, fontSize:15, fontWeight:600,
                   background:'none', border:'none', cursor:'pointer', position:'relative',
                   color:tab===id&&scene==='app'?T.core:T.textSoft, transition:'color .15s' }}>
-                <Icon size={14} />{label}
-                {tab===id&&scene==='app' && (
-                  <div style={{ position:'absolute', bottom:0, left:8, right:8, height:2, borderRadius:'2px 2px 0 0', background:T.core }} />
-                )}
+                {label}
               </button>
             ))}
           </nav>
@@ -4916,13 +4936,7 @@ export default function App() {
                           ? `Your team needs ${visibleIntents.length} ${visibleIntents.length===1?'thing':'things'}.`
                           : `I handled ${overnightHandled} things overnight.`}
                       </p>
-                      <span style={{ fontSize:12, color:T.textSoft, fontWeight:500 }}>
-                        last refreshed {lastRefreshedMin} min ago
-                      </span>
                     </div>
-                    <p style={{ fontSize:13, fontWeight:500, color:T.textSoft, margin:'4px 0 0' }}>
-                      {visibleIntents.length} need you now · {doneCount} can wait.
-                    </p>
                   </div>
                   {/* ── View handled (N) — popover showing done + dismissed items with per-item Undo ── */}
                   {handledList.length > 0 && (

@@ -14,6 +14,7 @@ import {
   LoopRegular,
   MicRegular,
   MoreHorizontalRegular,
+  ReadReceiptRegular,
   SendFilled,
   ShareRegular,
   ThumbDislikeRegular,
@@ -396,23 +397,6 @@ function UserAvatarImg({ author, avatarUrl }: { author: string; avatarUrl?: stri
   return <img src={avatarUrl} alt="" onError={() => setFailed(true)} />
 }
 
-/** Eye-shaped read receipt — small grey indicator in the bottom-right of the
- *  most recent outgoing message (matches new Teams desktop).
- */
-function ReadReceiptIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden focusable="false">
-      <path
-        d="M7 3.5C4 3.5 1.6 5.3 0.6 6.7c-0.2 0.3-0.2 0.7 0 0.9C1.6 8.7 4 10.5 7 10.5s5.4-1.8 6.4-3.2c0.2-0.3 0.2-0.7 0-0.9C12.4 5 9.9 3.5 7 3.5z"
-        stroke="currentColor"
-        strokeWidth="0.9"
-        fill="none"
-      />
-      <circle cx="7" cy="7" r="1.5" fill="currentColor" />
-    </svg>
-  )
-}
-
 function TeamsMessage({
   message,
   isSelf,
@@ -573,7 +557,7 @@ function TeamsMessage({
 
         {isSelf && isLastOutgoing && !isCopilotPanel && (hasBubbleText || showAdaptiveCard) && (
           <span className="teams-msg__read-receipt" aria-label="Read">
-            <ReadReceiptIcon />
+            <ReadReceiptRegular size={14} />
           </span>
         )}
       </div>

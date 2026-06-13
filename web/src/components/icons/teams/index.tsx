@@ -478,3 +478,66 @@ export const CopilotLineRegular = ({ size = 20, ...rest }: TeamsIconProps) => (
     />
   </svg>
 )
+
+/* --------------------------------------------------------------------------
+ * Stroke-based Fluent glyphs.
+ *
+ * These two are stroke-drawn (not single-fill), so they live here as small
+ * standalone components rather than going through IconShell. Centralising them
+ * in the icon library (instead of inlining in feature components) keeps every
+ * Teams glyph on one consistent `TeamsIconProps` API and `currentColor`.
+ * ------------------------------------------------------------------------ */
+
+/** Shield-with-checkmark — the Copilot "your data is protected" indicator.
+ *  Approximates Fluent `ShieldCheckmarkRegular`. */
+export const ShieldCheckmarkRegular = ({ size = 20, ...rest }: TeamsIconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden={rest['aria-label'] ? undefined : true}
+    focusable="false"
+    {...rest}
+  >
+    <path
+      d="M12 2.5L4.5 5.25v6c0 4.7 3.2 8.6 7.5 9.75 4.3-1.15 7.5-5.05 7.5-9.75v-6L12 2.5z"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinejoin="round"
+      fill="none"
+    />
+    <path
+      d="M9 12.25l2.25 2.25L15.5 10"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+  </svg>
+)
+
+/** Eye glyph used as the "seen / read" receipt under the latest outgoing
+ *  message in the Teams desktop. */
+export const ReadReceiptRegular = ({ size = 14, ...rest }: TeamsIconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 14 14"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden={rest['aria-label'] ? undefined : true}
+    focusable="false"
+    {...rest}
+  >
+    <path
+      d="M7 3.5C4 3.5 1.6 5.3 0.6 6.7c-0.2 0.3-0.2 0.7 0 0.9C1.6 8.7 4 10.5 7 10.5s5.4-1.8 6.4-3.2c0.2-0.3 0.2-0.7 0-0.9C12.4 5 9.9 3.5 7 3.5z"
+      stroke="currentColor"
+      strokeWidth="0.9"
+      fill="none"
+    />
+    <circle cx="7" cy="7" r="1.5" fill="currentColor" />
+  </svg>
+)

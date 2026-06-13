@@ -99,6 +99,44 @@
   --teams-font-size-500: 18px;
   --teams-font-size-600: 24px;
 
+  /*
+   * Complete Fluent 2 type ramp. Each step ships a paired size + line-height
+   * token so headings scale by token rather than ad-hoc values.
+   * Reference: https://fluent2.microsoft.design/typography
+   */
+  --teams-type-caption2-size: 10px;   --teams-type-caption2-line: 14px;
+  --teams-type-caption1-size: 12px;   --teams-type-caption1-line: 16px;
+  --teams-type-body1-size: 14px;      --teams-type-body1-line: 20px;
+  --teams-type-body2-size: 16px;      --teams-type-body2-line: 22px;
+  --teams-type-subtitle2-size: 16px;  --teams-type-subtitle2-line: 22px;
+  --teams-type-subtitle1-size: 20px;  --teams-type-subtitle1-line: 26px;
+  --teams-type-title3-size: 24px;     --teams-type-title3-line: 32px;
+  --teams-type-title2-size: 28px;     --teams-type-title2-line: 36px;
+  --teams-type-title1-size: 32px;     --teams-type-title1-line: 40px;
+  --teams-type-large-title-size: 40px;--teams-type-large-title-line: 52px;
+  --teams-type-display-size: 68px;    --teams-type-display-line: 92px;
+  --teams-font-weight-regular: 400;
+  --teams-font-weight-semibold: 600;
+  --teams-font-weight-bold: 700;
+
+  /*
+   * Fluent 2 motion tokens — duration ramp + easing curves. All Teams chrome
+   * transitions/animations reference these so timing is consistent and can be
+   * neutralised in one place for reduced-motion.
+   * Reference: https://fluent2.microsoft.design/motion
+   */
+  --teams-duration-ultra-fast: 50ms;
+  --teams-duration-faster: 100ms;
+  --teams-duration-fast: 150ms;
+  --teams-duration-normal: 200ms;
+  --teams-duration-gentle: 250ms;
+  --teams-duration-slow: 300ms;
+  --teams-curve-accelerate-max: cubic-bezier(0.9, 0.1, 1, 0.2);
+  --teams-curve-accelerate-mid: cubic-bezier(0.7, 0, 1, 0.5);
+  --teams-curve-decelerate-mid: cubic-bezier(0.1, 0.9, 0.2, 1);
+  --teams-curve-easy-ease: cubic-bezier(0.33, 0, 0.67, 1);
+  --teams-curve-linear: cubic-bezier(0, 0, 1, 1);
+
   /* Chrome dimensions */
   --teams-titlebar-height: 48px;
   --teams-rail-width: 68px;
@@ -240,7 +278,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 80ms ease;
+  transition: background-color var(--teams-duration-faster) var(--teams-curve-easy-ease);
 }
 .teams-titlebar__nav-btn:hover {
   background-color: rgba(0, 0, 0, 0.05);
@@ -291,7 +329,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 80ms ease;
+  transition: background-color var(--teams-duration-faster) var(--teams-curve-easy-ease);
 }
 .teams-titlebar__icon-btn:hover {
   background-color: rgba(0, 0, 0, 0.05);
@@ -349,7 +387,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 80ms ease;
+  transition: background-color var(--teams-duration-faster) var(--teams-curve-easy-ease);
 }
 .teams-titlebar__wincontrol:hover {
   background-color: rgba(0, 0, 0, 0.05);
@@ -1142,7 +1180,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--teams-space-6);
-  transition: background-color 80ms ease;
+  transition: background-color var(--teams-duration-faster) var(--teams-curve-easy-ease);
 }
 .teams-action-btn:hover {
   background-color: var(--teams-brand-hover);
@@ -1520,7 +1558,7 @@
   background-color: var(--teams-brand);
   color: #FFFFFF;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color var(--teams-duration-fast) var(--teams-curve-easy-ease);
 }
 .teams-composer__copilot-send--ready:hover {
   background-color: var(--teams-brand-hover);
@@ -1879,7 +1917,7 @@
   background-color: transparent;
   color: var(--teams-brand);
   cursor: pointer;
-  transition: background-color 80ms ease;
+  transition: background-color var(--teams-duration-faster) var(--teams-curve-easy-ease);
 }
 .teams-conv-header__copilot-btn:hover {
   background-color: var(--teams-brand-tint);
@@ -1907,5 +1945,294 @@
   height: 16px;
   background-color: rgba(255, 255, 255, 0.55);
   margin: 0 2px;
+}
+
+/* ================================================================
+ * Accessibility — reduced motion
+ *
+ * WCAG 2.1 SC 2.3.3 (Animation from Interactions). When the user has
+ * requested reduced motion, neutralise every Teams transition/animation
+ * (typing caret, three-dot indicator, hover fades) to a single frame.
+ * ============================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .teams-chrome *,
+  .teams-scope * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ================================================================
+ * Theme: Dark
+ *
+ * Microsoft Teams ships Default (light), Dark and High-Contrast themes.
+ * The token values below are the Dark equivalents of the light palette at
+ * the top of this file. They are applied two ways:
+ *   1. Explicitly, when an ancestor (typically <html>) carries
+ *      data-teams-theme="dark" — used by the in-product theme switcher.
+ *   2. Automatically, from the OS via prefers-color-scheme, but ONLY when no
+ *      explicit data-teams-theme is set (so a manual choice always wins).
+ * ============================================================== */
+[data-teams-theme="dark"] {
+  --teams-bg-app: #0E0E0E;
+  --teams-bg-canvas: #1F1F1F;
+  --teams-bg-sidebar: #181818;
+  --teams-bg-rail: #0B0B0B;
+  --teams-bg-titlebar: #2B2B2B;
+  --teams-bg-titlebar-search: #3D3D3D;
+  --teams-bg-hover: rgba(255, 255, 255, 0.08);
+  --teams-bg-selected: rgba(127, 133, 245, 0.24);
+  --teams-bg-card: #2B2B2B;
+  --teams-bg-card-elevated: #333333;
+  --teams-bg-message-incoming: #2D2D2D;
+  --teams-bg-message-outgoing: #3A3B6B;
+  --teams-bg-overlay: rgba(0, 0, 0, 0.6);
+
+  --teams-border-subtle: #3A3A3A;
+  --teams-border-strong: #4D4D4D;
+  --teams-border-card: #404040;
+  --teams-divider: #3D3D3D;
+
+  --teams-text: #FFFFFF;
+  --teams-text-secondary: #C8C8C8;
+  --teams-text-tertiary: #A6A6A6;
+  --teams-text-inverse: #1F1F1F;
+  --teams-text-link: #A6A7DC;
+
+  --teams-brand: #7F85F5;
+  --teams-brand-blue-purple: #7F85F5;
+  --teams-brand-light: #9499F6;
+  --teams-brand-lightest: #A6AAF8;
+  --teams-brand-secondary: #7F85F5;
+  --teams-brand-hover: #9499F6;
+  --teams-brand-pressed: #6B70D6;
+  --teams-brand-tint: #3A3B6B;
+  --teams-brand-shade: #2A2B4D;
+  --teams-brand-dark-badge: #5B5FC7;
+
+  --teams-mention-bg: #3A3B6B;
+  --teams-mention-text: #A6A7DC;
+
+  --teams-error: #E37287;
+  --teams-error-bg: #3B2528;
+  --teams-error-border: #5C3438;
+
+  --teams-shadow-2: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.40), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.30);
+  --teams-shadow-4: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.50), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.35);
+  --teams-shadow-8: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.50), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-teams-theme]) {
+    --teams-bg-app: #0E0E0E;
+    --teams-bg-canvas: #1F1F1F;
+    --teams-bg-sidebar: #181818;
+    --teams-bg-rail: #0B0B0B;
+    --teams-bg-titlebar: #2B2B2B;
+    --teams-bg-titlebar-search: #3D3D3D;
+    --teams-bg-hover: rgba(255, 255, 255, 0.08);
+    --teams-bg-selected: rgba(127, 133, 245, 0.24);
+    --teams-bg-card: #2B2B2B;
+    --teams-bg-card-elevated: #333333;
+    --teams-bg-message-incoming: #2D2D2D;
+    --teams-bg-message-outgoing: #3A3B6B;
+    --teams-bg-overlay: rgba(0, 0, 0, 0.6);
+    --teams-border-subtle: #3A3A3A;
+    --teams-border-strong: #4D4D4D;
+    --teams-border-card: #404040;
+    --teams-divider: #3D3D3D;
+    --teams-text: #FFFFFF;
+    --teams-text-secondary: #C8C8C8;
+    --teams-text-tertiary: #A6A6A6;
+    --teams-text-inverse: #1F1F1F;
+    --teams-text-link: #A6A7DC;
+    --teams-brand: #7F85F5;
+    --teams-brand-blue-purple: #7F85F5;
+    --teams-brand-light: #9499F6;
+    --teams-brand-lightest: #A6AAF8;
+    --teams-brand-secondary: #7F85F5;
+    --teams-brand-hover: #9499F6;
+    --teams-brand-pressed: #6B70D6;
+    --teams-brand-tint: #3A3B6B;
+    --teams-brand-shade: #2A2B4D;
+    --teams-brand-dark-badge: #5B5FC7;
+    --teams-mention-bg: #3A3B6B;
+    --teams-mention-text: #A6A7DC;
+    --teams-error: #E37287;
+    --teams-error-bg: #3B2528;
+    --teams-error-border: #5C3438;
+    --teams-shadow-2: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.40), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.30);
+    --teams-shadow-4: 0 1.6px 3.6px 0 rgba(0, 0, 0, 0.50), 0 0.3px 0.9px 0 rgba(0, 0, 0, 0.35);
+    --teams-shadow-8: 0 3.2px 7.2px 0 rgba(0, 0, 0, 0.50), 0 0.6px 1.8px 0 rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* Dark-theme patches for the handful of colors hardcoded in component rules
+ * above (they predate the token sheet). Scoped so light is untouched. */
+[data-teams-theme="dark"] .teams-titlebar,
+[data-teams-theme="dark"] .teams-rail,
+[data-teams-theme="dark"] .teams-sidebar,
+[data-teams-theme="dark"] .teams-main {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-teams-theme="dark"] .teams-msg__app-tag {
+  background-color: rgba(127, 133, 245, 0.18);
+  border-color: rgba(127, 133, 245, 0.40);
+  color: var(--teams-brand);
+}
+[data-teams-theme="dark"] .teams-conv-header__icon-btn,
+[data-teams-theme="dark"] .teams-composer__fmt-btn {
+  color: var(--teams-text-secondary);
+}
+[data-teams-theme="dark"] .teams-dialog__footer {
+  background-color: var(--teams-bg-card);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-teams-theme]) .teams-titlebar,
+  :root:not([data-teams-theme]) .teams-rail,
+  :root:not([data-teams-theme]) .teams-sidebar,
+  :root:not([data-teams-theme]) .teams-main {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  :root:not([data-teams-theme]) .teams-msg__app-tag {
+    background-color: rgba(127, 133, 245, 0.18);
+    border-color: rgba(127, 133, 245, 0.40);
+    color: var(--teams-brand);
+  }
+  :root:not([data-teams-theme]) .teams-conv-header__icon-btn,
+  :root:not([data-teams-theme]) .teams-composer__fmt-btn {
+    color: var(--teams-text-secondary);
+  }
+  :root:not([data-teams-theme]) .teams-dialog__footer {
+    background-color: var(--teams-bg-card);
+  }
+}
+
+/* ================================================================
+ * Theme: High Contrast
+ *
+ * Mirrors the Teams High-Contrast theme (pure black canvas, white text and
+ * borders, yellow accent, cyan hover) for users who enable it explicitly or
+ * via prefers-contrast: more. Bubbles and cards gain a 1px border so they
+ * remain distinguishable against the black canvas.
+ * ============================================================== */
+[data-teams-theme="contrast"] {
+  --teams-bg-app: #000000;
+  --teams-bg-canvas: #000000;
+  --teams-bg-sidebar: #000000;
+  --teams-bg-rail: #000000;
+  --teams-bg-titlebar: #000000;
+  --teams-bg-titlebar-search: #000000;
+  --teams-bg-hover: rgba(255, 255, 0, 0.18);
+  --teams-bg-selected: #1AEBFF;
+  --teams-bg-card: #000000;
+  --teams-bg-card-elevated: #000000;
+  --teams-bg-message-incoming: #000000;
+  --teams-bg-message-outgoing: #000000;
+  --teams-bg-overlay: rgba(0, 0, 0, 0.85);
+  --teams-border-subtle: #FFFFFF;
+  --teams-border-strong: #FFFFFF;
+  --teams-border-card: #FFFFFF;
+  --teams-divider: #FFFFFF;
+  --teams-text: #FFFFFF;
+  --teams-text-secondary: #FFFFFF;
+  --teams-text-tertiary: #FFFFFF;
+  --teams-text-inverse: #000000;
+  --teams-text-link: #FFFF00;
+  --teams-brand: #FFFF00;
+  --teams-brand-blue-purple: #FFFF00;
+  --teams-brand-light: #FFFF00;
+  --teams-brand-lightest: #FFFF00;
+  --teams-brand-secondary: #FFFF00;
+  --teams-brand-hover: #1AEBFF;
+  --teams-brand-pressed: #1AEBFF;
+  --teams-brand-tint: #000000;
+  --teams-brand-shade: #000000;
+  --teams-brand-dark-badge: #000000;
+  --teams-mention-bg: #000000;
+  --teams-mention-text: #FFFF00;
+  --teams-error: #FF99A4;
+  --teams-error-bg: #000000;
+  --teams-error-border: #FFFFFF;
+  --teams-shadow-2: none;
+  --teams-shadow-4: none;
+  --teams-shadow-8: 0 0 0 1px #FFFFFF;
+}
+@media (prefers-contrast: more) {
+  :root:not([data-teams-theme]) {
+    --teams-bg-app: #000000;
+    --teams-bg-canvas: #000000;
+    --teams-bg-sidebar: #000000;
+    --teams-bg-rail: #000000;
+    --teams-bg-titlebar: #000000;
+    --teams-bg-titlebar-search: #000000;
+    --teams-bg-hover: rgba(255, 255, 0, 0.18);
+    --teams-bg-selected: #1AEBFF;
+    --teams-bg-card: #000000;
+    --teams-bg-card-elevated: #000000;
+    --teams-bg-message-incoming: #000000;
+    --teams-bg-message-outgoing: #000000;
+    --teams-bg-overlay: rgba(0, 0, 0, 0.85);
+    --teams-border-subtle: #FFFFFF;
+    --teams-border-strong: #FFFFFF;
+    --teams-border-card: #FFFFFF;
+    --teams-divider: #FFFFFF;
+    --teams-text: #FFFFFF;
+    --teams-text-secondary: #FFFFFF;
+    --teams-text-tertiary: #FFFFFF;
+    --teams-text-inverse: #000000;
+    --teams-text-link: #FFFF00;
+    --teams-brand: #FFFF00;
+    --teams-brand-secondary: #FFFF00;
+    --teams-brand-hover: #1AEBFF;
+    --teams-brand-pressed: #1AEBFF;
+    --teams-brand-tint: #000000;
+    --teams-mention-bg: #000000;
+    --teams-mention-text: #FFFF00;
+    --teams-shadow-2: none;
+    --teams-shadow-4: none;
+    --teams-shadow-8: 0 0 0 1px #FFFFFF;
+  }
+}
+/* HC patches: keep bubbles/cards/app-tag legible against the black canvas. */
+[data-teams-theme="contrast"] .teams-msg__bubble,
+[data-teams-theme="contrast"] .teams-adaptive-card,
+[data-teams-theme="contrast"] .teams-msg__app-tag {
+  border: 1px solid #FFFFFF !important;
+  color: var(--teams-text);
+}
+[data-teams-theme="contrast"] .teams-sidebar__channel--active,
+[data-teams-theme="contrast"] .teams-sidebar__item--selected,
+[data-teams-theme="contrast"] .teams-sidebar__pinned-row--selected {
+  outline: 2px solid #FFFF00;
+}
+
+/* ================================================================
+ * Accessibility — Windows forced-colors (high contrast) mode
+ *
+ * In forced-colors the OS swaps colors, but custom decorative indicators
+ * (the active rail/tab/channel markers) can disappear. Re-bind them to system
+ * color keywords so selection state is never lost.
+ * ============================================================== */
+@media (forced-colors: active) {
+  .teams-rail__item--active::before,
+  .teams-tab--active::after,
+  .teams-sidebar__channel--active::before {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+  .teams-msg__bubble,
+  .teams-adaptive-card,
+  .teams-composer__box,
+  .teams-composer__copilot-box {
+    border: 1px solid CanvasText;
+  }
+  .teams-rail__item--active,
+  .teams-tab--active,
+  .teams-sidebar__channel--active {
+    color: Highlight;
+  }
 }
 

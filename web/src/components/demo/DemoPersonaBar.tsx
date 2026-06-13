@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Persona } from '@/types'
+import { TeamsComplianceReport } from './TeamsComplianceReport'
+import { TeamsThemeSwitcher } from './TeamsThemeSwitcher'
 
 interface DemoPersonaBarProps {
   /** Breadcrumb: e.g. Demos / Story title / Persona */
@@ -75,6 +77,8 @@ export function DemoPersonaBar({
         </div>
       </div>
       <div className="flex items-center gap-4 flex-shrink-0">
+        <TeamsThemeSwitcher />
+        <TeamsComplianceReport />
         {showOverlayToggle && onOverlayToggle != null && (
           <label className="flex items-center gap-2 cursor-pointer text-white text-sm">
             <input

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import * as AdaptiveCards from 'adaptivecards'
+import { useTeamsTheme } from '@/utils/teamsTheme'
 
 interface TeamsAdaptiveCardProps {
   /** Adaptive Card JSON payload (https://adaptivecards.io) */
@@ -62,86 +63,115 @@ AdaptiveCards.AdaptiveCard.onProcessMarkdown = (text, result) => {
   result.didProcess = true
 }
 
-const hostConfig = new AdaptiveCards.HostConfig({
-  fontFamily:
-    "'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif",
-  spacing: { small: 4, default: 8, medium: 16, large: 20, extraLarge: 24, padding: 12 },
-  separator: { lineThickness: 1, lineColor: '#e1dfdd' },
-  supportsInteractivity: true,
-  fontTypes: {
-    default: {
-      fontFamily:
-        "'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif",
-      fontSizes: { small: 12, default: 14, medium: 16, large: 20, extraLarge: 24 },
-      fontWeights: { lighter: 200, default: 400, bolder: 600 },
-    },
-    monospace: {
-      fontFamily: "'Cascadia Code', 'Consolas', monospace",
-      fontSizes: { small: 12, default: 14, medium: 16, large: 20, extraLarge: 24 },
-      fontWeights: { lighter: 200, default: 400, bolder: 600 },
-    },
+/**
+ * Per-theme color palettes for the Adaptive Card host config. Teams renders
+ * cards with theme-matched container styles, so we build one host config per
+ * theme (Default / Dark / High-Contrast) and pick the live one at render.
+ */
+const CARD_PALETTES = {
+  light: {
+    canvas: '#ffffff',
+    emphasis: '#fafafa',
+    text: '#242424',
+    subtle: '#616161',
+    accent: '#5b5fc7',
+    good: '#107c10',
+    warning: '#a4262c',
+    attention: '#c4314b',
+    separator: '#e1dfdd',
   },
-  containerStyles: {
-    default: {
-      backgroundColor: '#ffffff',
-      foregroundColors: {
-        default: { default: '#242424', subtle: '#616161' },
-        accent: { default: '#5b5fc7', subtle: '#5b5fc7' },
-        good: { default: '#107c10', subtle: '#107c10' },
-        warning: { default: '#a4262c', subtle: '#a4262c' },
-        attention: { default: '#c4314b', subtle: '#c4314b' },
-        dark: { default: '#242424', subtle: '#616161' },
-        light: { default: '#ffffff', subtle: '#f5f5f5' },
+  dark: {
+    canvas: '#2b2b2b',
+    emphasis: '#333333',
+    text: '#ffffff',
+    subtle: '#c8c8c8',
+    accent: '#a6a7dc',
+    good: '#92c353',
+    warning: '#ffaa44',
+    attention: '#e37287',
+    separator: '#404040',
+  },
+  contrast: {
+    canvas: '#000000',
+    emphasis: '#000000',
+    text: '#ffffff',
+    subtle: '#ffffff',
+    accent: '#ffff00',
+    good: '#3ff23f',
+    warning: '#ffd700',
+    attention: '#ff99a4',
+    separator: '#ffffff',
+  },
+} as const
+
+type CardTheme = keyof typeof CARD_PALETTES
+
+function makeHostConfig(theme: CardTheme): AdaptiveCards.HostConfig {
+  const p = CARD_PALETTES[theme]
+  const fg = {
+    default: { default: p.text, subtle: p.subtle },
+    accent: { default: p.accent, subtle: p.accent },
+    good: { default: p.good, subtle: p.good },
+    warning: { default: p.warning, subtle: p.warning },
+    attention: { default: p.attention, subtle: p.attention },
+    dark: { default: p.text, subtle: p.subtle },
+    light: { default: p.canvas, subtle: p.emphasis },
+  }
+  return new AdaptiveCards.HostConfig({
+    fontFamily:
+      "'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif",
+    spacing: { small: 4, default: 8, medium: 16, large: 20, extraLarge: 24, padding: 12 },
+    separator: { lineThickness: 1, lineColor: p.separator },
+    supportsInteractivity: true,
+    fontTypes: {
+      default: {
+        fontFamily:
+          "'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif",
+        fontSizes: { small: 12, default: 14, medium: 16, large: 20, extraLarge: 24 },
+        fontWeights: { lighter: 200, default: 400, bolder: 600 },
+      },
+      monospace: {
+        fontFamily: "'Cascadia Code', 'Consolas', monospace",
+        fontSizes: { small: 12, default: 14, medium: 16, large: 20, extraLarge: 24 },
+        fontWeights: { lighter: 200, default: 400, bolder: 600 },
       },
     },
-    emphasis: {
-      backgroundColor: '#fafafa',
-      foregroundColors: {
-        default: { default: '#242424', subtle: '#616161' },
-        accent: { default: '#5b5fc7', subtle: '#5b5fc7' },
-        good: { default: '#107c10', subtle: '#107c10' },
-        warning: { default: '#a4262c', subtle: '#a4262c' },
-        attention: { default: '#c4314b', subtle: '#c4314b' },
-        dark: { default: '#242424', subtle: '#616161' },
-        light: { default: '#ffffff', subtle: '#f5f5f5' },
-      },
+    containerStyles: {
+      default: { backgroundColor: p.canvas, foregroundColors: fg },
+      emphasis: { backgroundColor: p.emphasis, foregroundColors: fg },
     },
-  },
-  actions: {
-    maxActions: 5,
-    spacing: 'default',
-    buttonSpacing: 8,
-    showCard: { actionMode: 'inline', inlineTopMargin: 8 },
-    actionsOrientation: 'horizontal',
-    actionAlignment: 'left',
-  },
-  factSet: {
-    title: {
-      color: 'default',
-      size: 'default',
-      weight: 'bolder',
-      wrap: true,
-      maxWidth: 150,
+    actions: {
+      maxActions: 5,
+      spacing: 'default',
+      buttonSpacing: 8,
+      showCard: { actionMode: 'inline', inlineTopMargin: 8 },
+      actionsOrientation: 'horizontal',
+      actionAlignment: 'left',
     },
-    value: {
-      color: 'default',
-      size: 'default',
-      weight: 'default',
-      wrap: true,
+    factSet: {
+      title: { color: 'default', size: 'default', weight: 'bolder', wrap: true, maxWidth: 150 },
+      value: { color: 'default', size: 'default', weight: 'default', wrap: true },
+      spacing: 8,
     },
-    spacing: 8,
-  },
-})
+  })
+}
+
+const HOST_CONFIGS: Record<CardTheme, AdaptiveCards.HostConfig> = {
+  light: makeHostConfig('light'),
+  dark: makeHostConfig('dark'),
+  contrast: makeHostConfig('contrast'),
+}
 
 export function TeamsAdaptiveCard({ card, onAction }: TeamsAdaptiveCardProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const { mode } = useTeamsTheme()
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
     const ac = new AdaptiveCards.AdaptiveCard()
-    ac.hostConfig = hostConfig
+    ac.hostConfig = HOST_CONFIGS[mode]
     ac.onExecuteAction = (action) => {
       if (!onAction) return
       const submit = action as AdaptiveCards.SubmitAction
@@ -164,7 +194,7 @@ export function TeamsAdaptiveCard({ card, onAction }: TeamsAdaptiveCardProps) {
     return () => {
       container.innerHTML = ''
     }
-  }, [card, onAction])
+  }, [card, onAction, mode])
 
   return <div ref={containerRef} className="teams-adaptive-card" />
 }
