@@ -4346,7 +4346,15 @@ function PageLayout({ children, maxWidth = 1280, background }) {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [mode, setMode] = useState('light')
+  // Initial theme can be deep-linked via ?theme=light|dark|contrast (handy for
+  // sharing a themed view and for verifying the High-Contrast theme).
+  const [mode, setMode] = useState(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get('theme')
+      if (t === 'light' || t === 'dark' || t === 'contrast') return t
+    } catch { /* ignore */ }
+    return 'light'
+  })
   const T = THEMES[mode]
   // Expose T globally for child components that reference window.__T
   window.__T = T
