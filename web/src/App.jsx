@@ -18,6 +18,7 @@ import {
   Cloud, Mail, Briefcase, Layers, LifeBuoy, GitBranch, Hash as HashIcon,
   Pin, PinOff,
 } from '@/components/icons/fluent'
+import { asset } from '@/utils/asset'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
   ChatRegular, PeopleTeamRegular, VideoCameraSmallRegular, BookContactsRegular,
@@ -57,6 +58,7 @@ const THEMES = {
     topBar:      '#E5EDF3',   // Teams chrome neutral blue-gray
     // Brand — Fluent brand purple
     core:        '#5C2E91',
+    coreText:    '#FFFFFF',   // readable text on a `core`-filled surface (buttons)
     coreMid:     '#7C4EAE',
     coreSoft:    'rgba(92,46,145,0.08)',
     coreGlow:    'rgba(92,46,145,0.18)',
@@ -92,6 +94,7 @@ const THEMES = {
     topBar:      '#292929',
     // Brand — lighter for dark backgrounds
     core:        '#9B6EC8',
+    coreText:    '#FFFFFF',
     coreMid:     '#B38FD6',
     coreSoft:    'rgba(155,110,200,0.12)',
     coreGlow:    'rgba(155,110,200,0.25)',
@@ -114,6 +117,40 @@ const THEMES = {
     shadowSm:    '0 1px 2px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.10)',
     shadowMd:    '0 2px 6px rgba(0,0,0,0.16), 0 1px 2px rgba(0,0,0,0.12)',
     shadowPurple:'0 2px 8px rgba(155,110,200,0.18), 0 1px 2px rgba(155,110,200,0.14)',
+    font: '"Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif',
+  },
+  // High Contrast — mirrors the Teams/Windows HC dark theme: pure-black
+  // surfaces, white text + borders, yellow accent and cyan for secondary
+  // status. Surfaces rely on borders (not fills/shadows) to separate, per HC
+  // guidance.
+  contrast: {
+    appBg:       '#000000',
+    surface:     '#000000',
+    surfaceMid:  '#000000',
+    surfaceBlur: '#000000',
+    rail:        '#000000',
+    topBar:      '#000000',
+    core:        '#FFFF00',
+    coreText:    '#000000',   // black text on the yellow accent (buttons)
+    coreMid:     '#FFE600',
+    coreSoft:    'rgba(255,255,0,0.15)',
+    coreGlow:    'rgba(255,255,0,0.25)',
+    coreGrad:    'linear-gradient(135deg,#FFFF00,#FFE600)',
+    coreBright:  '#FFFF66',
+    teal:        '#1AEBFF',   tealSoft:  'rgba(26,235,255,0.15)',
+    blue:        '#1AEBFF',   blueSoft:  'rgba(26,235,255,0.15)',
+    amber:       '#FFFF00',   amberSoft: 'rgba(255,255,0,0.15)',
+    red:         '#FF6B6B',   redSoft:   'rgba(255,107,107,0.18)',
+    green:       '#3FF23F',   greenSoft: 'rgba(63,242,63,0.15)',
+    text:        '#FFFFFF',
+    textMid:     '#FFFFFF',
+    textSoft:    '#FFFFFF',
+    textXsoft:   '#FFFFFF',
+    border:      '#FFFFFF',
+    borderMid:   '#FFFFFF',
+    shadowSm:    'none',
+    shadowMd:    'none',
+    shadowPurple:'none',
     font: '"Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif',
   },
 }
@@ -795,7 +832,7 @@ function JarvisMark({ size = 28, radius = 6, style = {} }) {
   const T = window.__T
   const isDark = T?.appBg === '#1F1F1F'
   return (
-    <img src="/jarvis-icon-transparent.png" alt="Jarvis"
+    <img src={asset('/jarvis-icon-transparent.png')} alt="Jarvis"
       style={{ width:size, height:size, borderRadius:radius, objectFit:'cover',
         background: isDark ? '#000' : '#fff',
         display:'block', flexShrink:0, ...style }} />
@@ -840,7 +877,7 @@ function Btn({ children, variant='primary', onClick, style={}, icon: Icon, disab
   const T = window.__T
   const [hov, setHov] = useState(false)
   const base = {
-    primary:  { background:hov?T.coreMid:T.core,       color:'white',  border:'none',                    shadow: hov ? T.shadowPurple : 'none' },
+    primary:  { background:hov?T.coreMid:T.core,       color:T.coreText,  border:'none',                    shadow: hov ? T.shadowPurple : 'none' },
     secondary:{ background:hov?T.surfaceMid:'transparent', color:T.text, border:`1px solid ${T.border}`,  shadow:'none' },
     ghost:    { background:hov?T.surfaceMid:'none',     color:T.textMid, border:'none',                   shadow:'none' },
     danger:   { background:hov?'#A52020':T.red,         color:'white',  border:'none',                    shadow:'none' },
@@ -2903,7 +2940,7 @@ function WelcomeScreen({ onLogin }) {
 
   const ctaStyle = {
     display:'inline-flex', alignItems:'center', gap:10, padding:'13px 28px',
-    borderRadius:4, fontSize:15, fontWeight:700, color:'white',
+    borderRadius:4, fontSize:15, fontWeight:700, color:T.coreText,
     background:T.core, border:'none', cursor:'pointer',
     boxShadow:T.shadowPurple, transition:'all .15s',
   }
@@ -2978,7 +3015,7 @@ function WelcomeScreen({ onLogin }) {
                       )}
                       <div style={{ maxWidth:'85%', padding:'9px 13px', borderRadius:8, fontSize:13, lineHeight:1.6,
                         ...(m.role==='u'
-                          ? { background:T.core, color:'white', borderBottomRightRadius:2 }
+                          ? { background:T.core, color:T.coreText, borderBottomRightRadius:2 }
                           : { background:T.surfaceMid, color:T.text, border:`1px solid ${T.border}`, borderBottomLeftRadius:2 }) }}>
                         {m.text}
                       </div>
@@ -3603,7 +3640,7 @@ function AgentWizard({ onClose }) {
                 <div style={{ padding:10, height:180, overflowY:'auto', display:'flex', flexDirection:'column', gap:7 }}>
                   {ran ? (<>
                     <div style={{ fontSize:13, padding:'9px 11px', borderRadius:8, background:T.surfaceMid, color:T.text }}>Hi — I'm your AI work assistant.</div>
-                    <div style={{ fontSize:13, padding:'9px 11px', borderRadius:8, background:T.core, color:'white', alignSelf:'flex-end' }}>3 back-to-back meetings in 30 min — prepare me.</div>
+                    <div style={{ fontSize:13, padding:'9px 11px', borderRadius:8, background:T.core, color:T.coreText, alignSelf:'flex-end' }}>3 back-to-back meetings in 30 min — prepare me.</div>
                     <div style={{ fontSize:13, padding:'9px 11px', borderRadius:8, background:T.surfaceMid, color:T.text }}>Found your 3 meetings. Prep notes and docs ready. Want me to share?</div>
                   </>) : (
                     <p style={{ fontSize:14, color:T.textXsoft, textAlign:'center', margin:'auto' }}>Run simulation to preview.</p>
@@ -4322,7 +4359,8 @@ export default function App() {
   // are themed via [data-teams-theme]; without this, dark mode would only repaint
   // the Jarvis-branded pages and the Teams chrome would stay light.
   useEffect(() => {
-    try { document.documentElement.setAttribute('data-teams-theme', mode === 'dark' ? 'dark' : 'light') } catch {}
+    const teamsTheme = mode === 'dark' ? 'dark' : mode === 'contrast' ? 'contrast' : 'light'
+    try { document.documentElement.setAttribute('data-teams-theme', teamsTheme) } catch {}
   }, [mode])
 
   const [scene, setScene] = useState('welcome') // welcome | setup | tuning | app
@@ -4704,6 +4742,7 @@ export default function App() {
               fontFamily:T.font }}>
             <option value="light">Light</option>
             <option value="dark">Dark</option>
+            <option value="contrast">High contrast</option>
           </select>
         </label>
         <span style={{ fontSize:11, color:'#6A6A6A', marginLeft:12 }}>
@@ -4715,7 +4754,7 @@ export default function App() {
       <div className="teams-titlebar teams-scope" role="toolbar" aria-label="Teams window">
         <div className="teams-titlebar__left">
           <span className="teams-titlebar__logo" aria-hidden="true">
-            <img src="/assets/teams-logo.svg" alt="" />
+            <img src={asset('/assets/teams-logo.svg')} alt="" />
           </span>
         </div>
         <div className="teams-titlebar__center">
@@ -4835,7 +4874,7 @@ export default function App() {
           {scene==='app' && (
             <div style={{ display:'flex', alignItems:'center', gap:8, padding:'5px 4px' }}>
               <div style={{ width:18, height:18, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:T.core }}>
-                <span style={{ fontSize:13, fontWeight:800, color:'white' }}>O</span>
+                <span style={{ fontSize:13, fontWeight:800, color:T.coreText }}>O</span>
               </div>
               <div style={{ lineHeight:1 }}>
                 <p style={{ fontSize:13, fontWeight:700, color:T.text }}>OrgFarm EPIC</p>
