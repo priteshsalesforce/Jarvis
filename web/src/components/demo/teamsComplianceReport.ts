@@ -93,11 +93,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'adaptive-cards',
     label: 'Adaptive Cards & content',
     weight: 8,
-    score: 60,
+    score: 90,
     summary:
-      'Agent/Copilot replies and brief items render as bespoke React bubbles and cards.',
+      'Structured/actionable agent replies render as real Adaptive Cards (adaptivecards SDK, Action.Submit, theme-aware host config); plain conversational replies stay as text — matching how Teams bots/Copilot present content.',
     recommendation:
-      'Render agent messages and actionable briefs as Adaptive Cards (adaptivecards SDK) so they match how Teams bots/Copilot present content and support Action.Submit.',
+      'Author richer card layouts (FactSet, Columns, Image) for data-dense briefs and code-split the SDK to trim the bundle.',
   },
   {
     id: 'accessibility',

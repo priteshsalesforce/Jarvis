@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 // Microsoft Fluent UI System Icons (Teams design system) via a thin adapter
 // that preserves the Lucide `size`/`color` prop API. Swapped from lucide-react
 // so the Jarvis app surface uses the same icon family as Teams.
@@ -19,6 +19,7 @@ import {
   Pin, PinOff,
 } from '@/components/icons/fluent'
 import { asset } from '@/utils/asset'
+import { TeamsAdaptiveCard } from '@/components/chat/teams/TeamsAdaptiveCard'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
   ChatRegular, PeopleTeamRegular, VideoCameraSmallRegular, BookContactsRegular,
@@ -1840,7 +1841,65 @@ function MessageTable({ table }) {
 // ─── renderBubble — order: thinking → answer → table → sources → actions ─
 // Mirrors Gemini's reading order: the thinking accordion sits above the prose,
 // the answer body follows, then any data viz, then citations and CTA chips.
+/**
+ * Build a Teams Adaptive Card payload from a structured/actionable agent
+ * reply. The reply text becomes a TextBlock (Adaptive Cards render the
+ * `**bold**` / `*italic*` markdown via the host's onProcessMarkdown), and each
+ * proposed action becomes an Action.Submit carrying the original action object
+ * so the existing tiered-click flow (L1/L2/L4) is preserved.
+ */
+function buildAgentCard(m) {
+  return {
+    type: 'AdaptiveCard',
+    $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+    version: '1.5',
+    body: [{ type: 'TextBlock', text: m.text || '', wrap: true }],
+    actions: (m.actions || []).map((a) => ({
+      type: 'Action.Submit',
+      title: a.label,
+      data: { __key: a.key, __label: a.label, __tier: a.tier || null },
+    })),
+  }
+}
+
+/**
+ * Render a structured agent reply as a real Teams Adaptive Card (matching how
+ * Teams bots / Copilot present actionable content). Routes Action.Submit back
+ * through the same handlers ActionChips uses, so tiered confirmations still
+ * fire. The card is theme-aware (light / dark / high-contrast) via
+ * TeamsAdaptiveCard's host config.
+ */
+function AdaptiveAgentCard({ m, onChipClick, onTieredClick }) {
+  const card = useMemo(() => buildAgentCard(m), [m])
+  const handleAction = useCallback(
+    (action) => {
+      const d = action?.data || {}
+      const label = d.__label ?? action?.title
+      if (d.__tier && onTieredClick) onTieredClick({ key: d.__key, label, tier: d.__tier })
+      else if (onChipClick) onChipClick(label)
+    },
+    [onChipClick, onTieredClick]
+  )
+  return (
+    <div className="teams-scope" style={{ marginTop: 4, maxWidth: 520 }}>
+      <TeamsAdaptiveCard card={card} onAction={handleAction} />
+    </div>
+  )
+}
+
 function renderBubble(m, T, onChipClick, onTieredClick) {
+  // Hybrid: structured/actionable replies render as a Teams Adaptive Card;
+  // plain conversational replies (and table replies) stay as text bubbles.
+  const isActionable = Array.isArray(m.actions) && m.actions.length > 0
+  if (isActionable && !m.table) {
+    return (
+      <div>
+        {m.trace && <AgentTrace trace={m.trace} sourcesCount={m.sources?.length || 0} />}
+        {m.text ? <AdaptiveAgentCard m={m} onChipClick={onChipClick} onTieredClick={onTieredClick} /> : null}
+        {m.sources && <SourceChips sources={m.sources} />}
+      </div>
+    )
+  }
   return (
     <div>
       {m.trace && <AgentTrace trace={m.trace} sourcesCount={m.sources?.length || 0} />}
