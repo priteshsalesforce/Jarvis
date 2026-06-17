@@ -12,4 +12,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    // Bind on all interfaces and accept the dev-tunnel host so Teams can load
+    // the tab over HTTPS during local development.
+    host: true,
+    allowedHosts: true,
+    // When serving through an HTTPS tunnel, set TUNNEL_HOST=<your-tunnel-host>
+    // so Vite's HMR websocket connects back over wss:443 (live reload inside
+    // the Teams tab). Without it, local HMR behaves normally.
+    ...(process.env.TUNNEL_HOST
+      ? { hmr: { host: process.env.TUNNEL_HOST, protocol: 'wss', clientPort: 443 } }
+      : {}),
+  },
 })

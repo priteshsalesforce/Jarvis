@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Teams app package build artifacts
+teams/build
+teams/appPackage.zip
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -20,6 +20,7 @@ import {
 } from '@/components/icons/fluent'
 import { asset } from '@/utils/asset'
 import { TeamsAdaptiveCard } from '@/components/chat/teams/TeamsAdaptiveCard'
+import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
   ChatRegular, PeopleTeamRegular, VideoCameraSmallRegular, BookContactsRegular,
@@ -196,6 +197,11 @@ input, textarea, select { font-family: inherit; }
 .j-msg .j-feedback { opacity: 0; transition: opacity .15s; }
 .j-msg:hover .j-feedback,
 .j-feedback:focus-within { opacity: 1; }
+.skip-link { position: absolute; left: 8px; top: -48px; z-index: 1000;
+  background: var(--focus-ring, #5C2E91); color: #fff; padding: 8px 14px;
+  border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none;
+  transition: top .15s ease; }
+.skip-link:focus { top: 8px; outline: 2px solid #fff; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   *, .enter, .enter-r, .pop, .done, .fade, .expand-down {
     animation-duration: 0.001ms !important;
@@ -218,12 +224,37 @@ const INTENTS = [
     source:'Workday · Life event',
     evidence:'Leave starts Jun 2 · Backfill lead time 3 weeks',
     chatScenario:'leave' },
+  { id:'brief', tier:'L1', cat:'Your morning brief',
+    headline:'Good morning, Alex — 6 things need you today',
+    why:'I ranked your inbox, Teams, calendar, Salesforce and Workday by deadline × impact. Three I can mostly handle; three need a decision.',
+    action:'Open the brief', source:'Jarvis · 9:00 AM',
+    evidence:'6 items · 3 need a decision', chatScenario:'brief' },
+  { id:'sfcase', tier:'L3', cat:'Overnight',
+    headline:'High-priority Salesforce case created — may need a review bridge',
+    why:'“Mandatory Product Review Preparation” came in overnight. I summarised it, found the stakeholders, and there\'s a 30-min slot at 1 PM. One tap sets up the bridge.',
+    action:'Review the case', source:'Salesforce · 02:14 AM',
+    evidence:'High priority · 3 stakeholders · 1 PM slot free', chatScenario:'sfcase' },
+  { id:'hrcase', tier:'L3', cat:'Confidential · needs you',
+    headline:'HR case assigned to you — acknowledge within 24h',
+    why:'A workplace concern naming someone on your team came in via the HR desk. I read the case and the policy and lined up the first steps — anything touching the people involved waits for you.',
+    action:'Open the HR case', source:'ServiceNow · HR desk',
+    evidence:'Medium severity · SLA 24h · HRBP loop-in required', chatScenario:'hrcase' },
   { id:'resch', tier:'L3', cat:'Just landed · needs you now',
     headline:'Marc made the 2 PM product review mandatory — clears with 1 tap',
     why:'Marc (SVP) outranks everything on your afternoon. I worked out the reshuffle and drafted every message — 4 on Teams, 3 emails. One approval sends them all and clears your 2 PM.',
     action:'Review the reshuffle', source:'Teams + Outlook · 11:40 AM',
     evidence:'Sender outranks 3 conflicting meetings · 7 messages drafted',
     chatScenario:'reschedule' },
+  { id:'task', tier:'L2', cat:'Follow-up needed',
+    headline:'Priya asked you to follow up with Finance before EOD',
+    why:'A Teams message from Priya reads like an action with a deadline. I can turn it into a task at 4:30 PM linked to the vendor thread.',
+    action:'Create follow-up task', source:'Teams · Priya',
+    evidence:'Deadline EOD · linked to #finance-ops', chatScenario:'followuptask' },
+  { id:'invoice', tier:'L1', cat:'Follow-up needed',
+    headline:'Uber invoice ready to file as an expense',
+    why:'An email arrived with an Uber invoice for yesterday\'s customer visit. I extracted the merchant, amount, date and category — one tap creates the Salesforce expense draft.',
+    action:'Review & file', source:'Outlook · receipts@uber.com',
+    evidence:'$24.80 · under $75 · no receipt approval needed', chatScenario:'invoice' },
   { id:'y1', tier:'L2', cat:'Yesterday',
     headline:'PTO request pending with your manager — 3 days',
     why:'Submitted Apr 29 for May 14–16. Manager SLA is 2 business days. I can draft a light nudge on your behalf.',
@@ -487,6 +518,106 @@ const CHAT_SCENARIOS = {
       { label:'Approve all & send', key:'reschedule_send', tier:'L4' },
       { label:'Review each message', key:'reschedule_review', tier:'L1' },
       { label:'Don\'t reschedule', key:'reschedule_cancel', tier:'L1' },
+    ],
+  }],
+  // ── S1: Morning brief — the scripted "6 things" opener ──────────────────
+  brief:[{
+    role:'j',
+    text:"Good morning, Alex. Here are the **6 things that need you today**:\n\n1. A high-priority **Salesforce case** was created overnight — it may need a review bridge.\n2. Your **2 PM product review** is currently blocked by three meetings.\n3. A **Teams message from Priya** needs a follow-up task.\n4. An **invoice email** is ready to become an expense submission.\n5. Your **PTO request** is still pending approval.\n6. You have an **upcoming holiday** — I can sketch a quick 2-day getaway plan.\n\nThree of these I can mostly handle; three need a decision. Want to start at the top?",
+    trace:{
+      summary:'Ranked 6 items across 5 systems by deadline × impact',
+      steps:[
+        { label:'Pulled overnight signals', plugin:'OutlookPlugin',
+          bullets:['Salesforce: 1 new high-priority case','Outlook: 1 invoice email, 1 mandatory invite','Teams: 1 action request from Priya'] },
+        { label:'Checked Workday + calendar', plugin:'WorkdayPlugin',
+          bullets:['PTO pending past SLA','Company holiday next Friday','2 PM blocked by 3 meetings'] },
+        { label:'Scored by deadline × impact', plugin:'WorkdayPlugin',
+          bullets:['3 need a decision · 3 I can mostly handle','Nothing low-signal surfaced'] },
+      ]
+    },
+  }],
+  // ── S2: Salesforce case creation → proactive review bridge ──────────────
+  sfcase:[{
+    role:'j',
+    text:"**New high-priority Salesforce case — “Mandatory Product Review Preparation.”**\nCreated overnight. I summarised it, found the required stakeholders, and there's a clean **30-minute bridge slot at 1:00 PM** today.\n\nWant me to set up the calendar bridge and draft the Teams update?",
+    trace:{
+      summary:'Read 1 case, found stakeholders and a bridge slot',
+      steps:[
+        { label:'Summarised Salesforce case 00043912', plugin:'SalesforcePlugin',
+          bullets:['Priority: High','Product area: Platform','Asks for a cross-functional review before Friday'] },
+        { label:'Identified required stakeholders', plugin:'SalesforcePlugin',
+          bullets:['You (owner)','Priya — design','Raj — engineering','Marc (SVP) — optional'] },
+        { label:'Found a 30-min bridge slot', plugin:'OutlookPlugin',
+          bullets:['1:00–1:30 PM today free for all three','No conflicts'] },
+      ]
+    },
+    actions:[
+      { label:'Create the calendar bridge', key:'sf_bridge', tier:'L1' },
+      { label:'Draft the Teams update', key:'sf_update', tier:'L2' },
+      { label:'Add a note to the case', key:'sf_note', tier:'L1' },
+    ],
+  }],
+  // ── HR / incident case handling (for the 18th review) ───────────────────
+  hrcase:[{
+    role:'j',
+    text:"**HR case assigned to you — HR-2041 · “Workplace concern, Platform team.”**\n\nIt came in through the HR service desk and names someone on your team. I read the case, checked the policy, and lined up the first steps — but anything that touches the people involved waits for you.\n\nI read the case, not the gossip. Nothing was shared wider.",
+    trace:{
+      summary:'Read 1 HR case, checked policy, identified the required steps',
+      steps:[
+        { label:'Read HR case HR-2041 (confidential)', plugin:'ServiceNowPlugin',
+          bullets:['Category: Workplace concern','Raised: 2 hours ago','Severity: Medium · SLA 24h'] },
+        { label:'Checked the employee-relations policy', plugin:'WorkdayPlugin',
+          bullets:['Manager acknowledges within 24h','HRBP loop-in required before any 1:1','No detail to the wider team'] },
+        { label:'Identified who needs to be involved', plugin:'WorkdayPlugin',
+          bullets:['HRBP: Dana Okafor','You (line manager) — acknowledge + a private check-in'] },
+      ]
+    },
+    actions:[
+      { label:'Acknowledge the case in the HR desk', key:'hr_ack', tier:'L1' },
+      { label:'Draft a private check-in note', key:'hr_note', tier:'L2' },
+      { label:'Loop in HRBP Dana', key:'hr_hrbp', tier:'L3' },
+      { label:'Send a message to the employee', key:'hr_send', tier:'L4' },
+    ],
+  }],
+  // ── S8: Teams message → follow-up task ──────────────────────────────────
+  followuptask:[{
+    role:'j',
+    text:"Priya messaged: *“Can you follow up with Finance on the vendor approval before EOD?”*\n\nThis reads like a follow-up task. Want me to create it for **today at 4:30 PM** and link it to the vendor thread?",
+    trace:{
+      summary:'Read 1 Teams message, detected an action request',
+      steps:[
+        { label:'Read Priya\'s Teams message', plugin:'TeamsPlugin',
+          bullets:['“follow up with Finance … before EOD”','Detected: action request + deadline'] },
+        { label:'Matched it to an open thread', plugin:'TeamsPlugin',
+          bullets:['Vendor approval thread · #finance-ops','Owner: you'] },
+      ]
+    },
+    actions:[
+      { label:'Create task · today 4:30 PM', key:'task_create', tier:'L1' },
+      { label:'Draft the message to Finance', key:'task_draft', tier:'L2' },
+    ],
+  }],
+  // ── S9: Email invoice → Salesforce expense submission ───────────────────
+  invoice:[{
+    role:'j',
+    text:"I found an **invoice from Uber** attached to an email — yesterday's customer visit. I extracted the details. Want me to create a **Salesforce expense submission** draft?",
+    trace:{
+      summary:'Read 1 email + attachment, extracted 4 fields',
+      steps:[
+        { label:'Detected an invoice attachment', plugin:'OutlookPlugin',
+          bullets:['From: receipts@uber.com','Subject: Your Tuesday trip'] },
+        { label:'Extracted the expense fields', plugin:'OutlookPlugin',
+          bullets:['Merchant: Uber','Amount: $24.80','Date: Jun 16','Category: Travel — client visit'] },
+        { label:'Checked it against expense policy', plugin:'SalesforcePlugin',
+          bullets:['Under $75 — no receipt approval needed','Cost centre: Platform PM'] },
+      ]
+    },
+    table:{
+      headers:['Field','Value'],
+      rows:[['Merchant','Uber'],['Amount','$24.80'],['Date','Jun 16'],['Category','Travel — client visit']],
+    },
+    actions:[
+      { label:'Create the expense draft in Salesforce', key:'exp_create', tier:'L1' },
     ],
   }],
 }
@@ -840,11 +971,19 @@ function JarvisMark({ size = 28, radius = 6, style = {} }) {
   )
 }
 
-function GlassCard({ children, style = {}, hover = true, onClick, className = '' }) {
+function GlassCard({ children, style = {}, hover = true, onClick, className = '', ariaLabel }) {
   const T = window.__T
   const [hov, setHov] = useState(false)
+  const interactive = !!onClick
   return (
-    <div onClick={onClick} onMouseEnter={() => hover && setHov(true)} onMouseLeave={() => setHov(false)}
+    <div onClick={onClick}
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={ariaLabel}
+      onKeyDown={interactive ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(e) }
+      } : undefined}
+      onMouseEnter={() => hover && setHov(true)} onMouseLeave={() => setHov(false)}
       className={className}
       style={{ borderRadius:4, background:T.surface, border:`1px solid ${hov ? T.borderMid : T.border}`,
         boxShadow: T.shadowSm,
@@ -2033,10 +2172,17 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
     approve_all:  'Within $5k single-approver limit · All 3 items pass expense-policy checks.',
     reject_all:   'You are declining all 3 items. Submitters will be notified with reason prompt.',
     reschedule_send: 'One of these declines an external meeting with the vendor (Acme). Sending it in your name needs your OK before the batch goes out.',
+    hr_send: 'This message goes to the employee named in a confidential HR case. Per the employee-relations policy, you must confirm before anything is sent in your name.',
   }
   // Custom "Done" copy for actions where the chip label isn't a good past-tense line.
   const DONE_LABELS = {
     reschedule_send: 'Done. Your 2 PM is clear for Marc — sent 4 Teams messages and 3 emails, updated your calendar, and added a note to the Salesforce case.',
+    sf_bridge:  'Calendar bridge created · 1:00–1:30 PM today, invites sent to Priya and Raj. Salesforce case updated.',
+    sf_note:    'Added a note to the Salesforce case: review bridge scheduled for 1 PM.',
+    task_create:'Task created for 4:30 PM today, linked to the vendor approval thread.',
+    exp_create: 'Expense draft created in Salesforce — Uber, $24.80. Ready for your submit.',
+    hr_ack:     'Acknowledged in the HR desk — SLA clock noted, HRBP told you\'re handling it.',
+    hr_hrbp:    'Looped in HRBP Dana Okafor with the case reference. No case detail sent wider.',
   }
   // Drafts shown for L2 "review-first" actions.
   const L2_DRAFTS = {
@@ -2056,6 +2202,21 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
     resch_ea: {
       subject: "Confirming attendance — 2 PM product review",
       body: "Hi — confirming Alex will join Marc's product review at 2 PM today. Please send any pre-read across when you have a moment.\n\nThanks!",
+    },
+    // S2 — Salesforce case → Teams update draft
+    sf_update: {
+      subject: null,
+      body: "Heads-up team — I've set up a 30-min review bridge at 1:00 PM today for the “Mandatory Product Review Preparation” case. Priya (design) and Raj (eng), please join. I'll share the case summary in the invite. Thanks!",
+    },
+    // S8 — follow-up task → message to Finance draft
+    task_draft: {
+      subject: null,
+      body: "Hi Finance team — following up on the vendor approval Priya flagged. Could we get a status before EOD today? Happy to jump on a quick call if that's faster. Thanks!",
+    },
+    // HR case → private check-in note draft (to the employee, gentle, non-leading)
+    hr_note: {
+      subject: null,
+      body: "Hi — do you have 15 minutes for a quick private chat today or tomorrow? Nothing urgent on deliverables; I just want to check in and make sure you've got what you need. Happy to find a time that works for you.",
     },
   }
   // Sub-actions surfaced when the user chooses to review the batch message-by-message.
@@ -2231,6 +2392,11 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
       : scenario === 'prep' ? 'QBR prep — SVP meeting'
       : scenario === 'leave' ? 'Parental-leave plan — Jun 2 to Sep 1'
       : scenario === 'reschedule' ? 'Marc\'s 2 PM review — clearing your afternoon'
+      : scenario === 'brief' ? 'Your morning brief'
+      : scenario === 'sfcase' ? 'Salesforce case — review bridge'
+      : scenario === 'hrcase' ? 'HR case HR-2041'
+      : scenario === 'followuptask' ? 'Follow-up with Finance'
+      : scenario === 'invoice' ? 'Uber invoice — expense draft'
       : 'New chat')
 
   return (
@@ -4430,6 +4596,13 @@ export default function App() {
     try { document.documentElement.setAttribute('data-teams-theme', teamsTheme) } catch {}
   }, [mode])
 
+  // When embedded as a Teams personal tab, hide the simulated chrome and let
+  // Teams drive the theme (the host provides its own title bar + app rail).
+  const { embedded, teamsTheme } = useTeamsEmbed()
+  useEffect(() => {
+    if (teamsTheme) setMode(teamsThemeToMode(teamsTheme))
+  }, [teamsTheme])
+
   const [scene, setScene] = useState('welcome') // welcome | setup | tuning | app
   const [tab, setTab] = useState('today')
   const [persona, setPersona] = useState('employee')
@@ -4695,7 +4868,11 @@ export default function App() {
     <div style={{ display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden', background:T.appBg, fontFamily:T.font, position:'relative', transition:'background .3s' }}>
       <style>{CSS}</style>
 
-      {/* ── Demo chrome (not part of Teams UI) ── */}
+      {/* Keyboard skip link — first focusable element, jumps past the chrome. */}
+      <a href="#jarvis-main" className="skip-link">Skip to main content</a>
+
+      {/* ── Demo chrome (not part of Teams UI) — hidden when embedded in Teams ── */}
+      {!embedded && (
       <div style={{ height:36, flexShrink:0, display:'flex', alignItems:'center', gap:14,
         padding:'0 14px', background:'#0B0B0B', color:'#E5E5E5',
         borderBottom:'1px solid #1A1A1A', zIndex:30, fontFamily:T.font }}>
@@ -4816,8 +4993,11 @@ export default function App() {
           Jarvis demo · not a Microsoft product surface
         </span>
       </div>
+      )}
 
-      {/* ── Teams titlebar — exact MS Teams shell (teams.css .teams-titlebar) ── */}
+      {/* ── Teams titlebar — exact MS Teams shell (teams.css .teams-titlebar).
+          Hidden when embedded: the Teams host renders the real title bar. ── */}
+      {!embedded && (
       <div className="teams-titlebar teams-scope" role="toolbar" aria-label="Teams window">
         <div className="teams-titlebar__left">
           <span className="teams-titlebar__logo" aria-hidden="true">
@@ -4862,11 +5042,14 @@ export default function App() {
           </div>
         </div>
       </div>
+      )}
 
       {/* ── Main area: left rail + content column ── */}
       <div style={{ display:'flex', flex:1, minHeight:0, overflow:'hidden' }}>
 
-      {/* Left rail — exact MS Teams shell (teams.css .teams-rail) */}
+      {/* Left rail — exact MS Teams shell (teams.css .teams-rail).
+          Hidden when embedded: the Teams host provides the app rail. */}
+      {!embedded && (
       <nav className="teams-rail teams-scope" aria-label="Teams app rail" style={{ width:68, flexShrink:0, zIndex:10 }}>
         {[
           { Icon: ChatRegular,             label:'Chat' },
@@ -4903,6 +5086,7 @@ export default function App() {
           <span className="teams-rail__label">Apps</span>
         </button>
       </nav>
+      )}
 
       {/* Main column */}
       <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0, overflow:'hidden', position:'relative', zIndex:1 }}>
@@ -4912,15 +5096,19 @@ export default function App() {
           background:T.surface, borderBottom:`1px solid ${T.border}`, transition:'background .3s' }}>
           <NeuralCore state={coreState} onClick={() => setCoreState('idle')} />
           <div style={{ width:1, height:24, background:T.border, flexShrink:0 }} />
-          <nav style={{ display:'flex' }}>
-            {navItems.map(({ id, label }) => (
+          <nav style={{ display:'flex' }} aria-label="Primary">
+            {navItems.map(({ id, label }) => {
+              const isActive = tab===id && scene==='app'
+              return (
               <button key={id} type="button" onClick={() => { SFX.tap(); setTab(id); if(scene!=='app') setScene('app') }}
+                aria-current={isActive ? 'page' : undefined}
                 style={{ display:'flex', alignItems:'center', gap:6, padding:'0 12px', height:52, fontSize:15, fontWeight:600,
                   background:'none', border:'none', cursor:'pointer', position:'relative',
-                  color:tab===id&&scene==='app'?T.core:T.textSoft, transition:'color .15s' }}>
+                  color:isActive?T.core:T.textSoft, transition:'color .15s' }}>
                 {label}
               </button>
-            ))}
+              )
+            })}
           </nav>
           <div style={{ flex:1 }} />
 

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "0f5c3a1e-9b2d-4c7a-8e6f-1a2b3c4d5e6f",
+  "packageName": "com.salesforce.jarvis",
+  "developer": {
+    "name": "Salesforce",
+    "websiteUrl": "https://www.salesforce.com",
+    "privacyUrl": "https://www.salesforce.com/company/privacy/",
+    "termsOfUseUrl": "https://www.salesforce.com/company/legal/"
+  },
+  "name": {
+    "short": "Jarvis",
+    "full": "Jarvis — your personal assistant at work"
+  },
+  "description": {
+    "short": "Your personal assistant at work — briefs, reminders and routine admin.",
+    "full": "Jarvis quietly handles the small stuff — emails, prep, PTO and training reminders — so you can focus on the rest. It asks before doing anything bigger, and every action is reversible."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#5C2E91",
+  "staticTabs": [
+    {
+      "entityId": "jarvis",
+      "name": "Jarvis",
+      "contentUrl": "{{TAB_ENDPOINT}}/?embed=1",
+      "websiteUrl": "{{TAB_ENDPOINT}}/",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["{{TAB_DOMAIN}}"]
+}

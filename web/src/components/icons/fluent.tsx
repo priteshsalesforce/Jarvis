@@ -118,7 +118,18 @@ function adapt(Icon: FluentIcon): FC<IconProps> {
     fill: _fill,
     ...rest
   }: IconProps) {
-    return <Icon {...rest} style={{ fontSize: size, color, ...style }} />
+    // Icons are decorative by default: the surrounding control carries the
+    // accessible name. Mark the glyph aria-hidden so screen readers don't
+    // announce it — unless the caller explicitly gives the icon its own label.
+    const labelled = rest['aria-label'] != null || rest['aria-labelledby'] != null
+    return (
+      <Icon
+        aria-hidden={labelled ? undefined : true}
+        focusable={false}
+        {...rest}
+        style={{ fontSize: size, color, ...style }}
+      />
+    )
   }
   FluentAdapter.displayName = `Fluent(${Icon.displayName ?? 'Icon'})`
   return FluentAdapter
