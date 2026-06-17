@@ -103,11 +103,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'accessibility',
     label: 'Accessibility (WCAG 2.1 AA)',
     weight: 12,
-    score: 70,
+    score: 90,
     summary:
-      'Global focus-visible ring, semantic buttons and several ARIA labels; reduced-motion respected in the Teams chrome.',
+      'Decorative icons (aria-hidden), keyboard-operable cards (role/tabindex/Enter+Space), a skip-to-content link, aria-current nav, a chat aria-live log, aria-modal dialogs, a global focus-visible ring, AA contrast across all three themes, and prefers-reduced-motion.',
     recommendation:
-      'Audit the app pages for full keyboard operability, focus order, name/role/value on every control, and AA contrast in all themes; honour prefers-reduced-motion in App.jsx animations.',
+      'Add focus-trap + Escape-to-close on every modal, label the message composer, and run an end-to-end screen-reader + keyboard pass to confirm.',
   },
   {
     id: 'motion',

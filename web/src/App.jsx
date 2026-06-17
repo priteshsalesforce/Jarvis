@@ -1577,7 +1577,7 @@ function AddMeetingModal({ onClose }) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:300,
       display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div className="pop" style={{ width:'100%', maxWidth:440, borderRadius:8, overflow:'hidden',
+      <div className="pop" role="dialog" aria-modal="true" aria-label="Add meeting" style={{ width:'100%', maxWidth:440, borderRadius:8, overflow:'hidden',
         background:T.surface, border:`1px solid ${T.border}`, boxShadow:'0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14)' }}>
         <div style={{ padding:'18px 22px 14px', borderBottom:`1px solid ${T.border}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <p style={{ fontSize:16, fontWeight:700, color:T.text }}>Add meeting</p>
@@ -1768,7 +1768,7 @@ function GateModal({ action, policy, onRun, onCancel }) {
   const T = window.__T
   const [confirmed, setConfirmed] = useState(false)
   return (
-    <div role="dialog" aria-label="Gated action"
+    <div role="dialog" aria-modal="true" aria-label="Gated action"
       style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:500,
         display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
       onClick={onCancel}>
@@ -2451,7 +2451,8 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
 
           {/* Centered reading column — max-width 800 */}
           <div style={{ maxWidth:800, margin:'0 auto', padding:'4px 16px 16px',
-            display:'flex', flexDirection:'column', gap:18 }}>
+            display:'flex', flexDirection:'column', gap:18 }}
+            role="log" aria-label="Conversation with Jarvis" aria-live="polite" aria-relevant="additions text">
             {messages.map((m, i) => {
               if (m.role === 'block') {
                 if (m.consumed) return null
@@ -2732,7 +2733,7 @@ function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
   }
 
   return (
-    <div role="dialog" aria-label="What Jarvis can do"
+    <div role="dialog" aria-modal="true" aria-label="What Jarvis can do"
       style={{ position:'fixed', inset:0, zIndex:400, display:'flex', justifyContent:'flex-end',
         background:'rgba(0,0,0,0.4)' }}
       onClick={onClose}>
@@ -3782,7 +3783,7 @@ function AgentWizard({ onClose }) {
   const lbl = { display:'block', fontSize:13, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:T.textSoft, marginBottom:5 }
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div className="pop" style={{ width:'100%', maxWidth:600, maxHeight:'88vh', borderRadius:8, overflow:'hidden', display:'flex', flexDirection:'column',
+      <div className="pop" role="dialog" aria-modal="true" aria-label="New skill" style={{ width:'100%', maxWidth:600, maxHeight:'88vh', borderRadius:8, overflow:'hidden', display:'flex', flexDirection:'column',
         background:T.surface, border:`1px solid ${T.border}`, boxShadow:'0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14)' }}>
         <div style={{ padding:'18px 22px', borderBottom:`1px solid ${T.border}`, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div>
@@ -5089,7 +5090,7 @@ export default function App() {
       )}
 
       {/* Main column */}
-      <div style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0, overflow:'hidden', position:'relative', zIndex:1 }}>
+      <div id="jarvis-main" tabIndex={-1} style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0, overflow:'hidden', position:'relative', zIndex:1, outline:'none' }}>
 
         {/* Top bar */}
         <div style={{ display:'flex', alignItems:'center', gap:12, padding:'0 16px', height:52, flexShrink:0, zIndex:10,
