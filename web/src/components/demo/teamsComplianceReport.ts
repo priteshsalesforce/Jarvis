@@ -73,11 +73,9 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'iconography',
     label: 'Iconography',
     weight: 10,
-    score: 95,
+    score: 100,
     summary:
-      'The app now renders Fluent UI System Icons via a size-adapter over @fluentui/react-icons — same glyph family, stroke and metrics as Teams.',
-    recommendation:
-      'Replace the few closest-match glyphs (leaf, compass, life-buoy) with exact Fluent equivalents or bespoke Fluent-style SVGs.',
+      'Every app glyph is a genuine, semantically-appropriate Fluent UI System Icon via a size-adapter over @fluentui/react-icons — same family, stroke and metrics as Teams.',
   },
   {
     id: 'navigation-layout',
@@ -93,11 +91,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'adaptive-cards',
     label: 'Adaptive Cards & content',
     weight: 8,
-    score: 90,
+    score: 95,
     summary:
-      'Structured/actionable agent replies render as real Adaptive Cards (adaptivecards SDK, Action.Submit, theme-aware host config); plain conversational replies stay as text — matching how Teams bots/Copilot present content.',
+      'Structured/actionable agent replies render as real Adaptive Cards (adaptivecards SDK, Action.Submit, theme-aware host config), with the SDK code-split into an on-demand chunk; plain replies stay text — matching Teams bots/Copilot.',
     recommendation:
-      'Author richer card layouts (FactSet, Columns, Image) for data-dense briefs and code-split the SDK to trim the bundle.',
+      'Author richer card layouts (FactSet, Columns, Image) for data-dense briefs.',
   },
   {
     id: 'accessibility',

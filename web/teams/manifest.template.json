@@ -3,7 +3,6 @@
   "manifestVersion": "1.17",
   "version": "1.0.0",
   "id": "0f5c3a1e-9b2d-4c7a-8e6f-1a2b3c4d5e6f",
-  "packageName": "com.salesforce.jarvis",
   "developer": {
     "name": "Salesforce",
     "websiteUrl": "https://www.salesforce.com",
@@ -25,10 +24,31 @@
   "accentColor": "#5C2E91",
   "staticTabs": [
     {
-      "entityId": "jarvis",
-      "name": "Jarvis",
-      "contentUrl": "{{TAB_ENDPOINT}}/?embed=1",
-      "websiteUrl": "{{TAB_ENDPOINT}}/",
+      "entityId": "today",
+      "name": "Today",
+      "contentUrl": "{{TAB_ENDPOINT}}/?embed=1&tab=today",
+      "websiteUrl": "{{TAB_ENDPOINT}}/?tab=today",
+      "scopes": ["personal"]
+    },
+    {
+      "entityId": "chats",
+      "name": "Conversations",
+      "contentUrl": "{{TAB_ENDPOINT}}/?embed=1&tab=conversations",
+      "websiteUrl": "{{TAB_ENDPOINT}}/?tab=conversations",
+      "scopes": ["personal"]
+    },
+    {
+      "entityId": "feed",
+      "name": "Feed",
+      "contentUrl": "{{TAB_ENDPOINT}}/?embed=1&tab=feed",
+      "websiteUrl": "{{TAB_ENDPOINT}}/?tab=feed",
+      "scopes": ["personal"]
+    },
+    {
+      "entityId": "agents",
+      "name": "Skills",
+      "contentUrl": "{{TAB_ENDPOINT}}/?embed=1&tab=agents",
+      "websiteUrl": "{{TAB_ENDPOINT}}/?tab=agents",
       "scopes": ["personal"]
     }
   ],

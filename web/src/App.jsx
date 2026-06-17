@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
 // Microsoft Fluent UI System Icons (Teams design system) via a thin adapter
 // that preserves the Lucide `size`/`color` prop API. Swapped from lucide-react
 // so the Jarvis app surface uses the same icon family as Teams.
@@ -19,7 +19,11 @@ import {
   Pin, PinOff,
 } from '@/components/icons/fluent'
 import { asset } from '@/utils/asset'
-import { TeamsAdaptiveCard } from '@/components/chat/teams/TeamsAdaptiveCard'
+// Lazy-loaded so the Adaptive Cards SDK ships in a separate chunk (loaded only
+// when the first actionable agent card renders), keeping the initial bundle lean.
+const TeamsAdaptiveCard = lazy(() =>
+  import('@/components/chat/teams/TeamsAdaptiveCard').then((m) => ({ default: m.TeamsAdaptiveCard }))
+)
 import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
@@ -2061,7 +2065,9 @@ function AdaptiveAgentCard({ m, onChipClick, onTieredClick }) {
   )
   return (
     <div className="teams-scope" style={{ marginTop: 4, maxWidth: 520 }}>
-      <TeamsAdaptiveCard card={card} onAction={handleAction} />
+      <Suspense fallback={<div aria-hidden style={{ height: 1 }} />}>
+        <TeamsAdaptiveCard card={card} onAction={handleAction} />
+      </Suspense>
     </div>
   )
 }
@@ -4650,8 +4656,22 @@ export default function App() {
     if (teamsTheme) setMode(teamsThemeToMode(teamsTheme))
   }, [teamsTheme])
 
-  const [scene, setScene] = useState('welcome') // welcome | setup | tuning | app
-  const [tab, setTab] = useState('today')
+  const [scene, setScene] = useState(() => {
+    // Deep-link / Teams embed: open straight into the app. Teams static tabs
+    // load the tab with ?tab=<id>, and ?embed=1 forces embedded mode.
+    try {
+      const p = new URLSearchParams(window.location.search)
+      if (p.get('tab') || p.get('embed') === '1' || p.get('embed') === 'teams') return 'app'
+    } catch { /* ignore */ }
+    return 'welcome'
+  }) // welcome | setup | tuning | app
+  const [tab, setTab] = useState(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get('tab')
+      if (['today', 'conversations', 'feed', 'agents'].includes(t)) return t
+    } catch { /* ignore */ }
+    return 'today'
+  })
   const [persona, setPersona] = useState('employee')
   // Load persisted Setup preferences (null = not set up yet)
   const [prefs, setPrefs] = useState(() => loadPrefs())
@@ -5138,7 +5158,9 @@ export default function App() {
       {/* Main column */}
       <div id="jarvis-main" tabIndex={-1} style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0, overflow:'hidden', position:'relative', zIndex:1, outline:'none' }}>
 
-        {/* Top bar */}
+        {/* Top bar — hidden when embedded: the Teams header provides the app
+            identity and the tabs (declared as static tabs in the manifest). */}
+        {!embedded && (
         <div style={{ display:'flex', alignItems:'center', gap:12, padding:'0 16px', height:52, flexShrink:0, zIndex:10,
           background:T.surface, borderBottom:`1px solid ${T.border}`, transition:'background .3s' }}>
           <NeuralCore state={coreState} onClick={() => setCoreState('idle')} />
@@ -5185,6 +5207,7 @@ export default function App() {
             </div>
           )}
         </div>
+        )}
 
         {/* Teams-style notification toast — anchored inside the app column */}
         {showNotif && !notifDone && (
