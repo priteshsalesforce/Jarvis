@@ -971,6 +971,44 @@ function JarvisMark({ size = 28, radius = 6, style = {} }) {
   )
 }
 
+/**
+ * Accessibility for modal dialogs (WCAG 2.1.2 / 2.4.3): on open, move focus
+ * into the dialog; trap Tab within it; close on Escape; and restore focus to
+ * the previously-focused element on close. Returns a ref to put on the dialog
+ * container (which should also have role="dialog" aria-modal="true").
+ */
+function useDialogA11y(onClose) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const node = ref.current
+    if (!node) return
+    const prevFocus = document.activeElement
+    const getFocusable = () =>
+      Array.from(
+        node.querySelectorAll(
+          'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => el.offsetParent !== null || el === document.activeElement)
+    const focusables = getFocusable()
+    ;(focusables[0] || node).focus?.()
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose?.(); return }
+      if (e.key !== 'Tab') return
+      const list = getFocusable()
+      if (list.length === 0) { e.preventDefault(); return }
+      const first = list[0], last = list[list.length - 1]
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
+    node.addEventListener('keydown', onKey)
+    return () => {
+      node.removeEventListener('keydown', onKey)
+      try { prevFocus?.focus?.() } catch { /* element gone */ }
+    }
+  }, [onClose])
+  return ref
+}
+
 function GlassCard({ children, style = {}, hover = true, onClick, className = '', ariaLabel }) {
   const T = window.__T
   const [hov, setHov] = useState(false)
@@ -1569,6 +1607,7 @@ function RightPanel({ onEventClick, onAddMeeting }) {
 // ─── Add Meeting Modal ────────────────────────────────────────────────────────
 function AddMeetingModal({ onClose }) {
   const T = window.__T
+  const dlgRef = useDialogA11y(onClose)
   const [prep, setPrep] = useState(true)
   const inp = { width:'100%', padding:'8px 10px', borderRadius:4, fontSize:14, outline:'none',
     background:T.surfaceMid, border:`1px solid ${T.border}`, color:T.text, fontFamily:T.font,
@@ -1577,7 +1616,7 @@ function AddMeetingModal({ onClose }) {
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:300,
       display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div className="pop" role="dialog" aria-modal="true" aria-label="Add meeting" style={{ width:'100%', maxWidth:440, borderRadius:8, overflow:'hidden',
+      <div ref={dlgRef} tabIndex={-1} className="pop" role="dialog" aria-modal="true" aria-label="Add meeting" style={{ outline:'none', width:'100%', maxWidth:440, borderRadius:8, overflow:'hidden',
         background:T.surface, border:`1px solid ${T.border}`, boxShadow:'0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14)' }}>
         <div style={{ padding:'18px 22px 14px', borderBottom:`1px solid ${T.border}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <p style={{ fontSize:16, fontWeight:700, color:T.text }}>Add meeting</p>
@@ -1766,10 +1805,11 @@ function ConfirmRow({ label, onConfirm, onCancel }) {
 
 function GateModal({ action, policy, onRun, onCancel }) {
   const T = window.__T
+  const dlgRef = useDialogA11y(onCancel)
   const [confirmed, setConfirmed] = useState(false)
   return (
-    <div role="dialog" aria-modal="true" aria-label="Gated action"
-      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:500,
+    <div ref={dlgRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Gated action"
+      style={{ outline:'none', position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:500,
         display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
       onClick={onCancel}>
       <div className="pop" onClick={e => e.stopPropagation()}
@@ -2683,6 +2723,7 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
 // The user sees four plain-English "I can help with" rows and can type their
 // own request to add/remove capabilities. No L1–L4 jargon. No permission math.
 function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
+  const dlgRef = useDialogA11y(onClose)
   const T = window.__T
   const [messages, setMessages] = useState([
     { role:'j', text:"Here's what I can help with today. Want to add something, or take something off my plate? Just tell me." },
@@ -2733,8 +2774,8 @@ function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
   }
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="What Jarvis can do"
-      style={{ position:'fixed', inset:0, zIndex:400, display:'flex', justifyContent:'flex-end',
+    <div ref={dlgRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="What Jarvis can do"
+      style={{ outline:'none', position:'fixed', inset:0, zIndex:400, display:'flex', justifyContent:'flex-end',
         background:'rgba(0,0,0,0.4)' }}
       onClick={onClose}>
       <div className="enter-r" onClick={e => e.stopPropagation()}
@@ -2823,6 +2864,7 @@ function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
             <Sparkles size={14} color={T.coreMid} />
             <input value={input} onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && send()}
+              aria-label="Ask Jarvis to add or remove something"
               placeholder="Ask me to add or remove something…"
               style={{ flex:1, fontSize:13, background:'none', border:'none', outline:'none',
                 color:T.text, fontFamily:T.font }} />
@@ -3776,6 +3818,7 @@ function AgentsView({ onNew }) {
 // ─── Agent Wizard ─────────────────────────────────────────────────────────────
 function AgentWizard({ onClose }) {
   const T = window.__T
+  const dlgRef = useDialogA11y(onClose)
   const [step, setStep] = useState(1); const [sel, setSel] = useState(null); const [ran, setRan] = useState(false); const [running, setRunning] = useState(false)
   const run = () => { setRunning(true); SFX.tap(); setTimeout(() => { setRunning(false); SFX.done(); setRan(true) }, 1500) }
   const inp = { width:'100%', padding:'8px 10px', borderRadius:4, fontSize:14, outline:'none', fontFamily:T.font,
@@ -3783,7 +3826,7 @@ function AgentWizard({ onClose }) {
   const lbl = { display:'block', fontSize:13, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:T.textSoft, marginBottom:5 }
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div className="pop" role="dialog" aria-modal="true" aria-label="New skill" style={{ width:'100%', maxWidth:600, maxHeight:'88vh', borderRadius:8, overflow:'hidden', display:'flex', flexDirection:'column',
+      <div ref={dlgRef} tabIndex={-1} className="pop" role="dialog" aria-modal="true" aria-label="New skill" style={{ outline:'none', width:'100%', maxWidth:600, maxHeight:'88vh', borderRadius:8, overflow:'hidden', display:'flex', flexDirection:'column',
         background:T.surface, border:`1px solid ${T.border}`, boxShadow:'0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14)' }}>
         <div style={{ padding:'18px 22px', borderBottom:`1px solid ${T.border}`, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <div>
@@ -4035,7 +4078,7 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState, coreState, pe
           <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:99,
             background:T.surfaceMid, border:`1px solid ${T.border}` }}>
             <Search size={13} color={T.textSoft} />
-            <input placeholder="Search conversations…" style={{ flex:1, fontSize:13, background:'none', border:'none', outline:'none', color:T.text, fontFamily:T.font }} />
+            <input placeholder="Search conversations…" aria-label="Search conversations" style={{ flex:1, fontSize:13, background:'none', border:'none', outline:'none', color:T.text, fontFamily:T.font }} />
           </div>
         </div>
 
@@ -4304,6 +4347,7 @@ function ContinueBar({ value, onChange, onSubmit, placeholder = 'Continue the co
         onKeyDown={e => e.key === 'Enter' && onSubmit()}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        aria-label="Message Jarvis"
         placeholder={placeholder}
         style={{ flex:1, fontSize:14, background:'none', border:'none', outline:'none',
           color:T.text, fontFamily:T.font, fontWeight:400, lineHeight:1.4, padding:'4px 0' }} />
@@ -4432,6 +4476,7 @@ function WhisperBar({ persona, coreState, setCoreState, onCommand, hero }) {
             onKeyDown={e=>e.key==='Enter'&&submit()}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
+            aria-label="Ask Jarvis anything"
             placeholder={ph}
             style={{ flex:1, fontSize:14, background:'none', border:'none', outline:'none',
               color:T.text, fontFamily:T.font, fontWeight:400, lineHeight:1.4, padding:'4px 0' }} />
@@ -4523,6 +4568,7 @@ function WhisperBar({ persona, coreState, setCoreState, onCommand, hero }) {
             onKeyDown={e=>e.key==='Enter'&&submit()}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
+            aria-label="Ask Jarvis anything"
             placeholder={ph}
             style={{ flex:1, fontSize:15, background:'none', border:'none', outline:'none', color:T.text, fontFamily:T.font }} />
           <button type="button"

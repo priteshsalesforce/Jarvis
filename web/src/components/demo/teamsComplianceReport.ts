@@ -83,11 +83,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'navigation-layout',
     label: 'Navigation & tab layout',
     weight: 10,
-    score: 70,
+    score: 90,
     summary:
-      'Personal-app tab pattern (Today / Conversations / Feed / Skills) with a clear L1 nav and content that fills the stage.',
+      'Personal-app tab pattern (Today / Conversations / Feed / Skills). When embedded as a Teams tab (useTeamsEmbed) the simulated title bar + rail are hidden and the Teams host owns the chrome and theme; the standalone demo keeps the chrome intentionally.',
     recommendation:
-      'In a real Teams app, let Teams render the title bar and app rail — drop the simulated chrome so the app content owns the full tab stage, per the tab design guidance.',
+      'Validate the tab navigation and deep-links against a live Teams tenant via the Developer Portal.',
   },
   {
     id: 'adaptive-cards',
@@ -103,11 +103,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'accessibility',
     label: 'Accessibility (WCAG 2.1 AA)',
     weight: 12,
-    score: 90,
+    score: 95,
     summary:
-      'Decorative icons (aria-hidden), keyboard-operable cards (role/tabindex/Enter+Space), a skip-to-content link, aria-current nav, a chat aria-live log, aria-modal dialogs, a global focus-visible ring, AA contrast across all three themes, and prefers-reduced-motion.',
+      'Decorative icons (aria-hidden), keyboard-operable cards, skip-to-content link, aria-current nav, chat aria-live log, dialogs with focus-trap + Escape-to-close + restore-focus, labelled composers/search, global focus-visible ring, AA contrast across all three themes, and prefers-reduced-motion.',
     recommendation:
-      'Add focus-trap + Escape-to-close on every modal, label the message composer, and run an end-to-end screen-reader + keyboard pass to confirm.',
+      'Last mile: an end-to-end screen-reader pass (NVDA/VoiceOver) to certify reading order and announcements.',
   },
   {
     id: 'motion',
