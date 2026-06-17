@@ -25,7 +25,7 @@ const TeamsAdaptiveCard = lazy(() =>
   import('@/components/chat/teams/TeamsAdaptiveCard').then((m) => ({ default: m.TeamsAdaptiveCard }))
 )
 import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
-import { FluentProvider } from '@fluentui/react-components'
+import { FluentProvider, Button as FluentButton } from '@fluentui/react-components'
 import { fluentThemeForMode } from '@/utils/fluentTheme'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
@@ -1057,24 +1057,39 @@ function Chip({ text, color }) {
   )
 }
 
+/**
+ * Fluent UI v9 Button. We use the real Fluent `Button` (keyboard, focus ring,
+ * pressed states, ARIA, theme integration come from the framework) but keep the
+ * Jarvis brand colors via inline overrides — FluentProvider's brand ramp is
+ * Teams purple, and the product brand is intentionally Jarvis purple. The
+ * existing `variant`/`icon`/`style` API is preserved so call sites don't change.
+ */
 function Btn({ children, variant='primary', onClick, style={}, icon: Icon, disabled=false }) {
   const T = window.__T
   const [hov, setHov] = useState(false)
-  const base = {
-    primary:  { background:hov?T.coreMid:T.core,       color:T.coreText,  border:'none',                    shadow: hov ? T.shadowPurple : 'none' },
-    secondary:{ background:hov?T.surfaceMid:'transparent', color:T.text, border:`1px solid ${T.border}`,  shadow:'none' },
-    ghost:    { background:hov?T.surfaceMid:'none',     color:T.textMid, border:'none',                   shadow:'none' },
-    danger:   { background:hov?'#A52020':T.red,         color:'white',  border:'none',                    shadow:'none' },
-  }[variant] || {}
+  const appearance =
+    variant === 'secondary' ? 'outline' :
+    variant === 'ghost' ? 'subtle' :
+    'primary' // primary + danger render filled
+  const colorStyle =
+    variant === 'primary'   ? { backgroundColor: hov ? T.coreMid : T.core, color: T.coreText, border: 'none', boxShadow: hov ? T.shadowPurple : 'none' } :
+    variant === 'danger'    ? { backgroundColor: hov ? '#A52020' : T.red, color: '#fff', border: 'none' } :
+    variant === 'secondary' ? { backgroundColor: hov ? T.surfaceMid : 'transparent', color: T.text, borderColor: T.border } :
+    variant === 'ghost'     ? { backgroundColor: hov ? T.surfaceMid : 'transparent', color: T.textMid, border: 'none' } :
+    {}
   return (
-    <button type="button" disabled={disabled} onClick={onClick}
-      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'8px 16px',
-        borderRadius:4, fontSize:14, fontWeight:600, cursor:disabled?'default':'pointer',
-        opacity:disabled?.4:1, transition:'all .15s', boxShadow:base.shadow,
-        background:base.background, color:base.color, border:base.border||'none', ...style }}>
-      {Icon && <Icon size={13} />}{children}
-    </button>
+    <FluentButton
+      appearance={appearance}
+      disabled={disabled}
+      onClick={onClick}
+      icon={Icon ? <Icon size={13} /> : undefined}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{ minWidth: 0, height: 'auto', gap: 6, padding: '8px 16px', borderRadius: 4,
+        fontSize: 14, fontWeight: 600, transition: 'all .15s', ...colorStyle, ...style }}
+    >
+      {children}
+    </FluentButton>
   )
 }
 
