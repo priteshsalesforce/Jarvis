@@ -43,11 +43,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'fluent-components',
     label: 'Fluent UI components',
     weight: 12,
-    score: 70,
+    score: 75,
     summary:
-      'Buttons, cards, lists, inputs and dialogs are custom-built but follow Fluent geometry, spacing and the neutral/brand token palette.',
+      'Groundwork laid: the app is wrapped in @fluentui/react-components FluentProvider mapped to the three Teams themes (light/dark/high-contrast), so v9 components inherit Teams-accurate tokens. Visible components are still bespoke (Fluent-aligned).',
     recommendation:
-      'Adopt the Fluent UI v9 / Teams UI Kit component library (Button, Card, Persona, TabList, Dialog) so behaviour, states and a11y come from the framework instead of bespoke markup.',
+      'Migrate the bespoke Button, Card, Input, TabList, Dialog and Persona to their Fluent UI v9 equivalents (with visual verification).',
   },
   {
     id: 'theming',

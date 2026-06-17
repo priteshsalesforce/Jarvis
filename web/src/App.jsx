@@ -25,6 +25,8 @@ const TeamsAdaptiveCard = lazy(() =>
   import('@/components/chat/teams/TeamsAdaptiveCard').then((m) => ({ default: m.TeamsAdaptiveCard }))
 )
 import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
+import { FluentProvider } from '@fluentui/react-components'
+import { fluentThemeForMode } from '@/utils/fluentTheme'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
   ChatRegular, PeopleTeamRegular, VideoCameraSmallRegular, BookContactsRegular,
@@ -4932,6 +4934,7 @@ export default function App() {
   // inside the Teams chrome via the scene dispatcher below.)
 
   return (
+    <FluentProvider theme={fluentThemeForMode(mode)} style={{ display:'contents' }}>
     <div style={{ display:'flex', flexDirection:'column', height:'100vh', overflow:'hidden', background:T.appBg, fontFamily:T.font, position:'relative', transition:'background .3s' }}>
       <style>{CSS}</style>
 
@@ -5575,6 +5578,7 @@ export default function App() {
         </div>
       )}
     </div>
+    </FluentProvider>
   )
 }
 
