@@ -25,7 +25,7 @@ const TeamsAdaptiveCard = lazy(() =>
   import('@/components/chat/teams/TeamsAdaptiveCard').then((m) => ({ default: m.TeamsAdaptiveCard }))
 )
 import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
-import { FluentProvider, Button as FluentButton } from '@fluentui/react-components'
+import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab } from '@fluentui/react-components'
 import { fluentThemeForMode } from '@/utils/fluentTheme'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
@@ -5183,20 +5183,16 @@ export default function App() {
           background:T.surface, borderBottom:`1px solid ${T.border}`, transition:'background .3s' }}>
           <NeuralCore state={coreState} onClick={() => setCoreState('idle')} />
           <div style={{ width:1, height:24, background:T.border, flexShrink:0 }} />
-          <nav style={{ display:'flex' }} aria-label="Primary">
-            {navItems.map(({ id, label }) => {
-              const isActive = tab===id && scene==='app'
-              return (
-              <button key={id} type="button" onClick={() => { SFX.tap(); setTab(id); if(scene!=='app') setScene('app') }}
-                aria-current={isActive ? 'page' : undefined}
-                style={{ display:'flex', alignItems:'center', gap:6, padding:'0 12px', height:52, fontSize:15, fontWeight:600,
-                  background:'none', border:'none', cursor:'pointer', position:'relative',
-                  color:isActive?T.core:T.textSoft, transition:'color .15s' }}>
-                {label}
-              </button>
-              )
-            })}
-          </nav>
+          <FluentTabList
+            aria-label="Primary"
+            selectedValue={scene==='app' ? tab : undefined}
+            onTabSelect={(_, data) => { SFX.tap(); setTab(data.value); if (scene !== 'app') setScene('app') }}
+            style={{ '--colorCompoundBrandStroke': T.core, '--colorCompoundBrandStrokeHover': T.coreMid, '--colorCompoundBrandStrokePressed': T.core }}
+          >
+            {navItems.map(({ id, label }) => (
+              <FluentTab key={id} value={id} style={{ fontWeight:600 }}>{label}</FluentTab>
+            ))}
+          </FluentTabList>
           <div style={{ flex:1 }} />
 
           {scene==='app' && (

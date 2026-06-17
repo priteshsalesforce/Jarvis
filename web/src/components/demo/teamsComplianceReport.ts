@@ -43,11 +43,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'fluent-components',
     label: 'Fluent UI components',
     weight: 12,
-    score: 80,
+    score: 83,
     summary:
-      'App wrapped in @fluentui/react-components FluentProvider (three Teams themes). The shared Button is now the real Fluent v9 Button (framework focus/keyboard/states/ARIA) with the Jarvis brand preserved; remaining shared components are Fluent-aligned bespoke.',
+      'App wrapped in FluentProvider (three Teams themes). The shared Button and the primary nav (Fluent TabList/Tab — role=tab, arrow-key nav, brand-tinted selected indicator) are now real Fluent v9 components with the Jarvis brand preserved; remaining shared components are Fluent-aligned bespoke.',
     recommendation:
-      'Migrate the remaining shared components (Card, Input, TabList, Dialog, Persona) to their Fluent UI v9 equivalents.',
+      'Migrate the remaining shared components (Card, Input, Dialog, Persona/Avatar) to their Fluent UI v9 equivalents.',
   },
   {
     id: 'theming',
