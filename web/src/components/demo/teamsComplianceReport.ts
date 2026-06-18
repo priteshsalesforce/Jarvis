@@ -43,11 +43,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'fluent-components',
     label: 'Fluent UI components',
     weight: 12,
-    score: 90,
+    score: 94,
     summary:
-      'App wrapped in FluentProvider (three Teams themes). Button, nav (TabList/Tab), Switch, Input/Textarea, Avatar and the Add-meeting / gated-action modals (Fluent Dialog — native focus-trap, Escape, backdrop) are now real Fluent v9 components, brand-preserved.',
+      'The shared component set is Fluent UI v9: FluentProvider (3 Teams themes), Button, TabList/Tab, Switch, Input/Textarea, Avatar, all modals as Fluent Dialog and the capabilities panel as Fluent OverlayDrawer — native focus-trap/Escape/backdrop, brand-preserved.',
     recommendation:
-      'Finish the last two wrappers — the multi-step Agent wizard (Dialog) and the capabilities side-panel (Drawer).',
+      'Optionally fold the remaining bespoke bits (chat composer pills, decision chips) into Fluent components for full coverage.',
   },
   {
     id: 'theming',

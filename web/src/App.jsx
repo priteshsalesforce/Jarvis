@@ -25,7 +25,7 @@ const TeamsAdaptiveCard = lazy(() =>
   import('@/components/chat/teams/TeamsAdaptiveCard').then((m) => ({ default: m.TeamsAdaptiveCard }))
 )
 import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
-import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab, Switch as FluentSwitch, Input as FluentInput, Textarea as FluentTextarea, Avatar as FluentAvatar, Dialog as FluentDialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions } from '@fluentui/react-components'
+import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab, Switch as FluentSwitch, Input as FluentInput, Textarea as FluentTextarea, Avatar as FluentAvatar, Dialog as FluentDialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, OverlayDrawer, DrawerHeader, DrawerHeaderTitle, DrawerBody, DrawerFooter } from '@fluentui/react-components'
 import { fluentThemeForMode } from '@/utils/fluentTheme'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
@@ -975,44 +975,6 @@ function JarvisMark({ size = 28, radius = 6, style = {} }) {
         background: isDark ? '#000' : '#fff',
         display:'block', flexShrink:0, ...style }} />
   )
-}
-
-/**
- * Accessibility for modal dialogs (WCAG 2.1.2 / 2.4.3): on open, move focus
- * into the dialog; trap Tab within it; close on Escape; and restore focus to
- * the previously-focused element on close. Returns a ref to put on the dialog
- * container (which should also have role="dialog" aria-modal="true").
- */
-function useDialogA11y(onClose) {
-  const ref = useRef(null)
-  useEffect(() => {
-    const node = ref.current
-    if (!node) return
-    const prevFocus = document.activeElement
-    const getFocusable = () =>
-      Array.from(
-        node.querySelectorAll(
-          'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
-        )
-      ).filter((el) => el.offsetParent !== null || el === document.activeElement)
-    const focusables = getFocusable()
-    ;(focusables[0] || node).focus?.()
-    const onKey = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose?.(); return }
-      if (e.key !== 'Tab') return
-      const list = getFocusable()
-      if (list.length === 0) { e.preventDefault(); return }
-      const first = list[0], last = list[list.length - 1]
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-    }
-    node.addEventListener('keydown', onKey)
-    return () => {
-      node.removeEventListener('keydown', onKey)
-      try { prevFocus?.focus?.() } catch { /* element gone */ }
-    }
-  }, [onClose])
-  return ref
 }
 
 function GlassCard({ children, style = {}, hover = true, onClick, className = '', ariaLabel }) {
@@ -2736,19 +2698,11 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
 // The user sees four plain-English "I can help with" rows and can type their
 // own request to add/remove capabilities. No L1–L4 jargon. No permission math.
 function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
-  const dlgRef = useDialogA11y(onClose)
   const T = window.__T
   const [messages, setMessages] = useState([
     { role:'j', text:"Here's what I can help with today. Want to add something, or take something off my plate? Just tell me." },
   ])
   const [input, setInput] = useState('')
-
-  // Esc dismiss
-  useEffect(() => {
-    const h = (e) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', h)
-    return () => document.removeEventListener('keydown', h)
-  }, [onClose])
 
   // Plain-language summary of Jarvis's current "beat". Four rows, with an
   // example so the user instantly recognises it in their day.
@@ -2787,32 +2741,21 @@ function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
   }
 
   return (
-    <div ref={dlgRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="What Jarvis can do"
-      style={{ outline:'none', position:'fixed', inset:0, zIndex:400, display:'flex', justifyContent:'flex-end',
-        background:'rgba(0,0,0,0.4)' }}
-      onClick={onClose}>
-      <div className="enter-r" onClick={e => e.stopPropagation()}
-        style={{ width:440, maxWidth:'96vw', height:'100%', background:T.surface,
-          borderLeft:`1px solid ${T.border}`, display:'flex', flexDirection:'column',
-          boxShadow:'-12px 0 28px rgba(0,0,0,0.15)' }}>
-        {/* Header */}
-        <div style={{ padding:'16px 20px', borderBottom:`1px solid ${T.border}`,
-          display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
-          <JarvisMark size={32} radius={8} />
-          <div>
-            <p style={{ fontSize:15, fontWeight:800, color:T.text, margin:0 }}>What I can do</p>
-            <p style={{ fontSize:12, color:T.textSoft, margin:'2px 0 0' }}>Here's where I'm helping — tell me to adjust.</p>
-          </div>
-          <div style={{ flex:1 }} />
-          <button type="button" aria-label="Close" onClick={onClose}
-            style={{ width:28, height:28, borderRadius:4, background:'none', border:'none', cursor:'pointer',
-              display:'flex', alignItems:'center', justifyContent:'center', color:T.textSoft }}>
-            <X size={14} />
-          </button>
-        </div>
-
-        {/* Body — scrollable */}
-        <div style={{ flex:1, overflowY:'auto', padding:'16px 20px' }}>
+    <OverlayDrawer open position="end" modalType="modal" onOpenChange={(_, data) => { if (!data.open) onClose() }}
+      style={{ width:440, maxWidth:'96vw' }}>
+      <DrawerHeader>
+        <DrawerHeaderTitle
+          action={<FluentButton appearance="subtle" aria-label="Close" icon={<X size={18} />} onClick={onClose} />}>
+          <span style={{ display:'inline-flex', alignItems:'center', gap:12 }}>
+            <JarvisMark size={32} radius={8} />
+            <span>
+              <span style={{ display:'block', fontSize:15, fontWeight:800, color:T.text }}>What I can do</span>
+              <span style={{ display:'block', fontSize:12, fontWeight:400, color:T.textSoft, marginTop:2 }}>Here's where I'm helping — tell me to adjust.</span>
+            </span>
+          </span>
+        </DrawerHeaderTitle>
+      </DrawerHeader>
+      <DrawerBody>
           {/* Intro conversation */}
           {messages.map((m, i) => (
             <div key={i} style={{ display:'flex', justifyContent: m.role==='u' ? 'flex-end' : 'flex-start',
@@ -2868,30 +2811,27 @@ function CapabilitiesDrawer({ onClose, onGrantSystem, prefs }) {
               color:T.core, fontSize:13, fontWeight:700, fontFamily:T.font }}>
             <Settings size={12} /> Open full Setup
           </button>
+      </DrawerBody>
+      <DrawerFooter>
+        <div style={{ width:'100%', display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:99,
+          background:T.surface, border:`1px solid ${T.border}` }}>
+          <Sparkles size={14} color={T.coreMid} />
+          <input value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && send()}
+            aria-label="Ask Jarvis to add or remove something"
+            placeholder="Ask me to add or remove something…"
+            style={{ flex:1, fontSize:13, background:'none', border:'none', outline:'none',
+              color:T.text, fontFamily:T.font }} />
+          <button type="button" onClick={send} aria-label="Send"
+            style={{ width:26, height:26, borderRadius:99, cursor:'pointer',
+              background: input.trim() ? T.core : T.surfaceMid,
+              border:'none', color: input.trim() ? '#fff' : T.textXsoft,
+              display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <ArrowRight size={13} />
+          </button>
         </div>
-
-        {/* Footer — talk to Jarvis */}
-        <div style={{ padding:'12px 16px', borderTop:`1px solid ${T.border}`, flexShrink:0 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:99,
-            background:T.surface, border:`1px solid ${T.border}`, transition:'all .15s' }}>
-            <Sparkles size={14} color={T.coreMid} />
-            <input value={input} onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && send()}
-              aria-label="Ask Jarvis to add or remove something"
-              placeholder="Ask me to add or remove something…"
-              style={{ flex:1, fontSize:13, background:'none', border:'none', outline:'none',
-                color:T.text, fontFamily:T.font }} />
-            <button type="button" onClick={send}
-              style={{ width:26, height:26, borderRadius:99, cursor:'pointer',
-                background: input.trim() ? T.core : T.surfaceMid,
-                border:'none', color: input.trim() ? '#fff' : T.textXsoft,
-                display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-              <ArrowRight size={13} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      </DrawerFooter>
+    </OverlayDrawer>
   )
 }
 
@@ -3832,34 +3772,32 @@ function AgentsView({ onNew }) {
 // ─── Agent Wizard ─────────────────────────────────────────────────────────────
 function AgentWizard({ onClose }) {
   const T = window.__T
-  const dlgRef = useDialogA11y(onClose)
   const [step, setStep] = useState(1); const [sel, setSel] = useState(null); const [ran, setRan] = useState(false); const [running, setRunning] = useState(false)
   const run = () => { setRunning(true); SFX.tap(); setTimeout(() => { setRunning(false); SFX.done(); setRan(true) }, 1500) }
   const inp = { width:'100%', padding:'8px 10px', borderRadius:4, fontSize:14, outline:'none', fontFamily:T.font,
     background:T.surfaceMid, border:`1px solid ${T.border}`, color:T.text }
   const lbl = { display:'block', fontSize:13, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:T.textSoft, marginBottom:5 }
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div ref={dlgRef} tabIndex={-1} className="pop" role="dialog" aria-modal="true" aria-label="New skill" style={{ outline:'none', width:'100%', maxWidth:600, maxHeight:'88vh', borderRadius:8, overflow:'hidden', display:'flex', flexDirection:'column',
-        background:T.surface, border:`1px solid ${T.border}`, boxShadow:'0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14)' }}>
-        <div style={{ padding:'18px 22px', borderBottom:`1px solid ${T.border}`, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <div>
-            <p style={{ fontSize:16, fontWeight:700, color:T.core }}>
+    <FluentDialog open modalType="modal" onOpenChange={(_, data) => { if (!data.open) { SFX.close(); onClose() } }}>
+      <DialogSurface aria-label="New skill" style={{ maxWidth:620 }}>
+        <DialogBody>
+          <DialogTitle action={
+            <span style={{ display:'inline-flex', alignItems:'center', gap:14 }}>
+              <span style={{ display:'flex', gap:5 }}>
+                {[1,2,3,4].map(s => (
+                  <span key={s} style={{ height:4, borderRadius:99, transition:'all .2s', width:s===step?20:5,
+                    background:s<=step?T.core:T.border }} />
+                ))}
+              </span>
+              <FluentButton appearance="subtle" aria-label="Close" icon={<X size={20} />} onClick={() => { SFX.close(); onClose() }} />
+            </span>
+          }>
+            <span style={{ display:'block', fontSize:16, fontWeight:700, color:T.core }}>
               {['Choose a template','Agent details','Schedule','Test & activate'][step-1]}
-            </p>
-            <p style={{ fontSize:13, color:T.textSoft, marginTop:2 }}>Step {step} of 4</p>
-          </div>
-          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-            <div style={{ display:'flex', gap:5 }}>
-              {[1,2,3,4].map(s => (
-                <div key={s} style={{ height:4, borderRadius:99, transition:'all .2s', width:s===step?20:5,
-                  background:s<=step?T.core:T.border }} />
-              ))}
-            </div>
-            <Btn variant="ghost" icon={X} onClick={() => { SFX.close(); onClose() }} style={{ padding:5 }} />
-          </div>
-        </div>
-        <div style={{ flex:1, overflowY:'auto', padding:'20px 22px' }}>
+            </span>
+            <span style={{ display:'block', fontSize:13, fontWeight:400, color:T.textSoft, marginTop:2 }}>Step {step} of 4</span>
+          </DialogTitle>
+          <DialogContent style={{ maxHeight:'62vh' }}>
           {step===1 && (
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
               {TEMPLATES.map(t => (
@@ -3934,15 +3872,16 @@ function AgentWizard({ onClose }) {
               </GlassCard>
             </div>
           )}
-        </div>
-        <div style={{ padding:'14px 22px', borderTop:`1px solid ${T.border}`, flexShrink:0, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          {step>1 ? <Btn variant="ghost" icon={ChevronLeft} onClick={() => { SFX.tap(); setStep(s=>s-1) }}>Back</Btn> : <div/>}
-          <Btn variant="primary" disabled={step===1&&!sel} onClick={() => { SFX.tap(); step===4?onClose():setStep(s=>s+1) }}>
-            {step===4?'Activate →':'Next →'}
-          </Btn>
-        </div>
-      </div>
-    </div>
+          </DialogContent>
+          <DialogActions style={{ justifyContent:'space-between' }}>
+            {step>1 ? <Btn variant="ghost" icon={ChevronLeft} onClick={() => { SFX.tap(); setStep(s=>s-1) }}>Back</Btn> : <span/>}
+            <Btn variant="primary" disabled={step===1&&!sel} onClick={() => { SFX.tap(); step===4?onClose():setStep(s=>s+1) }}>
+              {step===4?'Activate →':'Next →'}
+            </Btn>
+          </DialogActions>
+        </DialogBody>
+      </DialogSurface>
+    </FluentDialog>
   )
 }
 
