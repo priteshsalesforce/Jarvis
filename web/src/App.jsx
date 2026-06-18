@@ -25,7 +25,7 @@ const TeamsAdaptiveCard = lazy(() =>
   import('@/components/chat/teams/TeamsAdaptiveCard').then((m) => ({ default: m.TeamsAdaptiveCard }))
 )
 import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
-import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab, Switch as FluentSwitch, Input as FluentInput, Textarea as FluentTextarea, Avatar as FluentAvatar } from '@fluentui/react-components'
+import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab, Switch as FluentSwitch, Input as FluentInput, Textarea as FluentTextarea, Avatar as FluentAvatar, Dialog as FluentDialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions } from '@fluentui/react-components'
 import { fluentThemeForMode } from '@/utils/fluentTheme'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
@@ -1638,55 +1638,55 @@ function RightPanel({ onEventClick, onAddMeeting }) {
 // ─── Add Meeting Modal ────────────────────────────────────────────────────────
 function AddMeetingModal({ onClose }) {
   const T = window.__T
-  const dlgRef = useDialogA11y(onClose)
   const [prep, setPrep] = useState(true)
   // Fluent v9 Input fields: full-width with the focus underline tinted to the
   // Jarvis brand (FluentProvider's brand is Teams purple).
   const fluentField = { width:'100%', '--colorCompoundBrandStroke': T.core }
   const lbl = { display:'block', fontSize:13, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:T.textSoft, marginBottom:5 }
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:300,
-      display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div ref={dlgRef} tabIndex={-1} className="pop" role="dialog" aria-modal="true" aria-label="Add meeting" style={{ outline:'none', width:'100%', maxWidth:440, borderRadius:8, overflow:'hidden',
-        background:T.surface, border:`1px solid ${T.border}`, boxShadow:'0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14)' }}>
-        <div style={{ padding:'18px 22px 14px', borderBottom:`1px solid ${T.border}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <p style={{ fontSize:16, fontWeight:700, color:T.text }}>Add meeting</p>
-          <Btn variant="ghost" icon={X} onClick={() => { SFX.close(); onClose() }} style={{ padding:6 }} />
-        </div>
-        <div style={{ padding:'18px 22px', display:'flex', flexDirection:'column', gap:14 }}>
-          <div><label style={lbl}>Title</label><FluentInput placeholder="Meeting title" style={fluentField} /></div>
-          <div style={{ display:'flex', gap:10 }}>
-            <div style={{ flex:1.2 }}><label style={lbl}>Date</label><FluentInput type="date" defaultValue="2026-05-01" style={fluentField} /></div>
-            <div style={{ flex:1 }}><label style={lbl}>Start</label><FluentInput type="time" defaultValue="10:00" style={fluentField} /></div>
-            <div style={{ flex:1 }}><label style={lbl}>End</label><FluentInput type="time" defaultValue="10:30" style={fluentField} /></div>
-          </div>
-          <div><label style={lbl}>Attendees</label><FluentInput placeholder="Names or emails" style={fluentField} /></div>
-          <div>
-            <label style={lbl}>Location</label>
-            <div style={{ display:'flex', gap:8 }}>
-              {['Teams','Zoom','In person'].map(loc => (
-                <label key={loc} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 12px', borderRadius:4, cursor:'pointer',
-                  background:T.surfaceMid, border:`1px solid ${T.border}`, fontSize:14, color:T.textMid }}>
-                  <input type="radio" name="loc" defaultChecked={loc==='Teams'} style={{ accentColor:T.core }} /> {loc}
-                </label>
-              ))}
+    <FluentDialog open modalType="modal" onOpenChange={(_, data) => { if (!data.open) { SFX.close(); onClose() } }}>
+      <DialogSurface aria-label="Add meeting" style={{ maxWidth:460 }}>
+        <DialogBody>
+          <DialogTitle
+            action={<FluentButton appearance="subtle" aria-label="Close" icon={<X size={20} />} onClick={() => { SFX.close(); onClose() }} />}
+          >Add meeting</DialogTitle>
+          <DialogContent>
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div><label style={lbl}>Title</label><FluentInput placeholder="Meeting title" style={fluentField} /></div>
+              <div style={{ display:'flex', gap:10 }}>
+                <div style={{ flex:1.2 }}><label style={lbl}>Date</label><FluentInput type="date" defaultValue="2026-05-01" style={fluentField} /></div>
+                <div style={{ flex:1 }}><label style={lbl}>Start</label><FluentInput type="time" defaultValue="10:00" style={fluentField} /></div>
+                <div style={{ flex:1 }}><label style={lbl}>End</label><FluentInput type="time" defaultValue="10:30" style={fluentField} /></div>
+              </div>
+              <div><label style={lbl}>Attendees</label><FluentInput placeholder="Names or emails" style={fluentField} /></div>
+              <div>
+                <label style={lbl}>Location</label>
+                <div style={{ display:'flex', gap:8 }}>
+                  {['Teams','Zoom','In person'].map(loc => (
+                    <label key={loc} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 12px', borderRadius:4, cursor:'pointer',
+                      background:T.surfaceMid, border:`1px solid ${T.border}`, fontSize:14, color:T.textMid }}>
+                      <input type="radio" name="loc" defaultChecked={loc==='Teams'} style={{ accentColor:T.core }} /> {loc}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'11px 14px', borderRadius:4,
+                background:T.surfaceMid, border:`1px solid ${T.border}` }}>
+                <div>
+                  <p style={{ fontSize:15, fontWeight:600, color:T.text }}>Let Jarvis prep this meeting</p>
+                  <p style={{ fontSize:13, color:T.textSoft, marginTop:2 }}>Auto-fetch deck & notes 30 min before</p>
+                </div>
+                <Toggle value={prep} onChange={() => { SFX.tap(); setPrep(v=>!v) }} ariaLabel="Let Jarvis prep this meeting" />
+              </div>
             </div>
-          </div>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'11px 14px', borderRadius:4,
-            background:T.surfaceMid, border:`1px solid ${T.border}` }}>
-            <div>
-              <p style={{ fontSize:15, fontWeight:600, color:T.text }}>Let Jarvis prep this meeting</p>
-              <p style={{ fontSize:13, color:T.textSoft, marginTop:2 }}>Auto-fetch deck & notes 30 min before</p>
-            </div>
-            <Toggle value={prep} onChange={() => { SFX.tap(); setPrep(v=>!v) }} ariaLabel="Let Jarvis prep this meeting" />
-          </div>
-        </div>
-        <div style={{ padding:'14px 22px', borderTop:`1px solid ${T.border}`, display:'flex', gap:8, justifyContent:'flex-end' }}>
-          <Btn variant="secondary" onClick={() => { SFX.close(); onClose() }}>Cancel</Btn>
-          <Btn variant="primary" icon={Calendar} onClick={() => { SFX.done(); HX.done(); onClose() }}>Add to Calendar</Btn>
-        </div>
-      </div>
-    </div>
+          </DialogContent>
+          <DialogActions>
+            <Btn variant="secondary" onClick={() => { SFX.close(); onClose() }}>Cancel</Btn>
+            <Btn variant="primary" icon={Calendar} onClick={() => { SFX.done(); HX.done(); onClose() }}>Add to Calendar</Btn>
+          </DialogActions>
+        </DialogBody>
+      </DialogSurface>
+    </FluentDialog>
   )
 }
 
@@ -1836,57 +1836,41 @@ function ConfirmRow({ label, onConfirm, onCancel }) {
 
 function GateModal({ action, policy, onRun, onCancel }) {
   const T = window.__T
-  const dlgRef = useDialogA11y(onCancel)
   const [confirmed, setConfirmed] = useState(false)
   return (
-    <div ref={dlgRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Gated action"
-      style={{ outline:'none', position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:500,
-        display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
-      onClick={onCancel}>
-      <div className="pop" onClick={e => e.stopPropagation()}
-        style={{ width:'100%', maxWidth:460, borderRadius:8,
-          background:T.surface, border:`1px solid ${T.border}`, boxShadow:T.shadowMd }}>
-        <div style={{ padding:'18px 22px', borderBottom:`1px solid ${T.border}`,
-          display:'flex', alignItems:'center', gap:10 }}>
-          <div style={{ width:30, height:30, borderRadius:8, background:T.amberSoft,
-            display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <ShieldCheck size={15} color={T.amber} />
-          </div>
-          <p style={{ fontSize:16, fontWeight:800, color:T.text, margin:0 }}>One last check</p>
-        </div>
-        <div style={{ padding:'18px 22px' }}>
-          <p style={{ fontSize:14, fontWeight:700, color:T.text, margin:'0 0 10px' }}>{action.label}</p>
-          <div style={{ padding:'10px 12px', borderRadius:4, background:T.amberSoft, border:`1px solid ${T.amber}40`, marginBottom:14 }}>
-            <p style={{ fontSize:12, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:T.amber, margin:'0 0 4px' }}>
-              Why we're asking
-            </p>
-            <p style={{ fontSize:13, color:T.text, margin:0, lineHeight:1.5 }}>{policy}</p>
-          </div>
-          <label style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0', cursor:'pointer' }}>
-            <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}
-              style={{ width:16, height:16, accentColor:T.core, cursor:'pointer' }} />
-            <span style={{ fontSize:13, color:T.text }}>I confirm I want to run this action.</span>
-          </label>
-        </div>
-        <div style={{ padding:'14px 22px', borderTop:`1px solid ${T.border}`,
-          display:'flex', gap:8, justifyContent:'flex-end' }}>
-          <button type="button" onClick={onCancel}
-            style={{ padding:'8px 16px', borderRadius:4, cursor:'pointer',
-              background:'none', border:`1px solid ${T.border}`, color:T.text,
-              fontSize:13, fontWeight:700, fontFamily:T.font }}>
-            Cancel
-          </button>
-          <button type="button" onClick={() => confirmed && onRun()} disabled={!confirmed}
-            style={{ padding:'8px 16px', borderRadius:4,
-              cursor: confirmed ? 'pointer' : 'not-allowed',
-              background:confirmed ? T.red : T.borderMid, border:'none', color:'#fff',
-              opacity: confirmed ? 1 : 0.6,
-              fontSize:13, fontWeight:700, fontFamily:T.font }}>
-            Run
-          </button>
-        </div>
-      </div>
-    </div>
+    <FluentDialog open modalType="modal" onOpenChange={(_, data) => { if (!data.open) onCancel() }}>
+      <DialogSurface aria-label="Gated action" style={{ maxWidth:480 }}>
+        <DialogBody>
+          <DialogTitle>
+            <span style={{ display:'inline-flex', alignItems:'center', gap:10 }}>
+              <span style={{ width:30, height:30, borderRadius:8, background:T.amberSoft,
+                display:'inline-flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <ShieldCheck size={15} color={T.amber} />
+              </span>
+              One last check
+            </span>
+          </DialogTitle>
+          <DialogContent>
+            <p style={{ fontSize:14, fontWeight:700, color:T.text, margin:'0 0 10px' }}>{action.label}</p>
+            <div style={{ padding:'10px 12px', borderRadius:4, background:T.amberSoft, border:`1px solid ${T.amber}40`, marginBottom:14 }}>
+              <p style={{ fontSize:12, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.1em', color:T.amber, margin:'0 0 4px' }}>
+                Why we're asking
+              </p>
+              <p style={{ fontSize:13, color:T.text, margin:0, lineHeight:1.5 }}>{policy}</p>
+            </div>
+            <label style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0', cursor:'pointer' }}>
+              <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}
+                style={{ width:16, height:16, accentColor:T.core, cursor:'pointer' }} />
+              <span style={{ fontSize:13, color:T.text }}>I confirm I want to run this action.</span>
+            </label>
+          </DialogContent>
+          <DialogActions>
+            <Btn variant="secondary" onClick={onCancel}>Cancel</Btn>
+            <Btn variant="danger" disabled={!confirmed} onClick={() => confirmed && onRun()}>Run</Btn>
+          </DialogActions>
+        </DialogBody>
+      </DialogSurface>
+    </FluentDialog>
   )
 }
 
