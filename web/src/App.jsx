@@ -25,7 +25,7 @@ const TeamsAdaptiveCard = lazy(() =>
   import('@/components/chat/teams/TeamsAdaptiveCard').then((m) => ({ default: m.TeamsAdaptiveCard }))
 )
 import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
-import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab, Switch as FluentSwitch } from '@fluentui/react-components'
+import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab, Switch as FluentSwitch, Input as FluentInput, Textarea as FluentTextarea } from '@fluentui/react-components'
 import { fluentThemeForMode } from '@/utils/fluentTheme'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
@@ -1640,9 +1640,9 @@ function AddMeetingModal({ onClose }) {
   const T = window.__T
   const dlgRef = useDialogA11y(onClose)
   const [prep, setPrep] = useState(true)
-  const inp = { width:'100%', padding:'8px 10px', borderRadius:4, fontSize:14, outline:'none',
-    background:T.surfaceMid, border:`1px solid ${T.border}`, color:T.text, fontFamily:T.font,
-    backdropFilter:'blur(8px)', transition:'border-color .15s' }
+  // Fluent v9 Input fields: full-width with the focus underline tinted to the
+  // Jarvis brand (FluentProvider's brand is Teams purple).
+  const fluentField = { width:'100%', '--colorCompoundBrandStroke': T.core }
   const lbl = { display:'block', fontSize:13, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', color:T.textSoft, marginBottom:5 }
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', zIndex:300,
@@ -1654,13 +1654,13 @@ function AddMeetingModal({ onClose }) {
           <Btn variant="ghost" icon={X} onClick={() => { SFX.close(); onClose() }} style={{ padding:6 }} />
         </div>
         <div style={{ padding:'18px 22px', display:'flex', flexDirection:'column', gap:14 }}>
-          <div><label style={lbl}>Title</label><input style={inp} placeholder="Meeting title" onFocus={e=>e.target.style.borderColor=T.core} onBlur={e=>e.target.style.borderColor=T.border} /></div>
+          <div><label style={lbl}>Title</label><FluentInput placeholder="Meeting title" style={fluentField} /></div>
           <div style={{ display:'flex', gap:10 }}>
-            <div style={{ flex:1.2 }}><label style={lbl}>Date</label><input type="date" defaultValue="2026-05-01" style={inp} onFocus={e=>e.target.style.borderColor=T.core} onBlur={e=>e.target.style.borderColor=T.border} /></div>
-            <div style={{ flex:1 }}><label style={lbl}>Start</label><input type="time" defaultValue="10:00" style={inp} onFocus={e=>e.target.style.borderColor=T.core} onBlur={e=>e.target.style.borderColor=T.border} /></div>
-            <div style={{ flex:1 }}><label style={lbl}>End</label><input type="time" defaultValue="10:30" style={inp} onFocus={e=>e.target.style.borderColor=T.core} onBlur={e=>e.target.style.borderColor=T.border} /></div>
+            <div style={{ flex:1.2 }}><label style={lbl}>Date</label><FluentInput type="date" defaultValue="2026-05-01" style={fluentField} /></div>
+            <div style={{ flex:1 }}><label style={lbl}>Start</label><FluentInput type="time" defaultValue="10:00" style={fluentField} /></div>
+            <div style={{ flex:1 }}><label style={lbl}>End</label><FluentInput type="time" defaultValue="10:30" style={fluentField} /></div>
           </div>
-          <div><label style={lbl}>Attendees</label><input style={inp} placeholder="Names or emails" onFocus={e=>e.target.style.borderColor=T.core} onBlur={e=>e.target.style.borderColor=T.border} /></div>
+          <div><label style={lbl}>Attendees</label><FluentInput placeholder="Names or emails" style={fluentField} /></div>
           <div>
             <label style={lbl}>Location</label>
             <div style={{ display:'flex', gap:8 }}>
@@ -3896,13 +3896,15 @@ function AgentWizard({ onClose }) {
           )}
           {step===2 && (
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-              <div><label style={lbl}>Name *</label><input style={inp} defaultValue={TEMPLATES.find(t=>t.id===sel)?.name||''} /></div>
+              <div><label style={lbl}>Name *</label><FluentInput defaultValue={TEMPLATES.find(t=>t.id===sel)?.name||''} style={{ width:'100%', '--colorCompoundBrandStroke': T.core }} /></div>
               <div>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:5 }}>
                   <label style={lbl}>System prompt *</label>
                   <Btn variant="ghost" icon={Sparkles} style={{ fontSize:13, padding:'3px 8px', color:T.core }}>Generate with AI</Btn>
                 </div>
-                <textarea style={{ ...inp, height:120, resize:'none', fontFamily:'monospace', fontSize:13 }}
+                <FluentTextarea resize="none"
+                  style={{ width:'100%', '--colorCompoundBrandStroke': T.core }}
+                  textarea={{ style:{ height:120, fontFamily:'monospace', fontSize:13 } }}
                   defaultValue={'## Trigger\n- User requests a document summary.\n\n## Rules\n1. Only access data with explicit permission.\n2. Never share data externally.'} />
               </div>
             </div>

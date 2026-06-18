@@ -43,11 +43,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'fluent-components',
     label: 'Fluent UI components',
     weight: 12,
-    score: 85,
+    score: 87,
     summary:
-      'App wrapped in FluentProvider (three Teams themes). Shared Button, the primary nav (TabList/Tab) and toggles (Switch — also fixing a keyboard gap) are now real Fluent v9 components, brand-preserved; remaining shared controls are Fluent-aligned bespoke.',
+      'App wrapped in FluentProvider (three Teams themes). Button, primary nav (TabList/Tab), toggles (Switch) and form fields (Input/Textarea) are now real Fluent v9 components, brand-preserved and verified; remaining shared bits are Fluent-aligned bespoke.',
     recommendation:
-      'Migrate the remaining shared controls (Input/Textarea, Dialog, Radio, Persona/Avatar) to their Fluent UI v9 equivalents.',
+      'Migrate the remaining pieces (Dialog wrappers, Persona/Avatar) to Fluent UI v9 to complete the component set.',
   },
   {
     id: 'theming',
