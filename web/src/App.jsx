@@ -25,7 +25,7 @@ const TeamsAdaptiveCard = lazy(() =>
   import('@/components/chat/teams/TeamsAdaptiveCard').then((m) => ({ default: m.TeamsAdaptiveCard }))
 )
 import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
-import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab, Switch as FluentSwitch, Input as FluentInput, Textarea as FluentTextarea } from '@fluentui/react-components'
+import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab, Switch as FluentSwitch, Input as FluentInput, Textarea as FluentTextarea, Avatar as FluentAvatar } from '@fluentui/react-components'
 import { fluentThemeForMode } from '@/utils/fluentTheme'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
@@ -2663,16 +2663,12 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
                 <div key={i} className="enter" style={{ display:'flex', alignItems:'center', gap:10,
                   padding:'10px 12px', borderRadius:8,
                   background:T.surface, border:`1px solid ${T.border}`, animationDelay:`${i*.05}s` }}>
-                  <div style={{ position:'relative', flexShrink:0, width:36, height:36 }}>
-                    <img
-                      alt={person.name}
-                      src={`https://i.pravatar.cc/72?u=${encodeURIComponent(person.name)}`}
-                      style={{ width:36, height:36, borderRadius:'50%', display:'block',
-                        objectFit:'cover', border:`1.5px solid ${T.border}` }}
-                      onError={(e) => { e.currentTarget.style.display='none' }} />
-                    <div style={{ position:'absolute', bottom:0, right:0, width:10, height:10, borderRadius:'50%',
-                      background:person.online ? T.green : T.amber,
-                      border:`2px solid ${T.surface}` }} />
+                  <div style={{ position:'relative', flexShrink:0 }}>
+                    <FluentAvatar
+                      name={person.name}
+                      image={{ src: `https://i.pravatar.cc/72?u=${encodeURIComponent(person.name)}` }}
+                      badge={{ status: person.online ? 'available' : 'away' }}
+                      size={36} />
                   </div>
                   <div style={{ flex:1, minWidth:0 }}>
                     <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0 }}>{person.name}</p>
@@ -4328,14 +4324,12 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState, coreState, pe
                       <div key={i} style={{ display:'flex', alignItems:'center', gap:10,
                         padding:'10px 12px', borderRadius:8,
                         background:T.surface, border:`1px solid ${T.border}` }}>
-                        <div style={{ position:'relative', flexShrink:0, width:32, height:32 }}>
-                          <img alt={person.name}
-                            src={`https://i.pravatar.cc/72?u=${encodeURIComponent(person.name)}`}
-                            style={{ width:32, height:32, borderRadius:'50%', objectFit:'cover',
-                              border:`1.5px solid ${T.border}` }} />
-                          <div style={{ position:'absolute', bottom:0, right:0, width:9, height:9, borderRadius:'50%',
-                            background:person.online ? T.green : T.amber,
-                            border:`2px solid ${T.surface}` }} />
+                        <div style={{ position:'relative', flexShrink:0 }}>
+                          <FluentAvatar
+                            name={person.name}
+                            image={{ src: `https://i.pravatar.cc/72?u=${encodeURIComponent(person.name)}` }}
+                            badge={{ status: person.online ? 'available' : 'away' }}
+                            size={32} />
                         </div>
                         <div style={{ flex:1, minWidth:0 }}>
                           <p style={{ fontSize:13, fontWeight:700, color:T.text, margin:0 }}>{person.name}</p>
