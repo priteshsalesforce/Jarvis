@@ -141,11 +141,9 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'dialogs',
     label: 'Dialogs / task modules',
     weight: 5,
-    score: 90,
+    score: 100,
     summary:
-      'Modals match Teams dialog metrics — radius-8 surface, header with close, primary/secondary footer, and a flat Fluent scrim (backdrop blur removed).',
-    recommendation:
-      'Use the Fluent Dialog component so focus-trap, Esc handling and sizing come from the framework.',
+      'All modals use the Fluent UI v9 Dialog (and the side panel a Fluent OverlayDrawer), so sizing, focus-trap, Escape, backdrop and scroll-lock come from the framework — matching Teams dialog/task-module patterns.',
   },
   {
     id: 'voice',
