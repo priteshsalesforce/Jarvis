@@ -25,7 +25,7 @@ const TeamsAdaptiveCard = lazy(() =>
   import('@/components/chat/teams/TeamsAdaptiveCard').then((m) => ({ default: m.TeamsAdaptiveCard }))
 )
 import { useTeamsEmbed, teamsThemeToMode } from '@/utils/teamsEmbed'
-import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab } from '@fluentui/react-components'
+import { FluentProvider, Button as FluentButton, TabList as FluentTabList, Tab as FluentTab, Switch as FluentSwitch } from '@fluentui/react-components'
 import { fluentThemeForMode } from '@/utils/fluentTheme'
 // Official Microsoft Teams (Fluent) icons — ported from the real Teams shell.
 import {
@@ -1093,15 +1093,25 @@ function Btn({ children, variant='primary', onClick, style={}, icon: Icon, disab
   )
 }
 
-function Toggle({ value, onChange }) {
+/**
+ * Fluent UI v9 Switch (replaces the previous click-only div — now keyboard
+ * operable with role=switch). Brand-tinted to the Jarvis core via a token
+ * override; keeps the no-arg onChange contract its call sites rely on.
+ */
+function Toggle({ value, onChange, ariaLabel }) {
   const T = window.__T
   return (
-    <div onClick={onChange} style={{ width:44, height:24, borderRadius:99, position:'relative', cursor:'pointer', flexShrink:0,
-      background: value ? T.core : T.border, transition:'background .2s' }}>
-      <div style={{ position:'absolute', top:3, width:18, height:18, borderRadius:'50%', background:'white',
-        transition:'transform .2s, box-shadow .2s', boxShadow:'0 1px 3px rgba(0,0,0,0.2)',
-        transform: value ? 'translateX(23px)' : 'translateX(3px)' }} />
-    </div>
+    <FluentSwitch
+      checked={!!value}
+      onChange={() => onChange?.()}
+      aria-label={ariaLabel || 'Toggle setting'}
+      style={{
+        flexShrink: 0,
+        '--colorCompoundBrandBackground': T.core,
+        '--colorCompoundBrandBackgroundHover': T.coreMid,
+        '--colorCompoundBrandBackgroundPressed': T.core,
+      }}
+    />
   )
 }
 
@@ -1668,7 +1678,7 @@ function AddMeetingModal({ onClose }) {
               <p style={{ fontSize:15, fontWeight:600, color:T.text }}>Let Jarvis prep this meeting</p>
               <p style={{ fontSize:13, color:T.textSoft, marginTop:2 }}>Auto-fetch deck & notes 30 min before</p>
             </div>
-            <Toggle value={prep} onChange={() => { SFX.tap(); setPrep(v=>!v) }} />
+            <Toggle value={prep} onChange={() => { SFX.tap(); setPrep(v=>!v) }} ariaLabel="Let Jarvis prep this meeting" />
           </div>
         </div>
         <div style={{ padding:'14px 22px', borderTop:`1px solid ${T.border}`, display:'flex', gap:8, justifyContent:'flex-end' }}>
@@ -3154,6 +3164,7 @@ function SetupView({ initialPrefs, onComplete, onSkip, onBack }) {
               <div style={{ flex:1 }} />
               <label style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, color:T.text }}>
                 <Toggle value={draft.quiet.weekend}
+                  ariaLabel="Keep weekends quiet"
                   onChange={() => { SFX.tap(); setDraft(d => ({ ...d, quiet:{ ...d.quiet, weekend:!d.quiet.weekend } })) }} />
                 Keep weekends quiet
               </label>
@@ -3721,7 +3732,7 @@ function AgentsView({ onNew }) {
                     <p style={{ fontSize:15, fontWeight:700, color:T.text, margin:0, lineHeight:1.3 }}>{agent.name}</p>
                     <p style={{ fontSize:13, color:T.textSoft, margin:'3px 0 0' }}>{agent.schedule}</p>
                   </div>
-                  <Toggle value={agent.enabled} onChange={() => { SFX.tap(); toggleAgent(agent.id) }} />
+                  <Toggle value={agent.enabled} ariaLabel="Enable skill" onChange={() => { SFX.tap(); toggleAgent(agent.id) }} />
                 </div>
 
                 {/* Description */}
