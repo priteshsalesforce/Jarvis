@@ -121,11 +121,11 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     id: 'responsive',
     label: 'Responsive & adaptive layout',
     weight: 8,
-    score: 60,
+    score: 85,
     summary:
-      'Optimised for the desktop Teams stage with fluid max-width content columns.',
+      'Reflows across Teams stage sizes via a breakpoint hook: the Today two-column layout stacks, the app rail collapses, and the chat opens as a full-screen overlay on narrow/mobile widths (verified at 600px); list views use auto-fill grids.',
     recommendation:
-      'Make the app responsive across the Teams breakpoints (narrow desktop, web and mobile) so it reflows rather than assuming a wide stage.',
+      'Fine-tune the densest very-small (<400px) breakpoints — top-bar controls and the conversations split view.',
   },
   {
     id: 'app-icon',

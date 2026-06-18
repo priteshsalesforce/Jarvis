@@ -977,6 +977,22 @@ function JarvisMark({ size = 28, radius = 6, style = {} }) {
   )
 }
 
+/**
+ * Responsive breakpoints (Teams stage sizes). Returns the live window width and
+ * convenience flags so inline-styled layouts can reflow:
+ *   - isNarrow  (< 920px): stack two-column layouts, collapse the app rail
+ *   - isMobile  (< 640px): mobile stage — full-width panels
+ */
+function useBreakpoint() {
+  const [w, setW] = useState(() => (typeof window !== 'undefined' ? window.innerWidth : 1280))
+  useEffect(() => {
+    const onResize = () => setW(window.innerWidth)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  return { width: w, isNarrow: w < 920, isMobile: w < 640 }
+}
+
 function GlassCard({ children, style = {}, hover = true, onClick, className = '', ariaLabel }) {
   const T = window.__T
   const [hov, setHov] = useState(false)
@@ -2177,6 +2193,7 @@ function buildIntentOpening(item) {
 
 function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab, setActiveTab, onExpandFull }) {
   const T = window.__T
+  const { isNarrow } = useBreakpoint()
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [thinking, setThinking] = useState(false)
@@ -2419,9 +2436,11 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
       : 'New chat')
 
   return (
-    <div className="enter-r" style={{ width:400, flexShrink:0, display:'flex', flexDirection:'column',
-      background:T.surface, borderLeft:`1px solid ${T.border}`,
-      boxShadow:`-4px 0 12px rgba(0,0,0,0.06)` }}>
+    <div className="enter-r" style={isNarrow
+      ? { position:'fixed', inset:0, zIndex:300, display:'flex', flexDirection:'column', background:T.surface }
+      : { width:400, flexShrink:0, display:'flex', flexDirection:'column',
+          background:T.surface, borderLeft:`1px solid ${T.border}`,
+          boxShadow:`-4px 0 12px rgba(0,0,0,0.06)` }}>
       {/* Chat view — sticky title (with Related + maximize + close) and a max-800 reading column.
           Mirrors the Conversations chat pane exactly. */}
       {activeTab === 'chat' && (
@@ -4599,6 +4618,7 @@ export default function App() {
   // When embedded as a Teams personal tab, hide the simulated chrome and let
   // Teams drive the theme (the host provides its own title bar + app rail).
   const { embedded, teamsTheme } = useTeamsEmbed()
+  const { isNarrow } = useBreakpoint()
   useEffect(() => {
     if (teamsTheme) setMode(teamsThemeToMode(teamsTheme))
   }, [teamsTheme])
@@ -5063,8 +5083,9 @@ export default function App() {
       <div style={{ display:'flex', flex:1, minHeight:0, overflow:'hidden' }}>
 
       {/* Left rail — exact MS Teams shell (teams.css .teams-rail).
-          Hidden when embedded: the Teams host provides the app rail. */}
-      {!embedded && (
+          Hidden when embedded (Teams host provides it) or on narrow stages
+          (Teams collapses the rail on mobile/web narrow widths). */}
+      {!embedded && !isNarrow && (
       <nav className="teams-rail teams-scope" aria-label="Teams app rail" style={{ width:68, flexShrink:0, zIndex:10 }}>
         {[
           { Icon: ChatRegular,             label:'Chat' },
@@ -5381,11 +5402,11 @@ export default function App() {
                   })}
                 </div>
 
-                {/* ── Two-column body — both scroll with the page ── */}
-                <div style={{ display:'flex', alignItems:'flex-start', gap:24 }}>
+                {/* ── Two-column body — stacks on narrow stages ── */}
+                <div style={{ display:'flex', flexDirection:isNarrow?'column':'row', alignItems:isNarrow?'stretch':'flex-start', gap:24 }}>
 
-                  {/* Left: intent cards — 60% */}
-                  <div style={{ flex:3, minWidth:0 }}>
+                  {/* Left: intent cards — 60% (full width when stacked) */}
+                  <div style={{ flex:isNarrow?'unset':3, minWidth:0 }}>
 
                     {isDayCleared ? (
                       <div className="pop" style={{ padding:'32px 28px', borderRadius:12,
@@ -5451,8 +5472,8 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* Right: schedule — 40% */}
-                  <div style={{ flex:2, minWidth:0 }}>
+                  {/* Right: schedule — 40% (full width when stacked) */}
+                  <div style={{ flex:isNarrow?'unset':2, minWidth:0, width:isNarrow?'100%':undefined }}>
                     <RightPanel onEventClick={handleEventClick} onAddMeeting={() => setShowAddMeeting(true)} />
                   </div>
 
