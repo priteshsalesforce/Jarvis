@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jarvis — [266] Design Vision Showcase</title>
+<style>
+  :root {
+    --brand: #0176D3;
+    --brand-dark: #032D60;
+    --brand-mid: #014486;
+    --accent: #1B96FF;
+    --cloud: #D8E6FE;
+    --ink: #081B33;
+    --ink-soft: #51606F;
+    --line: #C9D6E5;
+    --bg: #FFFFFF;
+    --bg-soft: #F4F8FD;
+    --ok: #2E844A;
+    --warn: #B8740B;
+    --radius: 14px;
+    --maxw: 1120px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #0A1B2E;
+    color: var(--ink);
+    font-family: "Salesforce Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Stage */
+  .deck {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+  }
+
+  .slide {
+    position: absolute;
+    width: min(96vw, calc((100vh - 56px) * 16 / 9), 1280px);
+    aspect-ratio: 16 / 9;
+    background: var(--bg);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+    transition: opacity .35s ease, transform .35s ease;
+    pointer-events: none;
+  }
+  .slide.active { opacity: 1; transform: none; pointer-events: auto; }
+
+  .pad {
+    position: absolute;
+    inset: 0;
+    padding: clamp(36px, 5.2vh, 72px) clamp(44px, 5vw, 88px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Chrome inside each slide */
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    font-size: clamp(12px, 1.5vh, 15px);
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--brand);
+  }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .brandmark {
+    position: absolute; top: clamp(28px,4vh,46px); right: clamp(40px,4.4vw,80px);
+    font-weight: 800; color: var(--brand); font-size: clamp(15px,2vh,20px);
+    letter-spacing: -.01em;
+  }
+  .brandmark .cloud { color: var(--accent); }
+
+  h1 { font-size: clamp(34px, 6.4vh, 76px); line-height: 1.02; letter-spacing: -.02em; color: var(--brand-dark); font-weight: 800; }
+  h2 { font-size: clamp(26px, 4.6vh, 50px); line-height: 1.06; letter-spacing: -.015em; color: var(--brand-dark); font-weight: 800; }
+  h3 { font-size: clamp(16px, 2.3vh, 23px); color: var(--brand); font-weight: 800; letter-spacing: .005em; }
+  p, li { font-size: clamp(15px, 2.15vh, 22px); line-height: 1.45; color: var(--ink); }
+  .muted { color: var(--ink-soft); }
+
+  .title-spacer { flex: 1; }
+
+  /* Title slide */
+  .slide--title { background: radial-gradient(120% 140% at 82% 18%, #0B5CAB 0%, #032D60 52%, #021B3C 100%); }
+  .slide--title .pad { color: #fff; }
+  .slide--title h1 { color: #fff; max-width: 16ch; }
+  .slide--title .kicker { color: #BBD7FF; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(12px,1.7vh,16px); }
+  .slide--title .sub { color: #DCEBFF; font-size: clamp(16px,2.4vh,24px); margin-top: 18px; font-weight: 600; }
+  .slide--title .meta { margin-top: auto; display: grid; gap: 2px; }
+  .slide--title .meta .name { font-weight: 800; font-size: clamp(16px,2.3vh,22px); color:#fff; }
+  .slide--title .meta .row { color:#CFE2FF; font-size: clamp(13px,1.9vh,18px); }
+  .glyphs { position: absolute; right: clamp(40px,6vw,110px); top: 50%; transform: translateY(-50%); width: clamp(180px,26vw,340px); height: auto; opacity: .95; }
+
+  /* Two-column body */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(22px,3vw,46px); margin-top: clamp(18px,3vh,34px); flex: 1; }
+  .cols.tight { grid-template-columns: 1.05fr .95fr; }
+  .stack { display: flex; flex-direction: column; gap: clamp(10px,1.6vh,18px); }
+  .lead { font-size: clamp(17px,2.5vh,26px); font-weight: 600; color: var(--brand-dark); line-height: 1.3; }
+
+  ul.clean { list-style: none; display: flex; flex-direction: column; gap: clamp(9px,1.5vh,15px); }
+  ul.clean li { position: relative; padding-left: 26px; }
+  ul.clean li::before { content: ""; position: absolute; left: 4px; top: .62em; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  ul.clean li b { color: var(--brand-dark); }
+
+  .jtbd { display: flex; flex-direction: column; gap: clamp(8px,1.4vh,14px); }
+  .jtbd .q { background: var(--bg-soft); border: 1px solid var(--line); border-left: 4px solid var(--brand); border-radius: 10px; padding: clamp(10px,1.6vh,16px) clamp(13px,1.4vw,20px); }
+  .jtbd .q i { color: var(--ink); font-style: italic; }
+
+  /* Collaborator cards */
+  .people { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(12px,1.4vw,20px); margin-top: clamp(16px,2.6vh,30px); }
+  .person { border: 1px solid var(--line); border-radius: 12px; padding: clamp(14px,2vh,22px); background: var(--bg-soft); }
+  .person .role { color: var(--brand); font-weight: 800; font-size: clamp(12px,1.6vh,15px); text-transform: uppercase; letter-spacing: .05em; }
+  .person .pname { font-weight: 800; color: var(--brand-dark); font-size: clamp(17px,2.4vh,23px); margin: 6px 0 4px; }
+  .person .pnote { color: var(--ink-soft); font-size: clamp(13px,1.8vh,17px); line-height: 1.35; }
+
+  /* Value grid */
+  .vgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(12px,1.6vw,22px); }
+  .vcard { border: 1px solid var(--line); border-radius: 12px; padding: clamp(13px,1.9vh,20px); }
+  .vcard .vt { font-weight: 800; color: var(--brand-dark); font-size: clamp(15px,2vh,20px); margin-bottom: 4px; }
+  .vcard .vd { color: var(--ink-soft); font-size: clamp(13px,1.75vh,17px); line-height: 1.4; }
+
+  /* Demo / video slide */
+  .video-wrap { flex: 1; margin-top: clamp(16px,2.6vh,28px); display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(20px,2.4vw,38px); align-items: stretch; }
+  .video-box { position: relative; border-radius: 14px; background: linear-gradient(140% 140% at 70% 20%, #0B5CAB, #032D60); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; border: 1px solid #0B5CAB; overflow: hidden; }
+  .video-box video { position:absolute; inset:0; width:100%; height:100%; object-fit: cover; background:#021B3C; }
+  .video-box .ph { position: relative; z-index:1; display:flex; flex-direction: column; align-items:center; gap: 12px; text-align:center; padding: 24px; }
+  .play { width: clamp(56px,8vh,84px); height: clamp(56px,8vh,84px); border-radius: 50%; background: rgba(255,255,255,.16); border: 2px solid rgba(255,255,255,.6); display: grid; place-items: center; }
+  .play::after { content: ""; border-style: solid; border-width: clamp(11px,1.6vh,16px) 0 clamp(11px,1.6vh,16px) clamp(18px,2.6vh,26px); border-color: transparent transparent transparent #fff; margin-left: 6px; }
+  .video-box .vtitle { font-weight: 800; font-size: clamp(16px,2.3vh,22px); }
+  .video-box .vsub { color: #CFE2FF; font-size: clamp(12px,1.7vh,16px); max-width: 34ch; }
+
+  .arc { display: flex; flex-direction: column; gap: clamp(8px,1.4vh,13px); }
+  .arc .step { display: flex; gap: 12px; align-items: flex-start; }
+  .arc .n { flex: 0 0 auto; width: clamp(22px,3vh,28px); height: clamp(22px,3vh,28px); border-radius: 50%; background: var(--brand); color: #fff; font-weight: 800; font-size: clamp(12px,1.6vh,15px); display: grid; place-items: center; }
+  .arc .st { font-size: clamp(13px,1.85vh,18px); color: var(--ink); line-height: 1.3; }
+  .arc .st b { color: var(--brand-dark); }
+
+  /* Roadmap timeline */
+  .road { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(12px,1.4vw,20px); margin-top: clamp(18px,2.8vh,32px); flex: 1; align-content: start; }
+  .rcol { border-top: 4px solid var(--line); padding-top: 14px; }
+  .rcol.now { border-top-color: var(--brand); }
+  .rcol .when { font-weight: 800; color: var(--brand); font-size: clamp(13px,1.8vh,17px); text-transform: uppercase; letter-spacing: .04em; }
+  .rcol .what { margin-top: 8px; color: var(--ink); font-size: clamp(13px,1.8vh,18px); line-height: 1.4; }
+  .ask { margin-top: clamp(14px,2.2vh,24px); background: var(--bg-soft); border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: 10px; padding: clamp(12px,1.7vh,18px) clamp(14px,1.4vw,22px); font-size: clamp(14px,2vh,20px); }
+  .ask b { color: var(--brand-dark); }
+
+  .pillrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .pill { border: 1px solid var(--line); background: var(--bg-soft); color: var(--brand-dark); border-radius: 999px; padding: 6px 14px; font-size: clamp(12px,1.7vh,16px); font-weight: 600; }
+  .pill.ok { border-color: #BFE3CB; color: var(--ok); }
+
+  .callout { margin-top: auto; background: #FFF7EC; border: 1px solid #F0D6A8; border-left: 4px solid var(--warn); border-radius: 10px; padding: clamp(11px,1.6vh,16px) clamp(14px,1.4vw,20px); font-size: clamp(13px,1.8vh,17px); color: #6B4A11; }
+  .callout b { color: #7A4F08; }
+
+  .footer { position: absolute; left: clamp(44px,5vw,88px); right: clamp(44px,5vw,88px); bottom: clamp(16px,2.4vh,26px); display: flex; justify-content: space-between; align-items: center; font-size: clamp(11px,1.5vh,14px); color: var(--ink-soft); border-top: 1px solid var(--line); padding-top: 10px; }
+  .slide--title .footer { border-top-color: rgba(255,255,255,.18); color: #B7D2F4; }
+
+  /* Thank you */
+  .slide--end { background: radial-gradient(120% 140% at 18% 84%, #0B5CAB 0%, #032D60 55%, #021B3C 100%); }
+  .slide--end .pad { color: #fff; align-items: flex-start; justify-content: center; }
+  .slide--end h1 { color: #fff; }
+  .slide--end .ty-meta { margin-top: 22px; color: #DCEBFF; font-size: clamp(15px,2.2vh,21px); line-height: 1.6; }
+  .slide--end .ty-meta b { color: #fff; }
+
+  /* Controls */
+  .controls { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; z-index: 50; }
+  .dots { display: flex; gap: 8px; }
+  .dots button { width: 9px; height: 9px; border-radius: 50%; border: none; background: rgba(255,255,255,.32); cursor: pointer; padding: 0; transition: background .2s, transform .2s; }
+  .dots button.on { background: #fff; transform: scale(1.25); }
+  .nav { display: flex; gap: 8px; }
+  .nav button { width: 38px; height: 38px; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.10); color: #fff; font-size: 17px; cursor: pointer; display: grid; place-items: center; }
+  .nav button:hover { background: rgba(255,255,255,.2); }
+  .nav button:disabled { opacity: .35; cursor: default; }
+  .counter { color: #cfe0f5; font-size: 13px; font-variant-numeric: tabular-nums; min-width: 46px; text-align: center; }
+
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); width: 0; z-index: 60; transition: width .35s ease; }
+
+  .hint { position: fixed; top: 14px; right: 16px; color: rgba(255,255,255,.55); font-size: 12px; z-index: 50; }
+
+  @media (max-width: 720px) {
+    .cols, .cols.tight, .video-wrap, .road, .people, .vgrid { grid-template-columns: 1fr; }
+    .glyphs { display: none; }
+  }
+  @media print {
+    html, body { background: #fff; }
+    .controls, .hint, .progress { display: none !important; }
+    .deck { position: static; padding: 0; display: block; }
+    .slide { position: relative; opacity: 1; transform: none; box-shadow: none; page-break-after: always; width: 100%; margin: 0 0 12px; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="hint">← → to navigate · F for fullscreen</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 — Title -->
+  <section class="slide slide--title active" aria-label="Title">
+    <div class="pad">
+      <div class="kicker">Design Vision Showcase · [266] Release</div>
+      <div class="title-spacer" style="flex:0; height: 6vh;"></div>
+      <h1>Jarvis</h1>
+      <div class="sub">The autonomous employee action layer — an ideal EA for every employee, inside Microsoft Teams.</div>
+      <div class="meta">
+        <div class="name">Pritesh Chavan</div>
+        <div class="row">Product Designer, Service Cloud UX</div>
+        <div class="row">August 6, 2026 · pritesh.chavan@salesforce.com</div>
+      </div>
+      <div class="footer"><span>Salesforce · Internal Only</span><span>1 / 8</span></div>
+    </div>
+    <svg class="glyphs" viewBox="0 0 240 200" fill="none" aria-hidden="true">
+      <ellipse cx="150" cy="90" rx="78" ry="52" fill="#1B96FF"/>
+      <ellipse cx="100" cy="104" rx="46" ry="34" fill="#57B0FF"/>
+      <text x="150" y="98" text-anchor="middle" fill="#fff" font-size="26" font-weight="800" font-family="inherit">salesforce</text>
+      <path d="M40 40 l6 14 14 6 -14 6 -6 14 -6 -14 -14 -6 14 -6z" fill="#FFCf3f"/>
+      <path d="M210 150 l5 11 11 5 -11 5 -5 11 -5 -11 -11 -5 11 -5z" fill="#FFCf3f"/>
+    </svg>
+  </section>
+
+  <!-- 2 — Agenda -->
+  <section class="slide" aria-label="Agenda">
+    <div class="pad">
+      <div class="eyebrow"><span class="dot"></span> Let's get started</div>
+      <h2 style="margin-top:14px;">Today in 7 minutes</h2>
+      <div class="cols" style="align-items:center;">
+        <ul class="clean" style="gap: clamp(14px,2.4vh,26px);">
+          <li><b>The problem</b> — work is scattered across too many systems.</li>
+          <li><b>The vision</b> — Jarvis, an action layer inside Teams.</li>
+          <li><b>Live demo</b> — one disrupted afternoon, handled.</li>
+          <li><b>Where it goes</b> — the next 3+ releases.</li>
+        </ul>
+        <div class="stack">
+          <p class="lead">Not a chatbot. An action layer between you and the systems you already use.</p>
+          <p class="muted">It watches Outlook, Calendar, Workday, Jira and Salesforce, handles the small stuff, drafts the rest, and asks before anything that affects other people.</p>
+        </div>
+      </div>
+      <div class="footer"><span>Jarvis · [266] Design Vision Showcase</span><span>2 / 8</span></div>
+    </div>
+    <div class="brandmark">sales<span class="cloud">force</span></div>
+  </section>
+
+  <!-- 3 — Collaborators -->
+  <section class="slide" aria-label="Thank You and Collaborators">
+    <div class="pad">
+      <div class="eyebrow"><span class="dot"></span> Thank You + Collaborators</div>
+      <h2 style="margin-top:14px;">A cross-functional partnership</h2>
+      <div class="people">
+        <div class="person">
+          <div class="role">Product</div>
+          <div class="pname">Deval Marolia</div>
+          <div class="pnote">Prioritization and co-exploration of the vision.</div>
+        </div>
+        <div class="person">
+          <div class="role">Engineering · PMTS</div>
+          <div class="pname">Bikramaditya Padhi</div>
+          <div class="pnote">Technical feasibility on Agentforce.</div>
+        </div>
+        <div class="person">
+          <div class="role">Research &amp; Insights</div>
+          <div class="pname">Sneha Murali</div>
+          <div class="pnote">Grounding the JTBD in voice-of-customer.</div>
+        </div>
+      </div>
+      <div class="stack" style="margin-top: clamp(18px,2.8vh,32px);">
+        <h3>Guiding research</h3>
+        <ul class="clean">
+          <li>The "ideal EA" north-star framing — the bar for taste, tact, and trust.</li>
+          <li>Internal Jarvis research: persona intent blueprints, trust &amp; transparency patterns, the tiered-action (silent risk) model.</li>
+          <li>Voice-of-customer on employee context-switching and routine HR/IT ticket load.</li>
+        </ul>
+      </div>
+      <div class="footer"><span>Jarvis · [266] Design Vision Showcase</span><span>3 / 8</span></div>
+    </div>
+    <div class="brandmark">sales<span class="cloud">force</span></div>
+  </section>
+
+  <!-- 4 — Customer Value & JTBD -->
+  <section class="slide" aria-label="Customer Value and Jobs To Be Done">
+    <div class="pad">
+      <div class="eyebrow"><span class="dot"></span> Customer Value &amp; Job(s) To Be Done</div>
+      <div class="cols tight" style="margin-top: clamp(14px,2.2vh,26px);">
+        <div class="stack">
+          <h3>What is the value to the customer?</h3>
+          <div class="vgrid">
+            <div class="vcard"><div class="vt">Employees</div><div class="vd">Time back — less portal-hopping. One brief, not 13 interruptions.</div></div>
+            <div class="vcard"><div class="vt">The business</div><div class="vd">Fewer routine HR/IT tickets reach the service desk.</div></div>
+            <div class="vcard"><div class="vt">Managers</div><div class="vd">Time on exceptions and readiness, not repetitive approvals.</div></div>
+            <div class="vcard"><div class="vt">Salesforce</div><div class="vd">Owns the employee action layer — expands beyond HR/IT Service.</div></div>
+          </div>
+        </div>
+        <div class="stack">
+          <h3>What are the Job(s) to be Done?</h3>
+          <div class="jtbd">
+            <div class="q"><i>When my day gets disrupted, reshuffle it quietly so I don't lose 20 minutes apologizing.</i></div>
+            <div class="q"><i>When messages pile up, draft the replies in my voice — I'll approve in one batch.</i></div>
+            <div class="q"><i>When an action affects other people, wait for my explicit OK, and let me undo it.</i></div>
+            <div class="q"><i>Every morning, give me one brief of what needs me — and don't add to the noise.</i></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer"><span>Jarvis · [266] Design Vision Showcase</span><span>4 / 8</span></div>
+    </div>
+    <div class="brandmark">sales<span class="cloud">force</span></div>
+  </section>
+
+  <!-- 5 — Vision Simulation -->
+  <section class="slide" aria-label="Vision Simulation">
+    <div class="pad">
+      <div class="eyebrow"><span class="dot"></span> Vision Simulation</div>
+      <h2 style="margin-top:12px;">One disrupted afternoon, handled</h2>
+      <div class="video-wrap">
+        <div class="video-box">
+          <!-- To embed your recording: drop the file next to this HTML as dvs-266-demo.mp4
+               and uncomment the <video> line below. -->
+          <!-- <video controls preload="metadata" src="dvs-266-demo.mp4"></video> -->
+          <div class="ph">
+            <div class="play" aria-hidden="true"></div>
+            <div class="vtitle">4-minute vision simulation</div>
+            <div class="vsub">"Marc's Mandatory Review" — an SVP drops a mandatory meeting that collides with three things. Watch Jarvis turn 7 messages into 1 approval. Embed the recording here.</div>
+          </div>
+        </div>
+        <div class="arc" aria-label="Demo arc">
+          <div class="step"><div class="n">1</div><div class="st"><b>The interrupt</b> — one calm notification, no spam.</div></div>
+          <div class="step"><div class="n">2</div><div class="st"><b>What it read</b> — lineage: the invite, the rank signal, 3 conflicts.</div></div>
+          <div class="step"><div class="n">3</div><div class="st"><b>The batch</b> — one card: 4 Teams messages + 3 emails.</div></div>
+          <div class="step"><div class="n">4</div><div class="st"><b>Inspect &amp; tweak</b> — soften one note; taste preserved.</div></div>
+          <div class="step"><div class="n">5</div><div class="st"><b>One approval</b> — a single light gate on the rank-sensitive send.</div></div>
+          <div class="step"><div class="n">6</div><div class="st"><b>Done, reversible</b> — logged in the Feed with one-click Undo.</div></div>
+        </div>
+      </div>
+      <div class="footer"><span>Live vibe-coded demo · 4 min max</span><span>5 / 8</span></div>
+    </div>
+    <div class="brandmark">sales<span class="cloud">force</span></div>
+  </section>
+
+  <!-- 6 — Next Steps -->
+  <section class="slide" aria-label="Next Steps">
+    <div class="pad">
+      <div class="eyebrow"><span class="dot"></span> Next Steps · 3+ releases</div>
+      <h2 style="margin-top:12px;">A timeline beyond [266]</h2>
+      <div class="road">
+        <div class="rcol now">
+          <div class="when">[266] — now</div>
+          <div class="what">Vision, working prototype, and vibe-coded demo. A validated interaction model.</div>
+        </div>
+        <div class="rcol">
+          <div class="when">+1 release</div>
+          <div class="what">Slack parity. Per-item hold in batch approval ("approve 5, hold 2"). Richer manager signals.</div>
+        </div>
+        <div class="rcol">
+          <div class="when">+2 releases</div>
+          <div class="what">Cross-vendor orchestration in one flow — Workday + ServiceNow + Salesforce. Voice + mobile.</div>
+        </div>
+        <div class="rcol">
+          <div class="when">+3 releases</div>
+          <div class="what">The default proactive employee surface across HR, IT, and ops — replacing portal-hopping.</div>
+        </div>
+      </div>
+      <div class="ask"><b>The ask:</b> carry this interaction model — tiered trust, batch approval, reversible audit — into Theme Reviews and Advanced Planning as the pattern for Salesforce employee-facing agents.</div>
+      <div class="footer"><span>Jarvis · [266] Design Vision Showcase</span><span>6 / 8</span></div>
+    </div>
+    <div class="brandmark">sales<span class="cloud">force</span></div>
+  </section>
+
+  <!-- 7 — How this relates (differentiation / backup) -->
+  <section class="slide" aria-label="How this relates to existing Salesforce products">
+    <div class="pad">
+      <div class="eyebrow"><span class="dot"></span> How this relates to existing products</div>
+      <h2 style="margin-top:12px;">A vision, built on Agentforce — not a competitor</h2>
+      <div class="cols" style="margin-top: clamp(16px,2.6vh,30px);">
+        <ul class="clean">
+          <li><b>Built on Agentforce</b> — Jarvis showcases what the platform makes possible for employee experience.</li>
+          <li><b>Complements Employee Service</b> — that answers questions; Jarvis is the cross-system <b>action layer</b>.</li>
+          <li><b>Teams-native by design</b> — meets customers on the Microsoft stack, a different surface than Slack AI.</li>
+        </ul>
+        <div class="stack">
+          <p class="lead">The contribution is the interaction model.</p>
+          <div class="pillrow">
+            <span class="pill">Tiered trust</span>
+            <span class="pill">Batch approval</span>
+            <span class="pill">Rank-aware priority</span>
+            <span class="pill">Reversible audit</span>
+          </div>
+          <p class="muted" style="margin-top:10px;">The pattern we believe every Salesforce employee-facing agent should adopt.</p>
+        </div>
+      </div>
+      <div class="footer"><span>Differentiation · backup for Q&amp;A</span><span>7 / 8</span></div>
+    </div>
+    <div class="brandmark">sales<span class="cloud">force</span></div>
+  </section>
+
+  <!-- 8 — Thank you -->
+  <section class="slide slide--end" aria-label="Thank you">
+    <div class="pad">
+      <div class="kicker" style="color:#BBD7FF; font-weight:800; letter-spacing:.12em; text-transform:uppercase; font-size: clamp(12px,1.7vh,16px);">[266] Design Vision Showcase</div>
+      <h1 style="margin-top:14px;">Thank you</h1>
+      <div class="ty-meta">
+        <div><b>Pritesh Chavan</b> · Product Designer, Service Cloud UX · pritesh.chavan@salesforce.com</div>
+        <div>With <b>Deval Marolia</b> (PM), <b>Bikramaditya Padhi</b> (Eng), <b>Sneha Murali</b> (R&amp;I)</div>
+        <div style="opacity:.8; margin-top:10px;">Built on Salesforce Agentforce · Microsoft Teams + Email</div>
+      </div>
+      <div class="footer"><span>Salesforce · Internal Only</span><span>8 / 8</span></div>
+    </div>
+  </section>
+
+</div>
+
+<div class="controls">
+  <div class="nav">
+    <button id="prev" aria-label="Previous slide">‹</button>
+  </div>
+  <div class="counter" id="counter">1 / 8</div>
+  <div class="nav">
+    <button id="next" aria-label="Next slide">›</button>
+  </div>
+  <div class="dots" id="dots" role="tablist" aria-label="Slides"></div>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let i = 0;
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const dotsWrap = document.getElementById('dots');
+
+  slides.forEach((_, idx) => {
+    const b = document.createElement('button');
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-label', 'Go to slide ' + (idx + 1));
+    b.addEventListener('click', () => go(idx));
+    dotsWrap.appendChild(b);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function go(n) {
+    i = Math.max(0, Math.min(total - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    dots.forEach((d, idx) => d.classList.toggle('on', idx === i));
+    counter.textContent = (i + 1) + ' / ' + total;
+    progress.style.width = ((i + 1) / total * 100) + '%';
+    prevBtn.disabled = i === 0;
+    nextBtn.disabled = i === total - 1;
+  }
+  function nextSlide() { go(i + 1); }
+  function prevSlide() { go(i - 1); }
+
+  nextBtn.addEventListener('click', nextSlide);
+  prevBtn.addEventListener('click', prevSlide);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
+    else if (e.key === 'Home') { go(0); }
+    else if (e.key === 'End') { go(total - 1); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    }
+  });
+
+  // Click left/right thirds of the stage to navigate.
+  document.getElementById('deck').addEventListener('click', (e) => {
+    if (e.target.closest('a, button, video')) return;
+    const x = e.clientX / window.innerWidth;
+    if (x > 0.62) nextSlide(); else if (x < 0.38) prevSlide();
+  });
+
+  go(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jarvis — Prototype Explorer</title>
+<style>
+  :root{
+    --bar:#0B0E14; --bar-2:#161B26; --line:#2A313F; --txt:#E7ECF3; --muted:#9AA7BC;
+    --accent:#FE9339; --blue:#2A8FF0; --good:#3DD68C;
+    --font:-apple-system,"Segoe UI","Salesforce Sans",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;font-family:var(--font);background:#0B0E14;overflow:hidden}
+
+  .bar{height:60px;background:var(--bar);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 18px;color:var(--txt)}
+  .title{display:flex;align-items:center;gap:10px;font-weight:800;font-size:.98rem;white-space:nowrap}
+  .core{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8E7BF0,#5B4BBE 70%);box-shadow:0 0 0 3px rgba(91,75,190,.25)}
+  .title .sub{color:var(--muted);font-weight:600;font-size:.8rem;border-left:1px solid var(--line);padding-left:12px;margin-left:2px}
+
+  .switch{display:flex;gap:6px;background:var(--bar-2);border:1px solid var(--line);border-radius:12px;padding:5px}
+  .seg{display:flex;flex-direction:column;align-items:flex-start;gap:1px;background:transparent;border:none;color:var(--muted);padding:6px 13px;border-radius:8px;cursor:pointer;font-family:var(--font);transition:all .15s ease;min-width:88px}
+  .seg:hover{background:#1F2735;color:var(--txt)}
+  .seg.active{background:#fff;color:#0B0E14}
+  .seg .k{font-weight:800;font-size:.82rem;letter-spacing:.02em}
+  .seg.active .k{color:#0B0E14}
+  .seg .d{font-size:.68rem;font-weight:600;opacity:.8;white-space:nowrap}
+  .seg.active .d{color:#3A4A5E;opacity:1}
+
+  .spacer{flex:1}
+  .meta{color:var(--muted);font-size:.78rem;text-align:right;max-width:330px;line-height:1.35}
+  .meta b{color:var(--txt)}
+  .openbtn{display:inline-flex;align-items:center;gap:6px;background:var(--bar-2);border:1px solid var(--line);color:var(--txt);font-weight:700;font-size:.8rem;padding:8px 13px;border-radius:9px;cursor:pointer;text-decoration:none;white-space:nowrap}
+  .openbtn:hover{background:#1F2735}
+
+  .stage{height:calc(100vh - 60px);position:relative;background:#EEF3F9}
+  iframe{width:100%;height:100%;border:none;display:block;background:#fff}
+
+  .banner{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:#161B26;color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:14px 18px;box-shadow:0 12px 40px rgba(0,0,0,.4);font-size:.9rem;max-width:520px;text-align:center;display:none;z-index:5}
+  .banner.show{display:block}
+  .banner b{color:var(--accent)}
+  .banner code{background:#0B0E14;padding:2px 7px;border-radius:5px;font-size:.84rem;color:var(--good)}
+
+  .hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:#8392A8;font-size:.74rem;background:rgba(11,14,20,.7);padding:5px 12px;border-radius:999px;z-index:5}
+
+  @media(max-width:1040px){ .meta{display:none} .seg{min-width:0} .seg .d{display:none} }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <div class="title"><span class="core"></span> Jarvis <span class="sub">Prototype Explorer</span></div>
+    <div class="switch" id="switch"></div>
+    <div class="spacer"></div>
+    <div class="meta" id="meta"></div>
+    <a class="openbtn" id="openBtn" target="_blank" rel="noopener">Open standalone &#8599;</a>
+  </div>
+  <div class="stage">
+    <iframe id="frame" title="prototype"></iframe>
+    <div class="banner" id="banner"></div>
+    <div class="hint">Switch with the bar above &middot; or press <b>M / A / B / C / D</b></div>
+  </div>
+
+<script>
+  const PROTOS = [
+    { key:'Main', name:'Current build', desc:'Live (Vite)', src:'http://localhost:5173/',
+      meta:'<b>Main &middot; the current prototype</b> Nassan reviewed \u2014 multi-tab IA (Today / Conversations / Feed). The live React build.',
+      live:true },
+    { key:'A', name:'Right-rail', desc:'Help-portal', src:'dvs-266-ia-redesign.html',
+      meta:'<b>A &middot; right-rail redesign.</b> History drawer + conversation + action-recommendations rail. The safe read of Nassan\u2019s "two-panel" steer.' },
+    { key:'B', name:'Left-chat', desc:'War-room', src:'dvs-266-ia-redesign-left-chat.html',
+      meta:'<b>B &middot; left-chat / war-room.</b> Persistent chat drives a large work canvas. The ITSM war-room pattern.' },
+    { key:'C', name:'One-stream', desc:'Takeover', src:'dvs-266-ia-onestream.html',
+      meta:'<b>C &middot; one living stream.</b> Proactive-first, lifecycle cards, in-flight + autonomy. Focus opens full-screen.' },
+    { key:'D', name:'Split view', desc:'Stream + focus', src:'dvs-266-ia-onestream-split.html',
+      meta:'<b>D &middot; split view.</b> Concept C with the stream as a left rail and focus beside it. Responsive \u2192 takeover under 880px.' }
+  ];
+
+  const frame = document.getElementById('frame');
+  const meta = document.getElementById('meta');
+  const banner = document.getElementById('banner');
+  const openBtn = document.getElementById('openBtn');
+  const sw = document.getElementById('switch');
+  let current = 0;
+
+  PROTOS.forEach((p,i)=>{
+    const b = document.createElement('button');
+    b.className='seg'; b.innerHTML='<span class="k">'+p.key+'</span><span class="d">'+p.desc+'</span>';
+    b.onclick=()=>select(i);
+    sw.appendChild(b);
+  });
+
+  function select(i){
+    current=i; const p=PROTOS[i];
+    document.querySelectorAll('.seg').forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    frame.src = p.src;
+    meta.innerHTML = p.meta;
+    openBtn.href = p.src;
+    location.hash = p.key;
+    if(p.live){
+      banner.innerHTML = 'Loading the <b>live build</b> from <code>http://localhost:5173/</code> \u2014 if it\u2019s blank, start it with <code>npm run dev</code> in <code>web/</code>.';
+      banner.classList.add('show');
+      setTimeout(()=>banner.classList.remove('show'), 5200);
+    } else { banner.classList.remove('show'); }
+  }
+
+  document.addEventListener('keydown',(e)=>{
+    const k=e.key.toUpperCase();
+    const idx=PROTOS.findIndex(p=>p.key.toUpperCase()[0]===k && (k!=='M'||p.key==='Main'));
+    const map={'M':0,'A':1,'B':2,'C':3,'D':4};
+    if(map[k]!==undefined){ select(map[k]); }
+  });
+
+  // honor hash on load
+  const start = PROTOS.findIndex(p=>p.key.toLowerCase()===(location.hash.replace('#','').toLowerCase()));
+  select(start>=0?start:0);
+</script>
+</body>
+</html>

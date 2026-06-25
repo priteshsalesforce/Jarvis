@@ -1,0 +1,26 @@
+---
+description: How to start a project's dev server and open the demo in the browser
+alwaysApply: true
+---
+
+# Run the Demo
+
+When I say anything like **"run the demo"**, **"open the demo"**, **"start the dev server"**, **"launch this project"**, or **"open the app in the browser"**, do all of the following automatically without asking for details:
+
+## Steps
+
+1. **Find the dev command.** Look for `package.json` (check root, then common subfolders like `web/`, `client/`, `frontend/`, `app/`). Read its `scripts` to pick the dev script — usually `dev`, else `start`. If deps are missing (`node_modules` absent), run the install first (`npm install`, or `pnpm`/`yarn` if a matching lockfile exists).
+
+2. **Check if it's already running.** Use `lsof -nP -iTCP -sTCP:LISTEN` to see if a dev server is already up. Don't start a duplicate — if one is already serving the project, just reuse it.
+
+3. **Start it in the background.** Run the dev command from the correct folder (use the `working_directory` parameter, not `cd`). Background it so my session isn't blocked.
+
+4. **Use the REAL port.** Never assume the port. Read it from the dev server's startup banner (e.g. Vite's `➜ Local: http://localhost:5173/`). Ports shift (5173 → 5174 …) when others are busy.
+
+5. **Verify, then report the URL.** Confirm it responds (e.g. `curl -s -o /dev/null -w "%{http_code}" <url>` returns 200). Then give me the exact clickable URL to open.
+
+## Notes
+
+- `ERR_CONNECTION_REFUSED` on a localhost port almost always means the dev server simply isn't running — start it rather than debugging code.
+- If multiple runnable apps exist in the repo, tell me which ones you found and start the most likely one (or ask only if genuinely ambiguous).
+- Always surface the URL printed by the tool, not a guessed one.

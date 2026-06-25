@@ -24,31 +24,10 @@
   "accentColor": "#5C2E91",
   "staticTabs": [
     {
-      "entityId": "today",
-      "name": "Today",
+      "entityId": "jarvis",
+      "name": "Jarvis",
       "contentUrl": "{{TAB_ENDPOINT}}/?embed=1&tab=today",
       "websiteUrl": "{{TAB_ENDPOINT}}/?tab=today",
-      "scopes": ["personal"]
-    },
-    {
-      "entityId": "chats",
-      "name": "Conversations",
-      "contentUrl": "{{TAB_ENDPOINT}}/?embed=1&tab=conversations",
-      "websiteUrl": "{{TAB_ENDPOINT}}/?tab=conversations",
-      "scopes": ["personal"]
-    },
-    {
-      "entityId": "feed",
-      "name": "Feed",
-      "contentUrl": "{{TAB_ENDPOINT}}/?embed=1&tab=feed",
-      "websiteUrl": "{{TAB_ENDPOINT}}/?tab=feed",
-      "scopes": ["personal"]
-    },
-    {
-      "entityId": "agents",
-      "name": "Skills",
-      "contentUrl": "{{TAB_ENDPOINT}}/?embed=1&tab=agents",
-      "websiteUrl": "{{TAB_ENDPOINT}}/?tab=agents",
       "scopes": ["personal"]
     }
   ],

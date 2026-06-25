@@ -4046,7 +4046,7 @@ function ConversationsView({ openConvId, onConvOpen, setCoreState, coreState, pe
   return (
     <div style={{ flex:1, display:'flex', overflow:'hidden', height:'100%' }}>
       {/* Left: conversation list (grey rail) */}
-      <div style={{ width:280, flexShrink:0, borderRight:`1px solid ${T.border}`, display:'flex', flexDirection:'column', background:T.appBg }}>
+      <div style={{ width:280, flexShrink:0, display:'flex', flexDirection:'column', background:T.surface, margin:16, borderRadius:16, overflow:'hidden' }}>
         {/* Search at the top of the rail */}
         <div style={{ padding:'14px 12px 6px' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:99,
@@ -4615,13 +4615,43 @@ export default function App() {
     try { document.documentElement.setAttribute('data-teams-theme', teamsTheme) } catch {}
   }, [mode])
 
-  // When embedded as a Teams personal tab, hide the simulated chrome and let
-  // Teams drive the theme (the host provides its own title bar + app rail).
-  const { embedded, teamsTheme } = useTeamsEmbed()
+  // This build is packaged to run inside the real Microsoft Teams client, which
+  // provides its own title bar, app rail, and theme. We therefore always hide
+  // the *simulated* Teams shell (the fake title bar + app rail). `teamsTheme` is
+  // still read from the Teams host (when present) so the app follows the host's
+  // light / dark / contrast theme automatically.
+  const { teamsTheme } = useTeamsEmbed()
+  const embedded = true
   const { isNarrow } = useBreakpoint()
   useEffect(() => {
     if (teamsTheme) setMode(teamsThemeToMode(teamsTheme))
   }, [teamsTheme])
+
+  // The app keeps its own in-app navigation (Today / Conversations / Feed /
+  // Skills) even inside Teams — it runs as a single personal tab and handles its
+  // own view switching.
+  const showInAppNav = true
+
+  // Hidden developer / demo bar (persona · theme · docs · notify · compliance).
+  // Off by default in this packaged build. Toggle with a deliberately
+  // conflict-free shortcut — Ctrl/Cmd + Shift + Alt + D — and remember the choice.
+  const [showDemoBar, setShowDemoBar] = useState(() => {
+    try { return localStorage.getItem('jarvis_demo_bar') === '1' } catch { return false }
+  })
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.altKey && e.code === 'KeyD') {
+        e.preventDefault()
+        setShowDemoBar(v => {
+          const next = !v
+          try { localStorage.setItem('jarvis_demo_bar', next ? '1' : '0') } catch { /* ignore */ }
+          return next
+        })
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const [scene, setScene] = useState(() => {
     // Deep-link / Teams embed: open straight into the app. Teams static tabs
@@ -4906,15 +4936,12 @@ export default function App() {
       {/* Keyboard skip link — first focusable element, jumps past the chrome. */}
       <a href="#jarvis-main" className="skip-link">Skip to main content</a>
 
-      {/* ── Demo chrome (not part of Teams UI) — hidden when embedded in Teams ── */}
-      {!embedded && (
+      {/* ── Demo / developer bar (not part of Teams UI) — hidden by default;
+          toggle with Ctrl/Cmd + Shift + Alt + D ── */}
+      {showDemoBar && (
       <div style={{ height:36, flexShrink:0, display:'flex', alignItems:'center', gap:14,
         padding:'0 14px', background:'#0B0B0B', color:'#E5E5E5',
         borderBottom:'1px solid #1A1A1A', zIndex:30, fontFamily:T.font }}>
-        <span style={{ fontSize:11, fontWeight:600, color:'#8A8A8A',
-          textTransform:'uppercase', letterSpacing:'0.1em' }}>
-          Demo mode
-        </span>
         <span style={{ fontSize:11, color:'#555' }}>·</span>
         <span style={{ fontSize:11, color:'#A0A0A0' }}>Viewing as:</span>
         <div className="persona-dd" style={{ position:'relative' }}>
@@ -5024,9 +5051,6 @@ export default function App() {
             <option value="contrast">High contrast</option>
           </select>
         </label>
-        <span style={{ fontSize:11, color:'#6A6A6A', marginLeft:12 }}>
-          Jarvis demo · not a Microsoft product surface
-        </span>
       </div>
       )}
 
@@ -5127,11 +5151,12 @@ export default function App() {
       {/* Main column */}
       <div id="jarvis-main" tabIndex={-1} style={{ flex:1, display:'flex', flexDirection:'column', minWidth:0, overflow:'hidden', position:'relative', zIndex:1, outline:'none' }}>
 
-        {/* Top bar — hidden when embedded: the Teams header provides the app
-            identity and the tabs (declared as static tabs in the manifest). */}
-        {!embedded && (
+        {/* In-app navigation — kept even inside Teams: Jarvis runs as a single
+            personal tab and handles its own Today / Conversations / Feed / Skills
+            switching. */}
+        {showInAppNav && (
         <div style={{ display:'flex', alignItems:'center', gap:12, padding:'0 16px', height:52, flexShrink:0, zIndex:10,
-          background:T.surface, borderBottom:`1px solid ${T.border}`, transition:'background .3s' }}>
+          background:T.surface, borderBottom:'none', transition:'background .3s' }}>
           <NeuralCore state={coreState} onClick={() => setCoreState('idle')} />
           <div style={{ width:1, height:24, background:T.border, flexShrink:0 }} />
           <FluentTabList

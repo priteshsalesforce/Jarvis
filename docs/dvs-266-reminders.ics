@@ -1,0 +1,148 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Jarvis DVS Prep//[266] DVS Reminders//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Jarvis — [266] DVS Prep
+X-WR-TIMEZONE:Asia/Kolkata
+BEGIN:VEVENT
+UID:dvs266-01-proposal-row@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART:20260612T040000Z
+DTEND:20260612T043000Z
+SUMMARY:DVS: Fill [266] proposal row + loop in PM & R&I
+DESCRIPTION:Complete your row in the DVS Proposals sheet (Name, Cloud, Product, Vision name, Summary). Ping PM + R&I partners to co-own. Sheet: https://docs.google.com/spreadsheets/d/149AYGwuvHEtM4HNzIFg9t-yiKsaU6vf1IE7lQKmUcYU/edit?gid=1400000112
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Fill [266] proposal row today
+TRIGGER:PT0S
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dvs266-02-jtbd-pm@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART:20260616T040000Z
+DTEND:20260616T043000Z
+SUMMARY:DVS: Lock JTBD + confirm PM co-presenter
+DESCRIPTION:Write the clear Jobs-To-Be-Done statement. Confirm a PM co-presenter (PM co-presentations are encouraged) and an R&I partner for the research slide.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Lock JTBD + PM co-presenter
+TRIGGER:PT0S
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dvs266-03-rough-demo@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART:20260622T040000Z
+DTEND:20260622T043000Z
+SUMMARY:DVS: Record rough 4-min demo video (from prototype)
+DESCRIPTION:Vibe-code/record a rough cut of the "Marc's Mandatory Review" flow from web/src/App.jsx. 4 minutes MAX. This is required for async review and strengthens selection.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Record rough 4-min demo
+TRIGGER:PT0S
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dvs266-04-finalize-proposal@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART:20260624T040000Z
+DTEND:20260624T043000Z
+SUMMARY:DVS: Finalize proposal row + paste demo link (selection tomorrow)
+DESCRIPTION:Last check before leadership selection. Ensure the proposal row is complete, demo video link is in, and design leadership has visibility.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Finalize proposal — selection is tomorrow
+TRIGGER:PT0S
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Selection tomorrow — finalize today
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dvs266-05-selection@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART:20260625T040000Z
+DTEND:20260625T043000Z
+SUMMARY:DVS: Leadership selection (~6 weeks out) — check status
+DESCRIPTION:Design leadership selects presentations roughly 6 weeks ahead of the Aug 6 showcase. Confirm whether Jarvis is selected for live vs async.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Selection window — check status
+TRIGGER:PT0S
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dvs266-06-draft-deck@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART:20260709T040000Z
+DTEND:20260709T043000Z
+SUMMARY:DVS: Draft full deck (partner, experience map, JTBD, vision, next steps)
+DESCRIPTION:Build the deck: partner slide, context/experience map, JTBD + research, immersive vision visuals, next-steps roadmap for 3+ releases out.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Draft the full deck
+TRIGGER:PT0S
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dvs266-07-leadership-review@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART:20260722T040000Z
+DTEND:20260722T043000Z
+SUMMARY:DVS: Design leadership review of deck + demo
+DESCRIPTION:Required design leadership review. Refine story, visuals and demo with leadership and stakeholders.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Design leadership review
+TRIGGER:PT0S
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dvs266-08-lock-video@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART:20260730T040000Z
+DTEND:20260730T043000Z
+SUMMARY:DVS: Lock final 4-min vision video + embed for async review
+DESCRIPTION:Finalize the 4-minute (max) vision simulation video and embed it for async GM/PM review.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Lock + embed final video
+TRIGGER:PT0S
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dvs266-09-dress-rehearsal@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART:20260803T040000Z
+DTEND:20260803T043000Z
+SUMMARY:DVS: Dress rehearsal at Employee Service Crits
+DESCRIPTION:Use the Aug 3 Employee Service Crits (deep-dive crit) to rehearse: 1 slide problem statement + run the demo. Gather feedback before the live showcase.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS: Dress rehearsal at crits
+TRIGGER:PT0S
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:dvs266-10-showcase@jarvis
+DTSTAMP:20260611T120000Z
+DTSTART;VALUE=DATE:20260806
+DTEND;VALUE=DATE:20260807
+SUMMARY:[266] Design Vision Showcase — LIVE (Jarvis)
+DESCRIPTION:The [266] Release Design Vision Showcase. Present Jarvis live if selected. Host: Jason Winters. Invites owned by Heidi Ng.
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS [266] showcase day
+TRIGGER:-PT12H
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DVS [266] showcase tomorrow
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+END:VCALENDAR

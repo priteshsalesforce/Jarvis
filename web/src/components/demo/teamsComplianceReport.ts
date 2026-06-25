@@ -83,7 +83,7 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     weight: 10,
     score: 90,
     summary:
-      'Personal-app tab pattern (Today / Conversations / Feed / Skills). When embedded as a Teams tab (useTeamsEmbed) the simulated title bar + rail are hidden and the Teams host owns the chrome and theme; the standalone demo keeps the chrome intentionally.',
+      'Single personal-tab pattern: Jarvis ships as one Teams static tab and handles its own in-app navigation (Today / Conversations / Feed / Skills). The simulated title bar + rail are always hidden so the Teams host owns the window chrome and theme; a hidden developer bar is available via Ctrl/Cmd+Shift+Alt+D.',
     recommendation:
       'Validate the tab navigation and deep-links against a live Teams tenant via the Developer Portal.',
   },
@@ -133,7 +133,7 @@ export const TEAMS_COMPLIANCE_CRITERIA: ComplianceCriterion[] = [
     weight: 5,
     score: 95,
     summary:
-      'Ships a valid Teams app manifest (teams-manifest.json) with the required icon pair — color (jarvis-icon.png) + transparent outline (jarvis-icon-transparent.png) — accent color and personal-app static tabs.',
+      'Ships a valid Teams app manifest (teams/manifest.template.json, packaged via npm run package:teams) with the required icon pair — color (color.png) + transparent outline (outline.png) — accent color and a single personal-app static tab.',
     recommendation:
       'Export the icons at the exact required sizes (192px color, 32px outline) and validate the package in the Teams Developer Portal.',
   },
