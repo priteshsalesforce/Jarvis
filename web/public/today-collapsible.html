@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jarvis · Collapsible panels — options</title>
+<style>
+  :root{
+    --appBg:#F5F5F5; --surface:#FFFFFF;
+    --core:#5C2E91; --coreMid:#7C4EAE; --coreBright:#9B6EC8;
+    --coreSoft:rgba(92,46,145,0.07); --coreGlow:rgba(92,46,145,0.16);
+    --text:#242424; --textMid:#424242; --textSoft:#616161; --textXsoft:#707070;
+    --border:#E6E6E6; --borderMid:#D7D7D7; --surfaceMid:#FAFAFA;
+    --green:#2E844A; --greenSoft:rgba(46,132,74,.10);
+    --amber:#9A6A00; --amberSoft:rgba(154,106,0,.10);
+    --blue:#0B5CAB;  --blueSoft:rgba(11,92,171,.10);
+    --red:#B42318;   --redSoft:rgba(180,35,24,.10);
+    --font:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--appBg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;padding:36px 20px 110px}
+  .grad{background:linear-gradient(135deg,var(--core),var(--coreBright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px}
+
+  .page-head{max-width:1240px;margin:0 auto 6px;text-align:center}
+  .eyebrow{font-size:13px;font-weight:700;color:var(--core);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px}
+  .page-head h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+  .page-head p{font-size:15px;color:var(--textMid);line-height:1.6;max-width:780px;margin:0 auto}
+
+  .controls{max-width:1240px;margin:22px auto 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px}
+  .controls .lbl{font-size:13px;font-weight:700;color:var(--textMid)}
+  .seg{display:inline-flex;background:var(--surfaceMid);border:1px solid var(--border);border-radius:99px;overflow:hidden}
+  .seg button{border:none;background:transparent;font-family:var(--font);font-size:13px;font-weight:700;color:var(--textMid);padding:8px 16px;cursor:pointer}
+  .seg button.on{background:var(--core);color:#fff}
+  .controls .hint{font-size:12.5px;color:var(--textXsoft)}
+  .modedesc{max-width:1240px;margin:10px auto 0;text-align:center;font-size:13px;color:var(--textSoft);line-height:1.5}
+  .modedesc b{color:var(--text)}
+
+  .screen{max-width:1240px;margin:18px auto 0;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--appBg);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .frame{position:relative;height:600px;overflow:hidden}
+
+  .app3{display:flex;height:100%;position:relative}
+  .center{flex:1;min-width:0;overflow:auto;position:relative;transition:margin .25s var(--ease)}
+  .glow{position:absolute;top:0;left:0;right:0;height:120px;pointer-events:none;background:radial-gradient(60% 100% at 50% 0%,var(--coreGlow) 0%,transparent 70%)}
+  .pad{padding:18px 20px;position:relative}
+
+  /* panels */
+  .panel{flex:none;background:var(--surface);overflow:hidden;transition:width .25s var(--ease),transform .25s var(--ease)}
+  .rail{width:208px;border-right:1px solid var(--border)}
+  .mpanel{width:312px;border-left:1px solid var(--border)}
+  .panel-full{height:100%;overflow:auto;width:208px}
+  .mpanel .panel-full{width:312px}
+  .panel-mini{display:none;height:100%;flex-direction:column;align-items:center;gap:12px;padding:12px 0}
+
+  .pbtn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--textSoft);font-size:15px}
+  .pbtn:hover{border-color:var(--core);color:var(--core)}
+  .prow{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 0}
+  .ptitle{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--textXsoft)}
+
+  /* rail content */
+  .railin{padding:10px 12px}
+  .home{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:700;color:var(--core);background:var(--coreSoft);margin-bottom:6px}
+  .home .ic{font-size:16px}
+  .raildiv{height:1px;background:var(--border);margin:6px 0 10px}
+  .newbtn{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;border:1px solid var(--border);background:var(--surface);color:var(--core);font-weight:700;font-size:12.5px;padding:8px;border-radius:9px;cursor:pointer;margin-bottom:12px}
+  .rgrp{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--textXsoft);margin:10px 4px 5px}
+  .ritem{padding:7px 10px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--textMid);line-height:1.3;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .ritem:hover{background:var(--surfaceMid)}
+  .miniavatar{width:30px;height:30px;border-radius:8px;background:var(--coreSoft);color:var(--core);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer}
+
+  /* center */
+  .greet{font-size:21px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-bottom:12px}
+  .ask{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--borderMid);border-radius:13px;padding:7px 7px 7px 14px;box-shadow:0 12px 34px rgba(92,46,145,.07);margin-bottom:14px}
+  .ask img{width:23px;height:23px;border-radius:7px}
+  .ask input{flex:1;border:none;outline:none;font-family:var(--font);font-size:14px;background:transparent}
+  .ask .send{border:none;background:var(--core);color:#fff;font-weight:700;font-size:12.5px;padding:7px 13px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  .pills{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:12px 0}
+  .pill{display:inline-flex;align-items:center;font-size:12px;font-weight:600;color:var(--textMid);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:6px 10px;cursor:pointer}
+  .pill.on{background:var(--core);color:#fff;border-color:var(--core)}
+  .pill b{margin-left:6px;font-weight:700;opacity:.7}
+  .pill.handledpill{margin-left:auto}.pill.handledpill .ic{margin-right:4px;font-size:12px}
+  .pilldiv{width:1px;height:16px;background:var(--border)}
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 8px 24px rgba(92,46,145,.05);cursor:pointer}
+  .card + .card{margin-top:10px}
+  .ctag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:99px;margin-bottom:7px}
+  .card h3{font-size:13.5px;font-weight:700;line-height:1.35;margin-bottom:5px}
+  .card .meta{font-size:12px;color:var(--textSoft);line-height:1.45;margin-bottom:11px}
+  .card-big{background:linear-gradient(180deg,var(--coreSoft),transparent 55%),var(--surface)}
+  .actions{display:flex;gap:7px}
+  .b-primary{border:none;background:var(--core);color:#fff;font-weight:700;font-size:12px;padding:7px 12px;border-radius:7px;cursor:pointer}
+  .b-ghost{border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:12px;padding:7px 12px;border-radius:7px;cursor:pointer}
+
+  /* meetings panel */
+  .mp-head{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 10px}
+  .mp-head h3{font-size:13px;font-weight:800;display:flex;align-items:center;gap:7px}
+  .mp-body{padding:0 14px 14px}
+  .ring{width:48px;height:48px;border-radius:50%;flex:none;background:conic-gradient(var(--core) 0 28%, #E4DCEF 28% 100%);display:flex;align-items:center;justify-content:center}
+  .ring span{width:38px;height:38px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--core);line-height:1}
+  .ring small{font-size:8px;font-weight:700;color:var(--textXsoft)}
+  .mp-next{background:linear-gradient(135deg,var(--coreSoft),transparent 70%),var(--surface);border:1px solid rgba(92,46,145,.18);border-radius:14px;padding:13px}
+  .mp-next .row{display:flex;align-items:center;gap:11px}
+  .mp-next .lab{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--core)}
+  .mp-next .ttl{font-size:14px;font-weight:800;margin-top:2px}
+  .mp-next .sub{font-size:11px;color:var(--textSoft);margin-top:2px}
+  .mp-next .join{margin-top:11px;width:100%;border:none;background:var(--core);color:#fff;font-weight:700;font-size:12.5px;padding:8px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+  .mp-stats{display:flex;gap:7px;margin:11px 0}
+  .mp-stat{flex:1;text-align:center;border:1px solid var(--border);border-radius:10px;padding:8px 4px}
+  .mp-stat .n{font-size:16px;font-weight:800;line-height:1}.mp-stat.warn .n{color:var(--red)}
+  .mp-stat .l{font-size:9px;color:var(--textXsoft);font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+  .mp-sech{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--textXsoft);margin:6px 2px 8px}
+  .ev{display:grid;grid-template-columns:42px 12px 1fr;gap:8px;align-items:start;padding:8px 5px;border-radius:8px;cursor:pointer}
+  .ev:hover{background:var(--surfaceMid)}
+  .ev + .ev{border-top:1px solid var(--border)}
+  .ev .t{font-size:11.5px;font-weight:700;color:var(--textSoft)}
+  .ev .line{display:flex;justify-content:center;padding-top:4px}
+  .ev .dot{width:8px;height:8px;border-radius:50%;background:var(--borderMid)}
+  .ev.now .dot{background:var(--core);box-shadow:0 0 0 4px var(--coreSoft)}.ev.conflict .dot{background:var(--red)}
+  .ev.past .t,.ev.past b{color:var(--textXsoft)}
+  .ev b{font-size:12px;font-weight:600;display:block}
+  .ev .tag{display:inline-block;margin-top:2px;font-size:9.5px;font-weight:700;color:var(--core);background:var(--coreSoft);padding:1px 6px;border-radius:99px}
+  .ev .tag.conflict{color:var(--red);background:var(--redSoft)}
+
+  /* ===== collapse modes ===== */
+  /* ICON: shrink to a slim icon strip */
+  [data-mode="icon"] .rail.collapsed{width:56px}
+  [data-mode="icon"] .mpanel.collapsed{width:60px}
+  [data-mode="icon"] .panel.collapsed .panel-full{display:none}
+  [data-mode="icon"] .panel.collapsed .panel-mini{display:flex}
+  /* HIDE: fully collapse, edge toggle reopens */
+  [data-mode="hide"] .rail.collapsed{width:0;border-color:transparent}
+  [data-mode="hide"] .mpanel.collapsed{width:0;border-color:transparent}
+  /* OVERLAY: panels float over the center */
+  [data-mode="overlay"] .rail{position:absolute;left:0;top:0;height:100%;z-index:20;box-shadow:10px 0 34px rgba(0,0,0,.14)}
+  [data-mode="overlay"] .mpanel{position:absolute;right:0;top:0;height:100%;z-index:20;box-shadow:-10px 0 34px rgba(0,0,0,.14)}
+  [data-mode="overlay"] .rail.collapsed{transform:translateX(-100%)}
+  [data-mode="overlay"] .mpanel.collapsed{transform:translateX(100%)}
+
+  .scrim{position:absolute;inset:0;background:rgba(0,0,0,.16);z-index:15;display:none}
+  .edge{position:absolute;top:14px;z-index:25;display:none;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:12px;font-weight:700;color:var(--core);cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.1)}
+  .edge.left{left:12px}.edge.right{right:12px}
+</style>
+</head>
+<body>
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="ic-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="ic-chevL" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="ic-chevR" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="ic-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></symbol>
+    <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="ic-video" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></symbol>
+    <symbol id="ic-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="ic-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  </svg>
+
+  <div class="page-head">
+    <div class="eyebrow">Collapsible panels</div>
+    <h1>Expand / collapse the left & right panels</h1>
+    <p>Try each collapse style below, then click the chevrons on the panels (or the edge tab) to collapse and expand. Tell me which behaviour you want and I'll build it with remembered state + responsive auto-collapse.</p>
+  </div>
+
+  <div class="controls">
+    <span class="lbl">Collapse style:</span>
+    <div class="seg" id="seg">
+      <button data-mode="icon" class="on">Icon rail</button>
+      <button data-mode="hide">Full hide</button>
+      <button data-mode="overlay">Overlay drawer</button>
+    </div>
+    <span class="hint">↔ Click the ‹ › chevrons on each panel to collapse / expand.</span>
+  </div>
+  <div class="modedesc" id="modedesc"></div>
+
+  <div class="screen">
+    <div class="frame">
+      <div class="app3" data-mode="icon" id="demo">
+
+        <!-- LEFT PANEL -->
+        <div class="panel rail" id="rail">
+          <div class="panel-full">
+            <div class="prow"><span class="ptitle">${''}Today &amp; chats</span><button class="pbtn" data-act="cl" title="Collapse"><svg class="ic"><use href="#ic-chevL"/></svg></button></div>
+            <div class="railin">
+              <div class="home"><svg class="ic"><use href="#ic-home"/></svg> Today</div>
+              <div class="raildiv"></div>
+              <button class="newbtn"><svg class="ic"><use href="#ic-plus"/></svg> New conversation</button>
+              <div class="rgrp">Today</div>
+              <div class="ritem">2 PM review conflict</div><div class="ritem">QBR prep for the SVP</div>
+              <div class="rgrp">Earlier</div>
+              <div class="ritem">Parental leave — Jun–Sep</div><div class="ritem">Liam capacity check-in</div>
+            </div>
+          </div>
+          <div class="panel-mini">
+            <button class="pbtn" data-act="el" title="Expand"><svg class="ic"><use href="#ic-chevR"/></svg></button>
+            <div class="miniavatar" title="Today"><svg class="ic"><use href="#ic-home"/></svg></div>
+            <div class="miniavatar" title="New"><svg class="ic"><use href="#ic-plus"/></svg></div>
+            <div class="miniavatar" title="2 PM review conflict">2</div>
+            <div class="miniavatar" title="QBR prep">Q</div>
+            <div class="miniavatar" title="Parental leave">P</div>
+          </div>
+        </div>
+
+        <!-- CENTER -->
+        <div class="center"><div class="pad"><div class="glow"></div>
+          <div class="greet">Good morning, Alex. <span class="grad">I handled 6 things overnight.</span></div>
+          <div class="ask"><img src="/jarvis-icon-transparent.png"><input placeholder="Ask Jarvis anything…"><button class="send">Ask <svg class="ic"><use href="#ic-chevR"/></svg></button></div>
+          <div class="pills"><span class="pill on">All<b>6</b></span><span class="pill">Meetings<b>2</b></span><span class="pill">Need decision<b>1</b></span><span class="pill">Follow-ups<b>3</b></span><span class="pilldiv"></span><span class="pill handledpill"><svg class="ic"><use href="#ic-clock"/></svg>Handled<b>3</b></span></div>
+          <div class="card card-big"><span class="ctag" style="color:var(--amber);background:var(--amberSoft)">Needs decision</span><h3>Marc made the 2 PM product review mandatory — it collides with 3 things.</h3><p class="meta">I worked out a fix that clears 2–3 PM. Open to review.</p><div class="actions"><button class="b-primary">Open conversation</button><button class="b-ghost">Snooze</button></div></div>
+          <div class="card"><span class="ctag" style="color:var(--blue);background:var(--blueSoft)">Approvals</span><h3>3 purchase requisitions pending your approval.</h3><p class="meta">All within policy · $2,840 total.</p><div class="actions"><button class="b-primary">Review</button></div></div>
+        </div></div>
+
+        <!-- RIGHT PANEL -->
+        <div class="panel mpanel" id="mpanel">
+          <div class="panel-full">
+            <div class="mp-head"><h3><svg class="ic"><use href="#ic-cal"/></svg> Meetings</h3><button class="pbtn" data-act="cr" title="Collapse"><svg class="ic"><use href="#ic-chevR"/></svg></button></div>
+            <div class="mp-body">
+              <div class="mp-next"><div class="row"><div class="ring"><span>42<small>MIN</small></span></div><div><div class="lab">Next meeting</div><div class="ttl">QBR with SVP</div><div class="sub">10:00–10:45 · Prep ready</div></div></div><button class="join"><svg class="ic"><use href="#ic-video"/></svg> Join</button></div>
+              <div class="mp-stats"><div class="mp-stat"><div class="n">4</div><div class="l">Meet</div></div><div class="mp-stat"><div class="n">3h</div><div class="l">Focus</div></div><div class="mp-stat warn"><div class="n">1</div><div class="l">Clash</div></div></div>
+              <div class="mp-sech">Today's agenda</div>
+              <div class="ev past"><div class="t">9:00</div><div class="line"><span class="dot"></span></div><div><b>Morning brief</b></div></div>
+              <div class="ev now"><div class="t">10:00</div><div class="line"><span class="dot"></span></div><div><b>QBR with SVP</b><span class="tag">Prep ready</span></div></div>
+              <div class="ev conflict"><div class="t">2:00</div><div class="line"><span class="dot"></span></div><div><b>Product review</b><span class="tag conflict">Conflict</span></div></div>
+              <div class="ev"><div class="t">4:00</div><div class="line"><span class="dot"></span></div><div><b>1:1 with Sarah</b></div></div>
+            </div>
+          </div>
+          <div class="panel-mini">
+            <button class="pbtn" data-act="er" title="Expand"><svg class="ic"><use href="#ic-chevL"/></svg></button>
+            <div class="ring" title="Next: QBR in 42 min"><span>42<small>MIN</small></span></div>
+            <div class="miniavatar" title="Join"><svg class="ic"><use href="#ic-video"/></svg></div>
+            <div class="miniavatar" title="4 meetings">4</div>
+          </div>
+        </div>
+
+        <button class="edge left" data-act="el" id="edgeL"><svg class="ic"><use href="#ic-msg"/></svg> Chats</button>
+        <button class="edge right" data-act="er" id="edgeR"><svg class="ic"><use href="#ic-cal"/></svg> Meetings</button>
+        <div class="scrim" id="scrim"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const demo=document.getElementById('demo'), rail=document.getElementById('rail'), mpanel=document.getElementById('mpanel');
+  const edgeL=document.getElementById('edgeL'), edgeR=document.getElementById('edgeR'), scrim=document.getElementById('scrim');
+  const seg=document.getElementById('seg'), modedesc=document.getElementById('modedesc');
+  const DESC={
+    icon:'<b>Icon rail</b> — collapses to a slim strip of icons (home, new chat, recent + next-meeting countdown). Nothing fully disappears; one click re-expands. Best default for desktop.',
+    hide:'<b>Full hide</b> — the panel collapses to zero width, giving the center the most room. A small edge tab (“Chats” / “Meetings”) appears to bring it back.',
+    overlay:'<b>Overlay drawer</b> — the panel floats over the content with a dim backdrop; great for narrow screens. Click the backdrop or the edge tab to toggle.'
+  };
+  function update(){
+    const mode=demo.dataset.mode;
+    const lc=rail.classList.contains('collapsed'), rc=mpanel.classList.contains('collapsed');
+    edgeL.style.display = (lc && mode!=='icon') ? 'inline-flex':'none';
+    edgeR.style.display = (rc && mode!=='icon') ? 'inline-flex':'none';
+    scrim.style.display = (mode==='overlay' && (!lc || !rc)) ? 'block':'none';
+    modedesc.innerHTML = DESC[mode];
+  }
+  function setMode(m){
+    demo.dataset.mode=m;
+    [...seg.children].forEach(b=>b.classList.toggle('on', b.dataset.mode===m));
+    // sensible defaults: overlay starts closed, others open
+    rail.classList.toggle('collapsed', m==='overlay');
+    mpanel.classList.toggle('collapsed', m==='overlay');
+    update();
+  }
+  seg.addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) setMode(b.dataset.mode); });
+  demo.addEventListener('click', e=>{
+    const el=e.target.closest('[data-act]'); if(!el) return;
+    const a=el.dataset.act;
+    if(a==='cl'||a==='el') rail.classList.toggle('collapsed', a==='cl');
+    if(a==='cr'||a==='er') mpanel.classList.toggle('collapsed', a==='cr');
+    update();
+  });
+  scrim.addEventListener('click', ()=>{ rail.classList.add('collapsed'); mpanel.classList.add('collapsed'); update(); });
+  setMode('icon');
+</script>
+</body>
+</html>

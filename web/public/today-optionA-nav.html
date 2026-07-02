@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jarvis · Option A — navigation & back-to-Today</title>
+<style>
+  :root{
+    --appBg:#F5F5F5; --surface:#FFFFFF;
+    --core:#5C2E91; --coreMid:#7C4EAE; --coreBright:#9B6EC8;
+    --coreSoft:rgba(92,46,145,0.07); --coreGlow:rgba(92,46,145,0.16);
+    --text:#242424; --textMid:#424242; --textSoft:#616161; --textXsoft:#707070;
+    --border:#E6E6E6; --borderMid:#D7D7D7; --surfaceMid:#FAFAFA;
+    --green:#2E844A; --greenSoft:rgba(46,132,74,.10);
+    --amber:#9A6A00; --amberSoft:rgba(154,106,0,.10);
+    --blue:#0B5CAB;  --blueSoft:rgba(11,92,171,.10);
+    --teal:#0B7C8C;  --tealSoft:rgba(11,124,140,.10);
+    --font:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--appBg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;padding:36px 20px 110px}
+  .grad{background:linear-gradient(135deg,var(--core),var(--coreBright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px}
+
+  .page-head{max-width:1180px;margin:0 auto 6px;text-align:center}
+  .eyebrow{font-size:13px;font-weight:700;color:var(--core);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px}
+  .page-head h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+  .page-head p{font-size:15px;color:var(--textMid);line-height:1.6;max-width:740px;margin:0 auto}
+
+  .block{max-width:1180px;margin:42px auto 0}
+  .block-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+  .block-name{font-size:18px;font-weight:800}
+  .pill-tag{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--core);background:var(--coreSoft);padding:4px 10px;border-radius:99px}
+  .pill-tag.rec{color:var(--green);background:var(--greenSoft)}
+  .block-desc{font-size:13px;color:var(--textSoft);margin:0 0 14px;max-width:880px;line-height:1.55}
+  .block-desc b{color:var(--text)}
+
+  .screen{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--appBg);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .flabel{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--textSoft);padding:11px 16px;border-bottom:1px solid var(--border);background:var(--surface)}
+  .frame{position:relative;height:540px;overflow:hidden}
+  .layout{display:flex;height:100%}
+  .glow{position:absolute;top:0;left:0;right:0;height:150px;pointer-events:none;background:radial-gradient(55% 100% at 50% 0%,var(--coreGlow) 0%,transparent 70%)}
+
+  .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media (max-width:1000px){.trio{grid-template-columns:1fr}}
+
+  /* rail */
+  .rail{width:208px;flex:none;border-right:1px solid var(--border);background:var(--surface);padding:12px;overflow:auto}
+  .home{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:6px}
+  .home:hover{background:var(--surfaceMid)}
+  .home.on{background:var(--coreSoft);color:var(--core)}
+  .home .ic{font-size:16px}
+  .raildiv{height:1px;background:var(--border);margin:6px 0 10px}
+  .newbtn{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;border:1px solid var(--border);background:var(--surface);color:var(--core);font-weight:700;font-size:12.5px;padding:8px;border-radius:9px;cursor:pointer;margin-bottom:12px}
+  .rgrp{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--textXsoft);margin:10px 4px 5px}
+  .ritem{padding:7px 10px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--textMid);line-height:1.3;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .ritem:hover{background:var(--surfaceMid);color:var(--text)}
+  .ritem.on{background:var(--coreSoft);color:var(--core);font-weight:700}
+  .main{flex:1;min-width:0;overflow:auto}
+  .pad{padding:20px;position:relative}
+
+  /* home content */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .greet{font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  .ask{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--borderMid);border-radius:13px;padding:8px 8px 8px 14px;box-shadow:0 12px 34px rgba(92,46,145,.07)}
+  .ask img{width:24px;height:24px;border-radius:7px}
+  .ask input{flex:1;border:none;outline:none;font-family:var(--font);font-size:14px;background:transparent}
+  .ask .send{border:none;background:var(--core);color:#fff;font-weight:700;font-size:13px;padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  .pills{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:14px 0}
+  .pill{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;color:var(--textMid);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:6px 11px;cursor:pointer}
+  .pill.on{background:var(--core);color:#fff;border-color:var(--core)}
+  .pill b{margin-left:6px;font-weight:700;opacity:.7}
+  .pill.handledpill{margin-left:auto;color:var(--textMid)}
+  .pill.handledpill .ic{margin-right:5px;font-size:13px}
+  .pilldiv{width:1px;height:18px;background:var(--border);margin:0 2px}
+  .insight{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;background:var(--surfaceMid);border:1px solid var(--border);margin-bottom:14px}
+  .insight .k{flex:none;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--core);display:inline-flex;align-items:center;gap:4px}
+  .insight p{font-size:12.5px;color:var(--textMid);line-height:1.4;margin:0}
+  .insight .bar{width:1px;height:13px;background:var(--border);flex:none}
+
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:15px 17px;box-shadow:0 8px 24px rgba(92,46,145,.05);cursor:pointer;transition:transform .16s var(--ease),box-shadow .16s var(--ease)}
+  .card:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(92,46,145,.1)}
+  .card + .card{margin-top:11px}
+  .card .open{position:absolute;top:14px;right:14px;color:var(--textXsoft);font-size:16px}
+  .ctag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-bottom:8px}
+  .card h3{font-size:14px;font-weight:700;line-height:1.38;margin-bottom:6px;padding-right:22px}
+  .card .meta{font-size:12px;color:var(--textSoft);line-height:1.5;margin-bottom:12px}
+  .card-big h3{font-size:16px}
+  .card-big{background:linear-gradient(180deg,var(--coreSoft),transparent 55%),var(--surface)}
+  .cfoot{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .b-primary{border:none;background:var(--core);color:#fff;font-weight:700;font-size:12px;padding:8px 13px;border-radius:7px;cursor:pointer}
+  .b-ghost{border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:12px;padding:8px 13px;border-radius:7px;cursor:pointer}
+  .micro{display:flex;gap:5px;opacity:.55}
+  .ma{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px}
+  .ma.done{color:var(--green)}.ma.remind{color:var(--blue)}.ma.dismiss{color:var(--textSoft)}
+
+  /* conversation */
+  .convo{display:flex;flex-direction:column;height:100%}
+  .convo-top{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--surface);min-height:54px}
+  .back{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--surface);color:var(--core);font-weight:700;font-size:12.5px;padding:7px 12px;border-radius:8px;cursor:pointer}
+  .back.solid{background:var(--core);color:#fff;border-color:var(--core)}
+  .convo-title{font-size:13.5px;font-weight:700}
+  .convo-sub{font-size:11px;color:var(--textXsoft)}
+  .crumb{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text)}
+  .crumb a{display:inline-flex;align-items:center;gap:5px;color:var(--core);font-weight:700;cursor:pointer}
+  .crumb .sep{color:var(--textXsoft)}
+  .thread{flex:1;overflow:auto;padding:16px;background:var(--appBg)}
+  .cmsg{display:flex;gap:8px;margin-bottom:12px;max-width:90%}
+  .cmsg.u{margin-left:auto;flex-direction:row-reverse}
+  .cmsg .av{width:24px;height:24px;border-radius:7px;flex:none}
+  .cbubble{padding:10px 13px;border-radius:12px;font-size:12.5px;line-height:1.5}
+  .cmsg.j .cbubble{background:var(--surface);border:1px solid var(--border);border-top-left-radius:3px}
+  .cmsg.u .cbubble{background:var(--core);color:#fff;border-top-right-radius:3px}
+  .cinput{display:flex;align-items:center;gap:8px;padding:11px 14px;border-top:1px solid var(--border);background:var(--surface)}
+  .cinput input{flex:1;border:1px solid var(--borderMid);border-radius:10px;padding:10px 12px;font-family:var(--font);font-size:13px;outline:none}
+  .cinput .send{border:none;background:var(--core);color:#fff;font-weight:700;padding:9px 13px;border-radius:9px;cursor:pointer}
+
+  .hint{font-size:12.5px;color:var(--textMid);background:var(--surface);border:1px dashed var(--coreMid);border-radius:10px;padding:9px 12px;margin-top:12px;line-height:1.5}
+  .hint b{color:var(--core)}
+  .ann{position:absolute;z-index:5;background:var(--core);color:#fff;font-size:11px;font-weight:700;padding:4px 9px;border-radius:7px;box-shadow:0 6px 16px rgba(92,46,145,.4)}
+  .ann::after{content:"";position:absolute;width:8px;height:8px;background:var(--core);transform:rotate(45deg)}
+</style>
+</head>
+<body>
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="ic-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="ic-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+    <symbol id="ic-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="ic-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="ic-chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="ic-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="ic-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></symbol>
+    <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="ic-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+  </svg>
+
+  <div class="page-head">
+    <div class="eyebrow">Option A · refinements</div>
+    <h1>Returning to Today, and Handled in the tabs</h1>
+    <p>You picked the persistent-rail layout. Two updates: <b>"Handled (3)" now lives in the filter tabs</b> (All · Meetings · Need decision · Follow-ups · Handled 3), and below are three clear ways to get from a conversation back to the Today view. Pick the back-navigation you prefer.</p>
+  </div>
+
+  <!-- TODAY HOME -->
+  <div class="block">
+    <div class="block-head"><span class="block-name">Today (home)</span><span class="pill-tag">Handled moved into tabs</span></div>
+    <p class="block-desc">The rail now starts with a pinned <b>Today / Home</b> entry (always your way back), then New conversation and your history. Handled is the last filter tab.</p>
+    <div class="screen"><div class="flabel">Today — home view</div><div class="frame"><div id="home"></div></div></div>
+  </div>
+
+  <!-- BACK NAV OPTIONS -->
+  <div class="block">
+    <div class="block-head"><span class="block-name">Back to Today — three ways</span></div>
+    <p class="block-desc">All three keep the history rail. They differ in how obvious the "exit to Today" is.</p>
+    <div class="trio">
+      <div>
+        <div class="screen"><div class="flabel">Nav 1 · Rail home (recommended)</div><div class="frame"><div id="nav1"></div></div></div>
+        <p class="block-desc" style="margin-top:8px"><b>Click "Today / Home"</b> at the top of the rail — pinned and always visible, like a home button. Clean header, fewest controls.</p>
+      </div>
+      <div>
+        <div class="screen"><div class="flabel">Nav 2 · Back button in header</div><div class="frame"><div id="nav2"></div></div></div>
+        <p class="block-desc" style="margin-top:8px">A prominent <b>← Back to Today</b> button sits at the top-left of the conversation. Most explicit and familiar.</p>
+      </div>
+      <div>
+        <div class="screen"><div class="flabel">Nav 3 · Breadcrumb</div><div class="frame"><div id="nav3"></div></div></div>
+        <p class="block-desc" style="margin-top:8px">A <b>Today › conversation</b> breadcrumb shows where you are; clicking "Today" returns home. Good for orientation.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const ic = n => '<svg class="ic"><use href="#ic-'+n+'"/></svg>';
+  const C = { core:'var(--core)', amber:'var(--amber)', blue:'var(--blue)' };
+  const Cs = { core:'var(--coreSoft)', amber:'var(--amberSoft)', blue:'var(--blueSoft)' };
+  const AV = '/jarvis-icon-transparent.png';
+
+  const GREET='Good morning, Alex.', BRIEF='I handled 6 things overnight';
+  const INSIGHT="Your last 3 PTO requests were approved in under 24h. If the current one stalls past tomorrow, I'll flag it.";
+  const ITEMS=[
+    {tag:'Needs decision',col:'amber',big:true,title:'Marc made the 2 PM product review mandatory — it collides with 3 things.',meta:'I worked out a fix that clears 2–3 PM. Open to review.',actions:['Open conversation','Snooze']},
+    {tag:'Approvals',col:'blue',title:'3 purchase requisitions pending your approval.',meta:'All within policy · $2,840 total.',actions:['Review']},
+  ];
+  const RECENTS=[{t:'2 PM review conflict'},{t:'QBR prep for the SVP'},{t:'Parental leave — Jun–Sep'},{t:'Liam capacity check-in'}];
+  const PILLS=[['All',6],['Meetings',2],['Need decision',1],['Follow-ups',3]];
+
+  const railHTML = (mode)=>{
+    // mode: 'home' or a conversation index (0)
+    const homeOn = mode==='home';
+    return `<div class="rail">
+      <div class="home ${homeOn?'on':''}">${ic('home')} Today</div>
+      <div class="raildiv"></div>
+      <button class="newbtn">${ic('plus')} New conversation</button>
+      <div class="rgrp">Today</div>
+      ${RECENTS.slice(0,2).map((r,i)=>`<div class="ritem ${(!homeOn&&i===0)?'on':''}">${r.t}</div>`).join('')}
+      <div class="rgrp">Earlier</div>
+      ${RECENTS.slice(2).map(r=>`<div class="ritem">${r.t}</div>`).join('')}
+    </div>`;
+  };
+
+  const askBar = `<div class="ask"><img src="${AV}"><input placeholder="Ask Jarvis anything…"><button class="send">Ask ${ic('chev')}</button></div>`;
+  const pillsBar = `<div class="pills">
+    ${PILLS.map((p,i)=>`<span class="pill ${i===0?'on':''}">${p[0]}<b>${p[1]}</b></span>`).join('')}
+    <span class="pilldiv"></span>
+    <span class="pill handledpill">${ic('undo')}Handled<b>3</b></span>
+  </div>`;
+  const insight = `<div class="insight"><span class="k">${ic('spark')} Overnight</span><span class="bar"></span><p>${INSIGHT}</p></div>`;
+  const micro = `<div class="micro"><button class="ma done">${ic('check')}</button><button class="ma remind">${ic('bell')}</button><button class="ma dismiss">${ic('x')}</button></div>`;
+  const card = it=>`<div class="card ${it.big?'card-big':''}"><span class="open">${ic('chev')}</span>
+    <span class="ctag" style="color:${C[it.col]};background:${Cs[it.col]}">${it.tag}</span>
+    <h3>${it.title}</h3><p class="meta">${it.meta}</p>
+    <div class="cfoot"><div class="actions">${it.actions.map((a,i)=>`<button class="${i?'b-ghost':'b-primary'}">${a}</button>`).join('')}</div>${micro}</div></div>`;
+
+  const homeMain = `<div class="main"><div class="pad"><div class="glow"></div>
+    <div class="topbar"><div class="greet">${GREET} <span class="grad">${BRIEF}.</span></div></div>
+    ${askBar}${pillsBar}${insight}
+    ${ITEMS.map(card).join('')}
+    <p style="font-size:12px;color:var(--textSoft);text-align:center;margin-top:14px">Personalised from your Set up · <a style="color:var(--core);font-weight:600">Edit →</a></p>
+  </div></div>`;
+
+  const THREAD=[
+    {r:'j',t:"Marc made the 2 PM product review mandatory. It collides with 3 things. Here's a fix to clear 2–3 PM: move your 1:1 with Sarah to 4 PM, step out of sprint sync, reschedule the Acme check-in."},
+    {r:'u',t:'Looks good — go ahead.'},
+    {r:'j',t:"Done. Sent 4 Teams messages and 3 emails, cleared your 2 PM, and added a note to the Salesforce case."},
+  ];
+  const thread = THREAD.map(m=>`<div class="cmsg ${m.r}">${m.r==='j'?`<img class="av" src="${AV}">`:''}<div class="cbubble">${m.t}</div></div>`).join('');
+  const cinput = `<div class="cinput"><input placeholder="Reply to Jarvis…"><button class="send">${ic('send')}</button></div>`;
+
+  // Home screen
+  document.getElementById('home').innerHTML = `<div class="layout">${railHTML('home')}${homeMain}</div>`;
+
+  // Nav variant 1 — rail home is the back path; minimal header
+  document.getElementById('nav1').innerHTML = `<div class="layout">${railHTML(0)}
+    <div class="main"><div class="convo">
+      <div class="convo-top"><div><div class="convo-title">2 PM review conflict</div><div class="convo-sub">Needs decision · 9:12 AM</div></div></div>
+      <div class="thread">${thread}<div class="hint">${ic('home')} <b>Back to Today:</b> click <b>Today</b> at the top of the rail (highlighted in the home screen).</div></div>${cinput}
+    </div></div></div>`;
+
+  // Nav variant 2 — explicit back button
+  document.getElementById('nav2').innerHTML = `<div class="layout">${railHTML(0)}
+    <div class="main"><div class="convo">
+      <div class="convo-top"><button class="back solid">${ic('back')} Back to Today</button><div><div class="convo-title">2 PM review conflict</div></div></div>
+      <div class="thread">${thread}</div>${cinput}
+    </div></div></div>`;
+
+  // Nav variant 3 — breadcrumb
+  document.getElementById('nav3').innerHTML = `<div class="layout">${railHTML(0)}
+    <div class="main"><div class="convo">
+      <div class="convo-top"><div class="crumb"><a>${ic('home')} Today</a><span class="sep">${ic('chev')}</span><span>2 PM review conflict</span></div></div>
+      <div class="thread">${thread}</div>${cinput}
+    </div></div></div>`;
+</script>
+</body>
+</html>

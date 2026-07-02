@@ -59,12 +59,12 @@ export function TeamsComplianceReport() {
   }, [open])
 
   return (
-    <div ref={containerRef} className="relative flex items-center">
+    <div ref={containerRef} className="relative flex items-center pl-2">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-white/40 transition-colors"
-        style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+        className="flex items-center gap-2 rounded-full px-2 py-1.5 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-white/40 transition-colors"
+        style={{ backgroundColor: 'rgba(255,255,255,0.1)', paddingLeft: 8, paddingRight: 8 }}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}

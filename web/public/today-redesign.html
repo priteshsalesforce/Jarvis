@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jarvis · Today + Conversations Redesign Options</title>
+<style>
+  :root{
+    --appBg:#F5F5F5; --surface:#FFFFFF;
+    --core:#5C2E91; --coreMid:#7C4EAE; --coreBright:#9B6EC8;
+    --coreSoft:rgba(92,46,145,0.07); --coreGlow:rgba(92,46,145,0.16);
+    --text:#242424; --textMid:#424242; --textSoft:#616161; --textXsoft:#707070;
+    --border:#E6E6E6; --borderMid:#D7D7D7; --surfaceMid:#FAFAFA;
+    --green:#2E844A; --greenSoft:rgba(46,132,74,.10);
+    --amber:#9A6A00; --amberSoft:rgba(154,106,0,.10);
+    --blue:#0B5CAB;  --blueSoft:rgba(11,92,171,.10);
+    --teal:#0B7C8C;  --tealSoft:rgba(11,124,140,.10);
+    --font:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--appBg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;padding:36px 20px 110px}
+  .grad{background:linear-gradient(135deg,var(--core),var(--coreBright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px}
+
+  .page-head{max-width:1180px;margin:0 auto 6px;text-align:center}
+  .eyebrow{font-size:13px;font-weight:700;color:var(--core);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px}
+  .page-head h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+  .page-head p{font-size:15px;color:var(--textMid);line-height:1.6;max-width:760px;margin:0 auto}
+  .legend{max-width:1180px;margin:18px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--textMid);line-height:1.8}
+  .legend b{color:var(--text)}
+  .legend .chip{display:inline-block;background:var(--coreSoft);color:var(--core);font-weight:700;font-size:12px;padding:2px 9px;border-radius:99px;margin:2px 4px 2px 0}
+  .legend .chip.cut{background:#fde8e8;color:#b42318;text-decoration:line-through}
+
+  .optwrap{max-width:1180px;margin:46px auto 0}
+  .opt-head{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+  .opt-name{font-size:19px;font-weight:800}
+  .opt-pill{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--core);background:var(--coreSoft);padding:4px 10px;border-radius:99px}
+  .opt-desc{font-size:13px;color:var(--textSoft);margin:0 0 16px;max-width:860px;line-height:1.55}
+
+  .flow{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:1000px){.flow{grid-template-columns:1fr}}
+  .screen{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--appBg);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .flabel{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--textSoft);padding:11px 16px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:8px}
+  .flabel .n{width:20px;height:20px;border-radius:50%;background:var(--core);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .frame{position:relative;height:560px;overflow:hidden}
+  .frame .scroll{position:absolute;inset:0;overflow:auto}
+  .pad{padding:22px}
+  .glow{position:absolute;top:0;left:0;right:0;height:160px;pointer-events:none;background:radial-gradient(55% 100% at 50% 0%,var(--coreGlow) 0%,transparent 70%)}
+
+  /* widgets */
+  .ask{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--borderMid);border-radius:13px;padding:8px 8px 8px 14px;box-shadow:0 12px 34px rgba(92,46,145,.07)}
+  .ask img{width:24px;height:24px;border-radius:7px}
+  .ask input{flex:1;border:none;outline:none;font-family:var(--font);font-size:14px;color:var(--text);background:transparent}
+  .ask .send{border:none;background:var(--core);color:#fff;font-weight:700;font-size:13px;padding:8px 15px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .insight{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;background:var(--surfaceMid);border:1px solid var(--border);margin:14px 0}
+  .insight .k{flex:none;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--core);display:inline-flex;align-items:center;gap:4px}
+  .insight p{font-size:12.5px;color:var(--textMid);line-height:1.4;margin:0}
+  .insight .bar{width:1px;height:13px;background:var(--border);flex:none}
+  .pills{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}
+  .pill{display:inline-flex;align-items:center;font-size:12.5px;font-weight:600;color:var(--textMid);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:6px 11px;cursor:pointer}
+  .pill.on{background:var(--core);color:#fff;border-color:var(--core)}
+  .pill b{margin-left:6px;font-weight:700;opacity:.7}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .handled{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:5px 11px;font-size:12px;font-weight:600;color:var(--textMid);cursor:pointer}
+
+  .greet{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-bottom:14px}
+  .greet.center{text-align:center}
+
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:0 8px 24px rgba(92,46,145,.05);cursor:pointer;transition:transform .16s var(--ease),box-shadow .16s var(--ease)}
+  .card:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(92,46,145,.1)}
+  .card:hover .micro{opacity:1}
+  .card + .card{margin-top:12px}
+  .card .open{position:absolute;top:15px;right:15px;color:var(--textXsoft);font-size:16px}
+  .ctag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:99px;margin-bottom:9px}
+  .card h3{font-size:14.5px;font-weight:700;line-height:1.38;margin-bottom:6px;padding-right:22px}
+  .card .meta{font-size:12.5px;color:var(--textSoft);line-height:1.5;margin-bottom:13px}
+  .card-big h3{font-size:17px}
+  .card-big{background:linear-gradient(180deg,var(--coreSoft),transparent 55%),var(--surface)}
+  .cfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .b-primary{border:none;background:var(--core);color:#fff;font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:7px;cursor:pointer}
+  .b-ghost{border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;font-size:12.5px;padding:8px 14px;border-radius:7px;cursor:pointer}
+  .micro{display:flex;gap:5px;opacity:.5;transition:opacity .15s}
+  .ma{width:29px;height:29px;border-radius:7px;border:1px solid var(--border);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+  .ma.done{color:var(--green)}.ma.remind{color:var(--blue)}.ma.dismiss{color:var(--textSoft)}
+
+  .sectitle{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--textXsoft);margin:22px 0 12px;display:flex;align-items:center;gap:7px}
+  .sectitle .see{margin-left:auto;font-size:11px;font-weight:700;color:var(--core);cursor:pointer;text-transform:none;letter-spacing:0}
+
+  /* recents */
+  .recents-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .rcard{border:1px solid var(--border);border-radius:12px;padding:13px 14px;background:var(--surface);cursor:pointer;transition:border-color .15s,transform .15s}
+  .rcard:hover{border-color:var(--core);transform:translateY(-2px)}
+  .rcard .rt{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;margin-bottom:5px}
+  .rcard .rt .av{width:18px;height:18px;border-radius:5px;flex:none}
+  .rcard .rs{font-size:12px;color:var(--textSoft);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .rcard .rtime{font-size:11px;color:var(--textXsoft);margin-top:7px}
+  .rstrip{display:flex;gap:11px;overflow-x:auto;padding-bottom:6px}
+  .rstrip .rcard{min-width:230px}
+
+  /* history rail */
+  .layout{display:flex;height:100%}
+  .rail{width:212px;flex:none;border-right:1px solid var(--border);background:var(--surface);padding:14px;overflow:auto}
+  .newbtn{display:flex;align-items:center;gap:8px;width:100%;justify-content:center;border:1px solid var(--border);background:var(--surface);color:var(--core);font-weight:700;font-size:13px;padding:9px;border-radius:9px;cursor:pointer;margin-bottom:14px}
+  .rgrp{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--textXsoft);margin:12px 4px 6px}
+  .ritem{display:block;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--textMid);line-height:1.35;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .ritem:hover{background:var(--surfaceMid);color:var(--text)}
+  .ritem.on{background:var(--coreSoft);color:var(--core);font-weight:700}
+  .rail-main{flex:1;min-width:0;overflow:auto}
+
+  /* conversation page */
+  .convo{display:flex;flex-direction:column;height:100%}
+  .convo-top{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--border);background:var(--surface)}
+  .back{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--surface);color:var(--textMid);font-weight:700;font-size:12.5px;padding:6px 11px;border-radius:8px;cursor:pointer}
+  .convo-title{font-size:14px;font-weight:700}
+  .convo-sub{font-size:11.5px;color:var(--textXsoft)}
+  .hbtn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--surface);color:var(--textMid);font-weight:700;font-size:12.5px;padding:6px 11px;border-radius:8px;cursor:pointer}
+  .thread{flex:1;overflow:auto;padding:20px 18px;background:var(--appBg)}
+  .cmsg{display:flex;gap:9px;margin-bottom:14px;max-width:88%}
+  .cmsg.u{margin-left:auto;flex-direction:row-reverse}
+  .cmsg .av{width:26px;height:26px;border-radius:8px;flex:none}
+  .cbubble{padding:11px 14px;border-radius:13px;font-size:13px;line-height:1.55}
+  .cmsg.j .cbubble{background:var(--surface);border:1px solid var(--border);border-top-left-radius:3px;color:var(--text)}
+  .cmsg.u .cbubble{background:var(--core);color:#fff;border-top-right-radius:3px}
+  .crow{display:flex;gap:8px;margin:6px 0 0 35px}
+  .csug{border:1px solid var(--border);background:var(--surface);border-radius:99px;font-size:12px;font-weight:600;color:var(--core);padding:6px 12px;cursor:pointer}
+  .cinput{display:flex;align-items:center;gap:9px;padding:12px 16px;border-top:1px solid var(--border);background:var(--surface)}
+  .cinput input{flex:1;border:1px solid var(--borderMid);border-radius:11px;padding:11px 14px;font-family:var(--font);font-size:13.5px;outline:none}
+  .cinput .send{border:none;background:var(--core);color:#fff;font-weight:700;font-size:13px;padding:10px 16px;border-radius:10px;cursor:pointer}
+
+  /* slide-over history (option C) */
+  .slideover{position:absolute;top:0;right:0;bottom:0;width:240px;background:var(--surface);border-left:1px solid var(--border);box-shadow:-16px 0 40px rgba(0,0,0,.08);padding:14px;overflow:auto}
+  .slideover .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .slideover .sh b{font-size:13px}
+</style>
+</head>
+<body>
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="ic-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="ic-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+    <symbol id="ic-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+    <symbol id="ic-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="ic-chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
+    <symbol id="ic-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="ic-send" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+    <symbol id="ic-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  </svg>
+
+  <div class="page-head">
+    <div class="eyebrow">Today + Conversations · merged</div>
+    <h1>Today becomes the hub — and every action opens a conversation</h1>
+    <p>Conversations are merged into Today (no separate tab). Clicking an intent or asking in the Jarvis bar opens a dedicated conversation page (Gemini-style), and your past conversations are always one click away to resume. Each option below shows the <b>Today</b> screen and the <b>Conversation</b> page it opens.</p>
+  </div>
+  <div class="legend">
+    <b>Changes in this round:</b>
+    <span class="chip cut">Persona switch</span> removed ·
+    <span class="chip">Conversations merged into Today</span>
+    <span class="chip">Intent → conversation page</span>
+    <span class="chip">Ask → conversation page</span>
+    <span class="chip">Resume past conversations from Today</span><br>
+    <b>Still preserved:</b>
+    <span class="chip">Ask bar</span><span class="chip">Overnight insight</span><span class="chip">Filters</span><span class="chip">Handled + Undo</span><span class="chip">Per-card Done / Remind / Dismiss</span><span class="chip">Edit Set up</span><span class="chip">Schedule + Add</span><span class="chip">Day-cleared state</span>
+  </div>
+
+  <!-- OPTION A -->
+  <div class="optwrap">
+    <div class="opt-head"><span class="opt-name">Option A · Persistent history rail</span><span class="opt-pill">Most Gemini-like</span></div>
+    <p class="opt-desc">A left rail lists your conversations (New + grouped by time) on every Today screen. The main column holds the brief, ask bar and intents; clicking an intent or asking swaps the main column to the live conversation — the rail stays, so jumping between threads is instant.</p>
+    <div class="flow">
+      <div class="screen"><div class="flabel"><span class="n">1</span> Today (home)</div><div class="frame"><div class="scroll" id="A1"></div></div></div>
+      <div class="screen"><div class="flabel"><span class="n">2</span> Conversation (after click / Ask)</div><div class="frame"><div class="scroll" id="A2"></div></div></div>
+    </div>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="optwrap">
+    <div class="opt-head"><span class="opt-name">Option B · Clean home + "Pick up where you left off"</span><span class="opt-pill">Calm home</span></div>
+    <p class="opt-desc">Today stays a clean, rail-free home: brief, ask bar, intents, and a "Pick up where you left off" section of recent conversation cards. Clicking an intent / asking opens a focused full-page conversation with a Back button and a History dropdown to switch threads.</p>
+    <div class="flow">
+      <div class="screen"><div class="flabel"><span class="n">1</span> Today (home)</div><div class="frame"><div class="scroll" id="B1"></div></div></div>
+      <div class="screen"><div class="flabel"><span class="n">2</span> Conversation (full page)</div><div class="frame"><div class="scroll" id="B2"></div></div></div>
+    </div>
+  </div>
+
+  <!-- OPTION C -->
+  <div class="optwrap">
+    <div class="opt-head"><span class="opt-name">Option C · Recents strip + slide-over history</span><span class="opt-pill">Compact</span></div>
+    <p class="opt-desc">Today shows a horizontal "Recent conversations" strip under the ask bar, keeping the page compact. The conversation page is full-width; a History button slides a panel over from the right to browse and resume any thread.</p>
+    <div class="flow">
+      <div class="screen"><div class="flabel"><span class="n">1</span> Today (home)</div><div class="frame"><div class="scroll" id="C1"></div></div></div>
+      <div class="screen"><div class="flabel"><span class="n">2</span> Conversation + slide-over history</div><div class="frame"><div class="scroll" id="C2"></div></div></div>
+    </div>
+  </div>
+
+<script>
+  const ic = n => '<svg class="ic"><use href="#ic-'+n+'"/></svg>';
+  const C = { core:'var(--core)', green:'var(--green)', amber:'var(--amber)', blue:'var(--blue)', teal:'var(--teal)' };
+  const Cs = { core:'var(--coreSoft)', green:'var(--greenSoft)', amber:'var(--amberSoft)', blue:'var(--blueSoft)', teal:'var(--tealSoft)' };
+  const AV = '/jarvis-icon-transparent.png';
+
+  const GREET = 'Good morning, Alex.', BRIEF = 'I handled 6 things overnight';
+  const INSIGHT = "Your last 3 PTO requests were approved in under 24h. If the current one stalls past tomorrow, I'll flag it.";
+  const ITEMS = [
+    { tag:'Needs decision', col:'amber', big:true, title:'Marc made the 2 PM product review mandatory — it collides with 3 things.', meta:'I worked out a fix that clears 2–3 PM. Open to review.', actions:['Open conversation','Snooze'] },
+    { tag:'Approvals', col:'blue', title:'3 purchase requisitions pending your approval.', meta:'All within policy · $2,840 total.', actions:['Review'] },
+    { tag:'Meeting prep', col:'core', title:'Your QBR prep bundle is ready for the 10 AM.', meta:'Deck, open actions, suggested opener.', actions:['Open'] },
+  ];
+  const RECENTS = [
+    { title:'2 PM review conflict', snippet:'Move 1:1 to 4 PM, step out of sprint sync, reschedule Acme…', time:'9:12 AM' },
+    { title:'QBR prep for the SVP', snippet:'Lead with the 18% incident improvement — her stated priority.', time:'Yesterday' },
+    { title:'Parental leave — Jun–Sep', snippet:'Handoff plan across HR, Calendar, IT and your team.', time:'Yesterday' },
+    { title:'Liam capacity check-in', snippet:'Drafted a wellness note, lined up Sloane as backup.', time:'Tue' },
+  ];
+  const PILLS = [['All',6],['Meetings',2],['Need decision',1],['Follow-ups',3]];
+
+  const handled = `<button class="handled">${ic('undo')} Handled (3)</button>`;
+  const askBar = `<div class="ask"><img src="${AV}"><input placeholder="Ask Jarvis anything…"><button class="send">Ask ${ic('chev')}</button></div>`;
+  const insight = `<div class="insight"><span class="k">${ic('spark')} Overnight</span><span class="bar"></span><p>${INSIGHT}</p></div>`;
+  const pills = `<div class="pills">${PILLS.map((p,i)=>`<span class="pill ${i===0?'on':''}">${p[0]}<b>${p[1]}</b></span>`).join('')}</div>`;
+  const micro = `<div class="micro"><button class="ma done" title="Done">${ic('check')}</button><button class="ma remind" title="Remind">${ic('bell')}</button><button class="ma dismiss" title="Dismiss">${ic('x')}</button></div>`;
+  const card = it => `<div class="card ${it.big?'card-big':''}"><span class="open">${ic('chev')}</span>
+      <span class="ctag" style="color:${C[it.col]};background:${Cs[it.col]}">${it.tag}</span>
+      <h3>${it.title}</h3><p class="meta">${it.meta}</p>
+      <div class="cfoot"><div class="actions">${it.actions.map((a,i)=>`<button class="${i?'b-ghost':'b-primary'}">${a}</button>`).join('')}</div>${micro}</div></div>`;
+  const rcard = r => `<div class="rcard"><div class="rt"><img class="av" src="${AV}">${r.title}</div><div class="rs">${r.snippet}</div><div class="rtime">${ic('clock')} ${r.time}</div></div>`;
+  const editlink = `<p style="font-size:12px;color:var(--textSoft);text-align:center;margin-top:14px">Personalised from your Set up · <a style="color:var(--core);font-weight:600;cursor:pointer">Edit →</a></p>`;
+  const railHTML = active => `<div class="rail"><button class="newbtn">${ic('plus')} New conversation</button>
+    <div class="rgrp">Today</div>${RECENTS.slice(0,2).map((r,i)=>`<div class="ritem ${active&&i===0?'on':''}">${r.title}</div>`).join('')}
+    <div class="rgrp">Earlier</div>${RECENTS.slice(2).map(r=>`<div class="ritem">${r.title}</div>`).join('')}</div>`;
+
+  const THREAD = [
+    {r:'j',t:"Marc made the 2 PM product review mandatory. It collides with 3 things. Here's a fix to clear 2–3 PM: move your 1:1 with Sarah to 4 PM, step out of sprint sync (Priya sends notes), and reschedule the Acme check-in to tomorrow."},
+    {r:'u',t:'Looks good — go ahead.'},
+    {r:'j',t:"Done. Sent 4 Teams messages and 3 emails, cleared your 2 PM, and added a note to the Salesforce case. I'll confirm as replies land."},
+  ];
+  const threadHTML = THREAD.map(m=>`<div class="cmsg ${m.r}">${m.r==='j'?`<img class="av" src="${AV}">`:''}<div class="cbubble">${m.t}</div></div>`).join('')
+    + `<div class="crow"><button class="csug">Undo all</button><button class="csug">What changed?</button><button class="csug">Notify the team</button></div>`;
+  const cinput = `<div class="cinput"><input placeholder="Reply to Jarvis…"><button class="send">${ic('send')}</button></div>`;
+
+  /* ---- OPTION A ---- */
+  document.getElementById('A1').innerHTML = `<div class="layout">${railHTML(false)}
+    <div class="rail-main"><div class="pad" style="position:relative"><div class="glow"></div>
+      <div class="topbar"><div class="greet" style="margin:0">${GREET} <span class="grad">${BRIEF}.</span></div>${handled}</div>
+      ${askBar}${pills}${insight}
+      ${ITEMS.map(card).join('')}${editlink}
+    </div></div></div>`;
+  document.getElementById('A2').innerHTML = `<div class="layout">${railHTML(true)}
+    <div class="rail-main"><div class="convo">
+      <div class="convo-top"><div><div class="convo-title">2 PM review conflict</div><div class="convo-sub">Needs decision · started 9:12 AM</div></div></div>
+      <div class="thread">${threadHTML}</div>${cinput}
+    </div></div></div>`;
+
+  /* ---- OPTION B ---- */
+  document.getElementById('B1').innerHTML = `<div class="pad" style="position:relative;max-width:680px;margin:0 auto"><div class="glow"></div>
+    <div class="topbar"><div></div>${handled}</div>
+    <div class="greet center">${GREET}<br><span class="grad">${BRIEF}.</span></div>
+    ${askBar}${pills}${insight}
+    ${ITEMS.map(card).join('')}
+    <div class="sectitle">${ic('msg')} Pick up where you left off <span class="see">View all →</span></div>
+    <div class="recents-grid">${RECENTS.map(rcard).join('')}</div>
+    ${editlink}</div>`;
+  document.getElementById('B2').innerHTML = `<div class="convo">
+    <div class="convo-top"><button class="back">${ic('back')} Today</button><div><div class="convo-title">2 PM review conflict</div><div class="convo-sub">Needs decision · started 9:12 AM</div></div><button class="hbtn">${ic('clock')} History ${ic('chev')}</button></div>
+    <div class="thread">${threadHTML}</div>${cinput}</div>`;
+
+  /* ---- OPTION C ---- */
+  document.getElementById('C1').innerHTML = `<div class="pad" style="position:relative"><div class="glow"></div>
+    <div class="topbar"><div class="greet" style="margin:0">${GREET} <span class="grad">${BRIEF}.</span></div>${handled}</div>
+    ${askBar}
+    <div class="sectitle">${ic('msg')} Recent conversations <span class="see">View all →</span></div>
+    <div class="rstrip">${RECENTS.map(rcard).join('')}</div>
+    ${pills}${insight}
+    ${ITEMS.map(card).join('')}${editlink}</div>`;
+  document.getElementById('C2').innerHTML = `<div class="convo">
+    <div class="convo-top"><button class="back">${ic('back')} Today</button><div><div class="convo-title">2 PM review conflict</div><div class="convo-sub">Needs decision · started 9:12 AM</div></div><button class="hbtn">${ic('clock')} History</button></div>
+    <div class="thread" style="margin-right:240px">${threadHTML}</div>
+    <div class="slideover"><div class="sh"><b>History</b><button class="ma dismiss">${ic('x')}</button></div>
+      <button class="newbtn">${ic('plus')} New</button>
+      ${RECENTS.map((r,i)=>`<div class="ritem ${i===0?'on':''}" style="white-space:normal;margin-bottom:2px"><b style="display:block;font-size:12.5px">${r.title}</b><span style="font-size:11px;color:var(--textXsoft)">${r.time}</span></div>`).join('')}
+    </div>
+    ${cinput}</div>`;
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jarvis · "Always working" presence — options</title>
+<style>
+  :root{
+    --appBg:#F5F5F5; --surface:#FFFFFF;
+    --core:#5C2E91; --coreMid:#7C4EAE; --coreBright:#9B6EC8;
+    --coreSoft:rgba(92,46,145,0.07); --coreGlow:rgba(92,46,145,0.16);
+    --text:#242424; --textMid:#424242; --textSoft:#616161; --textXsoft:#707070;
+    --border:#E6E6E6; --borderMid:#D7D7D7; --surfaceMid:#FAFAFA;
+    --green:#2E844A; --greenSoft:rgba(46,132,74,.10);
+    --amber:#9A6A00; --amberSoft:rgba(154,106,0,.10);
+    --blue:#0B5CAB;  --blueSoft:rgba(11,92,171,.10);
+    --red:#B42318;   --redSoft:rgba(180,35,24,.10);
+    --font:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--appBg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;padding:36px 20px 120px}
+  .grad{background:linear-gradient(135deg,var(--core),var(--coreBright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px}
+
+  .page-head{max-width:1140px;margin:0 auto 6px;text-align:center}
+  .eyebrow{font-size:13px;font-weight:700;color:var(--core);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px}
+  .page-head h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+  .page-head p{font-size:15px;color:var(--textMid);line-height:1.6;max-width:720px;margin:0 auto}
+
+  .grid{max-width:1140px;margin:40px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media (max-width:920px){.grid{grid-template-columns:1fr}}
+  .card{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card.full{grid-column:1 / -1}
+  .chead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:16px 18px 0;flex-wrap:wrap}
+  .cname{font-size:16px;font-weight:800}
+  .ctag{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--core);background:var(--coreSoft);padding:3px 9px;border-radius:99px}
+  .cdesc{font-size:13px;color:var(--textSoft);line-height:1.5;padding:6px 18px 14px}
+  .stage{position:relative;border-top:1px solid var(--border);background:var(--appBg);min-height:200px;padding:20px;overflow:hidden}
+
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+  @keyframes ripple{0%{transform:scale(.7);opacity:.6}100%{transform:scale(2.6);opacity:0}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes tin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.6s ease-in-out infinite}
+
+  /* mini chrome */
+  .topbar{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:9px 12px}
+  .orb{position:relative;width:30px;height:30px;flex:none}
+  .orb .core{position:absolute;inset:4px;border-radius:50%;background:linear-gradient(135deg,var(--core),var(--coreBright));box-shadow:0 0 0 3px var(--coreSoft)}
+  .orb .ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--core);animation:ripple 2.2s ease-out infinite}
+
+  /* A — status chip */
+  .chip{display:inline-flex;align-items:center;gap:9px;background:var(--surfaceMid);border:1px solid var(--border);border-radius:99px;padding:7px 13px;font-size:13px;color:var(--textMid)}
+  .chip b{color:var(--text);font-weight:700}
+  .chip .sys{color:var(--core);font-weight:700;min-width:128px;display:inline-block}
+  .chip .sys .w{display:inline-block;animation:tin .35s var(--ease)}
+  .connected{margin-left:auto;font-size:12px;color:var(--textXsoft);font-weight:600;display:inline-flex;align-items:center;gap:6px}
+
+  /* B — ambient ticker */
+  .ticker{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+  .ticker .k{flex:none;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--core);display:inline-flex;align-items:center;gap:6px}
+  .ticker .bar{width:1px;height:14px;background:var(--border)}
+  .ticker .line{flex:1;min-width:0;font-size:13px;color:var(--textMid);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .ticker .line .row{display:inline-block;animation:tin .4s var(--ease)}
+  .ticker .line .t{color:var(--textXsoft);font-weight:600;margin-right:8px}
+  .feedmini{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .fitem{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--textSoft);opacity:.8}
+  .fitem .fdot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+  /* C — live toast */
+  .appwin{position:relative;height:230px;border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden}
+  .appwin .blur{position:absolute;inset:0;padding:18px;color:var(--textXsoft);font-size:13px}
+  .appwin .card2{height:54px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--surfaceMid)}
+  .appwin .card2.newp{border-color:var(--core);box-shadow:0 0 0 3px var(--coreSoft);position:relative}
+  .appwin .card2.newp::before{content:"NEW";position:absolute;top:8px;left:10px;font-size:9px;font-weight:800;color:#fff;background:var(--core);padding:2px 7px;border-radius:99px}
+  .toast{position:absolute;left:14px;right:14px;bottom:14px;display:flex;align-items:flex-start;gap:11px;background:#2a2440;color:#fff;border-radius:12px;padding:12px 13px;box-shadow:0 14px 40px rgba(0,0,0,.3);animation:slideUp .4s var(--ease)}
+  .toast .av{width:30px;height:30px;border-radius:9px;flex:none;background:linear-gradient(135deg,var(--core),var(--coreBright));display:flex;align-items:center;justify-content:center;color:#fff}
+  .toast .ttl{font-size:13px;font-weight:700}
+  .toast .sub{font-size:12px;color:rgba(255,255,255,.72);margin-top:2px;line-height:1.4}
+  .toast .acts{display:flex;gap:7px;margin-top:9px}
+  .toast .b1{border:none;background:var(--coreBright);color:#1a1430;font-weight:700;font-size:12px;padding:6px 12px;border-radius:7px;cursor:pointer}
+  .toast .b2{border:1px solid rgba(255,255,255,.18);background:transparent;color:#fff;font-weight:700;font-size:12px;padding:6px 12px;border-radius:7px;cursor:pointer}
+  .simbtn{position:absolute;top:12px;right:12px;border:1px solid var(--border);background:var(--surface);color:var(--core);font-weight:700;font-size:11px;padding:5px 10px;border-radius:7px;cursor:pointer;z-index:5}
+
+  /* D — presence orb widget */
+  .widget{display:inline-flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px 12px 12px;box-shadow:0 14px 40px rgba(92,46,145,.1)}
+  .bigorb{position:relative;width:46px;height:46px;flex:none}
+  .bigorb .core{position:absolute;inset:7px;border-radius:50%;background:linear-gradient(135deg,var(--core),var(--coreBright))}
+  .bigorb .r1,.bigorb .r2{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--core)}
+  .bigorb .r1{animation:ripple 2.4s ease-out infinite}
+  .bigorb .r2{animation:ripple 2.4s ease-out infinite 1.2s}
+  .widget .wlab{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green);display:flex;align-items:center;gap:6px}
+  .widget .wact{font-size:13px;font-weight:700;color:var(--text);margin-top:3px}
+  .widget .wsub{font-size:11.5px;color:var(--textXsoft);margin-top:2px}
+
+  /* E — nav badges */
+  .railmini{width:200px;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:10px;overflow:hidden}
+  .rrow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--text)}
+  .rrow.on{background:var(--coreSoft);color:var(--core);font-weight:700}
+  .rrow .badge{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--core);color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+  .rrow .badge.pulse{position:relative}
+  .rrow .badge.pulse::after{content:"";position:absolute;inset:-3px;border-radius:99px;border:1.5px solid var(--core);animation:ripple 2s ease-out infinite}
+  .banner{margin-top:14px;display:flex;align-items:center;gap:10px;background:var(--coreSoft);border:1px solid rgba(92,46,145,.18);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text)}
+  .banner .lnk{margin-left:auto;color:var(--core);font-weight:700;cursor:pointer;font-size:12.5px}
+
+  .pickhint{display:block;text-align:center;font-size:12.5px;color:var(--textXsoft);margin-top:14px}
+  .pickhint b{color:var(--text)}
+</style>
+</head>
+<body>
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="ic-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+    <symbol id="ic-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+    <symbol id="ic-radar" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 12l6-4"/></symbol>
+    <symbol id="ic-bolt" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="ic-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+    <symbol id="ic-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/></symbol>
+    <symbol id="ic-hist" viewBox="0 0 24 24"><path d="M3 3v6h6"/><path d="M3.5 9a9 9 0 1 0 2.1-3.4L3 9"/><path d="M12 7v5l4 2"/></symbol>
+  </svg>
+
+  <div class="page-head">
+    <div class="eyebrow">Background presence</div>
+    <h1>Show that Jarvis is always working</h1>
+    <p>Five patterns for signalling that Jarvis is continuously watching your systems and surfacing what's new. They're playing live below — pick one, or combine a calm "always-on" indicator with a "something new" alert.</p>
+  </div>
+
+  <div class="grid">
+    <!-- A -->
+    <div class="card">
+      <div class="chead"><span class="cname">A · Live status chip</span><span class="ctag">Calm · persistent</span></div>
+      <p class="cdesc">A always-present chip in the header: a pulsing dot + "Watching" with the system it's checking right now cycling through. Quiet proof that Jarvis is on, without interrupting.</p>
+      <div class="stage">
+        <div class="topbar">
+          <div class="orb"><div class="ring"></div><div class="core"></div></div>
+          <div class="chip"><span class="dot"></span><b>Jarvis is watching</b> · <span class="sys" id="aSys"></span></div>
+          <span class="connected" id="aConn">6 systems connected</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- B -->
+    <div class="card">
+      <div class="chead"><span class="cname">B · Ambient activity ticker</span><span class="ctag">Live feed</span></div>
+      <p class="cdesc">A slim strip that streams what Jarvis just checked — most of it "nothing new", occasionally a real find. Reinforces constant, low-noise monitoring.</p>
+      <div class="stage">
+        <div class="ticker">
+          <span class="k"><svg class="ic"><use href="#ic-radar"/></svg> Live</span>
+          <span class="bar"></span>
+          <span class="line" id="bLine"></span>
+        </div>
+        <div class="feedmini">
+          <div class="fitem"><span class="fdot"></span> Scanned Outlook · 9:41 — nothing urgent</div>
+          <div class="fitem"><span class="fdot" style="background:var(--core)"></span> New email from Priya — flagged · 9:38</div>
+          <div class="fitem"><span class="fdot"></span> Synced Calendar · 9:35</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C -->
+    <div class="card full">
+      <div class="chead"><span class="cname">C · Live "something new" toast + NEW badge</span><span class="ctag">Real-time alert</span></div>
+      <p class="cdesc">When Jarvis catches something new (an email, a meeting invite), a toast slides in with quick actions, and the relevant item gets a NEW badge. This is the "interrupt only when it matters" moment. (Auto-fires; or hit "Simulate new event".)</p>
+      <div class="stage">
+        <div class="appwin">
+          <button class="simbtn" id="cSim">⚡ Simulate new event</button>
+          <div class="blur">
+            <div class="card2 newp" id="cNew" style="display:none"></div>
+            <div class="card2"></div>
+            <div class="card2"></div>
+          </div>
+          <div id="cToastHost"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D -->
+    <div class="card">
+      <div class="chead"><span class="cname">D · Presence orb widget</span><span class="ctag">Ambient · corner</span></div>
+      <p class="cdesc">A small always-on widget (e.g. bottom-right) with breathing scan rings, the last thing Jarvis did, and a live counter. Feels like a teammate quietly at work.</p>
+      <div class="stage" style="display:flex;align-items:center;justify-content:center">
+        <div class="widget">
+          <div class="bigorb"><div class="r1"></div><div class="r2"></div><div class="core"></div></div>
+          <div>
+            <div class="wlab"><span class="dot"></span> Working</div>
+            <div class="wact" id="dAct">Prepped your 10 AM QBR</div>
+            <div class="wsub" id="dSub">Watching 6 systems · 14 actions today</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- E -->
+    <div class="card">
+      <div class="chead"><span class="cname">E · New-update badges</span><span class="ctag">Counts</span></div>
+      <p class="cdesc">Numeric badges on the rail (Recents / Feed) and a "new since" banner. Best paired with a calm indicator — the badge tells you how much is waiting without a pop-up.</p>
+      <div class="stage">
+        <div class="railmini">
+          <div class="rrow on"><svg class="ic"><use href="#ic-home"/></svg> Today <span class="badge pulse">2</span></div>
+          <div class="rrow"><svg class="ic"><use href="#ic-hist"/></svg> Feed <span class="badge">5</span></div>
+          <div class="rrow"><svg class="ic"><use href="#ic-bolt"/></svg> Skills</div>
+        </div>
+        <div class="banner"><svg class="ic" style="color:var(--core)"><use href="#ic-spark"/></svg> <b style="font-weight:700">2 new updates</b> since 9:00 AM <span class="lnk">Review →</span></div>
+      </div>
+    </div>
+  </div>
+
+  <span class="pickhint">Tell me which to build — e.g. <b>"A + C"</b> (calm chip + new-event toast) is my recommendation.</span>
+
+<script>
+  const SYS = ['Outlook','Workday','Jira','Teams','Calendar','Slack','Salesforce'];
+  // A — cycle the system being scanned
+  let ai = 0;
+  const aSys = document.getElementById('aSys');
+  function tickA(){ aSys.innerHTML = `<span class="w">checking ${SYS[ai % SYS.length]}…</span>`; ai++; }
+  tickA(); setInterval(tickA, 1800);
+
+  // B — ambient ticker
+  const B = [
+    ['9:42','Checked Jira — no new blockers'],
+    ['9:43','Scanned Outlook — 1 flagged from Priya'],
+    ['9:44','Workday: PTO request still pending with Sarah'],
+    ['9:45','Calendar synced — QBR in 15 min'],
+    ['9:46','Teams: quiet, nothing needs you'],
+    ['9:47','Salesforce: case updated by Raj'],
+  ];
+  let bi = 0;
+  const bLine = document.getElementById('bLine');
+  function tickB(){ const [t,m] = B[bi % B.length]; bLine.innerHTML = `<span class="row"><span class="t">${t}</span>${m}</span>`; bi++; }
+  tickB(); setInterval(tickB, 2400);
+
+  // C — toast on new event
+  const EVENTS = [
+    { ic:'ic-mail', ttl:'New email — Priya Sharma', sub:'“Re: QBR deck” flagged as time-sensitive. Want me to summarise and draft a reply?' },
+    { ic:'ic-cal',  ttl:'New meeting invite — Marc (SVP)', sub:'Product review at 2 PM. It collides with 3 things — I worked out a fix.' },
+    { ic:'ic-bolt', ttl:'Workday update', sub:'Your PTO request was just approved by Sarah.' },
+  ];
+  let ci = 0; const host = document.getElementById('cToastHost'); const cNew = document.getElementById('cNew');
+  function fireC(){
+    const e = EVENTS[ci % EVENTS.length]; ci++;
+    cNew.style.display = 'block';
+    host.innerHTML = `<div class="toast">
+      <div class="av"><svg class="ic"><use href="#${e.ic}"/></svg></div>
+      <div style="flex:1;min-width:0"><div class="ttl">${e.ttl}</div><div class="sub">${e.sub}</div>
+        <div class="acts"><button class="b1">Open</button><button class="b2">Later</button></div></div>
+    </div>`;
+    clearTimeout(fireC._t); fireC._t = setTimeout(() => { host.innerHTML=''; cNew.style.display='none'; }, 4200);
+  }
+  document.getElementById('cSim').addEventListener('click', fireC);
+  setTimeout(fireC, 900); setInterval(fireC, 7000);
+
+  // D — rotate last action
+  const ACTS = [
+    ['Prepped your 10 AM QBR','Watching 6 systems · 14 actions today'],
+    ['Flagged an email from Priya','Watching 6 systems · 15 actions today'],
+    ['Nudged Sarah on your PTO','Watching 6 systems · 16 actions today'],
+  ];
+  let di = 0; const dAct = document.getElementById('dAct'), dSub = document.getElementById('dSub');
+  setInterval(() => { di++; const [a,s] = ACTS[di % ACTS.length]; dAct.textContent = a; dSub.textContent = s; }, 3000);
+</script>
+</body>
+</html>

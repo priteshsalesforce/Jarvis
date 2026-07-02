@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jarvis · Intent Conversation — Redesign Options</title>
+<style>
+  :root{
+    --appBg:#F5F5F5; --surface:#FFFFFF; --surfaceMid:#F2F1F4;
+    --core:#5C2E91; --coreMid:#7C4EAE; --coreBright:#9B6EC8;
+    --coreSoft:rgba(92,46,145,0.07); --coreGlow:rgba(92,46,145,0.16);
+    --text:#242424; --textMid:#424242; --textSoft:#616161; --textXsoft:#707070;
+    --border:#E6E6E6; --borderMid:#D7D7D7; --green:#2E844A; --greenSoft:rgba(46,132,74,.10);
+    --font:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--appBg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;padding:36px 20px 100px}
+  .grad{background:linear-gradient(135deg,var(--core),var(--coreBright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  b{font-weight:700}
+
+  .page-head{max-width:1180px;margin:0 auto 6px;text-align:center}
+  .eyebrow{font-size:13px;font-weight:700;color:var(--core);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px}
+  .page-head h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+  .page-head p{font-size:15px;color:var(--textMid);line-height:1.6;max-width:680px;margin:0 auto}
+  .toolbar{display:flex;justify-content:center;gap:10px;margin:22px auto 30px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font)}
+  .btn.primary{background:var(--core);color:#fff;border-color:var(--core)}
+
+  .lab{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
+  @media (max-width:1080px){.lab{grid-template-columns:1fr;max-width:520px}}
+
+  .col-head{margin-bottom:12px}
+  .col-name{font-size:16px;font-weight:800}
+  .col-pill{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--core);background:var(--coreSoft);padding:3px 9px;border-radius:99px;margin-left:8px}
+  .col-desc{font-size:12.5px;color:var(--textSoft);line-height:1.5;margin-top:6px}
+
+  /* device frame */
+  .panel{position:relative;height:620px;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--surface);box-shadow:0 8px 30px rgba(0,0,0,.06)}
+  .ttl{flex:none;display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface);z-index:3}
+  .ttl .av{width:26px;height:26px;border-radius:8px;flex:none}
+  .ttl h3{font-size:14px;font-weight:700;line-height:1.2}
+  .ttl .sub{font-size:11.5px;color:var(--textSoft)}
+  .ttl .sp{flex:1}
+  .ico-btn{width:28px;height:28px;border-radius:7px;border:none;background:none;color:var(--textSoft);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .ico-btn:hover{background:var(--coreSoft);color:var(--core)}
+
+  .log{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:16px}
+  .log::-webkit-scrollbar{width:5px}.log::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12);border-radius:3px}
+
+  /* reveal */
+  .msg{opacity:0;transform:translateY(12px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+  .playing .msg{opacity:1;transform:none}
+  .playing .msg.d1{transition-delay:.12s}.playing .msg.d2{transition-delay:.30s}
+  .playing .msg.d3{transition-delay:.5s}.playing .msg.d4{transition-delay:.7s}.playing .msg.d5{transition-delay:.9s}
+
+  .row-u{display:flex;justify-content:flex-end}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .draft{margin-top:10px;border-radius:14px;border:1px solid var(--border);background:var(--surface);overflow:hidden}
+  .draft .dh{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--textSoft)}
+  .draft .db{padding:12px 14px;font-size:13.5px;line-height:1.55;color:var(--text)}
+  .draft .da{display:flex;gap:8px;padding:0 14px 13px}
+  .btn-sm{font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--font);display:inline-flex;align-items:center;gap:6px}
+  .btn-sm.pri{background:var(--core);color:#fff;border-color:var(--core)}
+  .done{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--green);background:var(--greenSoft);border:1px solid rgba(46,132,74,.2);border-radius:12px;padding:11px 14px}
+  .done .u{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--core);background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+
+  /* suggestion + input dock */
+  .dock{flex:none;padding:10px 14px 14px;background:var(--surface);border-top:1px solid var(--border)}
+  .sugg{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+  .sugg::-webkit-scrollbar{display:none}
+  .sugg .s{flex:none;font-size:12.5px;font-weight:600;color:var(--textMid);background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:7px 13px;cursor:pointer;white-space:nowrap}
+  .sugg .s:hover{border-color:var(--core);color:var(--core)}
+
+  /* ============== OPTION A — GEMINI CLEAN ============== */
+  .A .log{max-width:none}
+  .A .j-av{width:24px;height:24px;border-radius:7px;flex:none;margin-top:1px}
+  .A .j{display:flex;gap:10px;align-items:flex-start}
+  .A .j .body{flex:1;font-size:14px;line-height:1.6;color:var(--text)}
+  .A .bub-u{max-width:80%;background:var(--surfaceMid);color:var(--text);border-radius:18px;border-bottom-right-radius:5px;padding:10px 15px;font-size:13.5px;line-height:1.5}
+  .A .chip{font-size:13px;font-weight:600;color:var(--core);background:var(--surface);border:1px solid var(--borderMid);border-radius:99px;padding:8px 14px;cursor:pointer}
+  .A .chip:hover{background:var(--coreSoft);border-color:var(--core)}
+  .A .inbar{display:flex;align-items:center;gap:10px;border:1px solid var(--borderMid);border-radius:26px;padding:7px 8px 7px 16px;background:var(--surface);box-shadow:0 2px 10px rgba(0,0,0,.04)}
+  .A .inbar input{flex:1;border:none;outline:none;font-family:var(--font);font-size:14px;color:var(--text);background:none}
+  .A .send{width:38px;height:38px;border-radius:50%;flex:none;border:none;cursor:pointer;background:linear-gradient(135deg,var(--core),var(--coreBright));color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px}
+  .A .plus{width:30px;height:30px;border-radius:50%;border:none;background:none;color:var(--textSoft);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+
+  /* ============== OPTION B — SOFT CARDS ============== */
+  .B .j-card{border:1px solid var(--border);background:var(--surface);border-radius:16px;box-shadow:0 8px 24px rgba(92,46,145,.05);overflow:hidden}
+  .B .j-head{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--border)}
+  .B .j-head .av{width:22px;height:22px;border-radius:6px}
+  .B .j-head b{font-size:12.5px}
+  .B .j-body{padding:13px 15px;font-size:14px;line-height:1.6;color:var(--text)}
+  .B .bub-u{max-width:80%;background:var(--coreSoft);border:1px solid rgba(92,46,145,.12);color:var(--text);border-radius:16px;border-bottom-right-radius:5px;padding:10px 15px;font-size:13.5px;line-height:1.5}
+  .B .chip{font-size:12.5px;font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--borderMid);border-radius:8px;padding:8px 13px;cursor:pointer}
+  .B .chip:hover{border-color:var(--core);color:var(--core)}
+  .B .inbar{display:flex;align-items:center;gap:10px;border:1px solid var(--borderMid);border-radius:14px;padding:8px 8px 8px 15px;background:var(--surface);box-shadow:0 4px 14px rgba(0,0,0,.05)}
+  .B .inbar input{flex:1;border:none;outline:none;font-family:var(--font);font-size:14px;background:none;color:var(--text)}
+  .B .send{padding:9px 16px;border-radius:9px;border:none;cursor:pointer;background:var(--core);color:#fff;font-weight:700;font-size:13px;font-family:var(--font);display:inline-flex;align-items:center;gap:6px}
+
+  /* ============== OPTION C — GEMINI IMMERSIVE ============== */
+  .C .panel-bg{position:absolute;inset:0;pointer-events:none;background:
+    radial-gradient(50% 30% at 15% 0%,rgba(155,110,200,.16),transparent 60%),
+    radial-gradient(45% 30% at 100% 8%,rgba(92,46,145,.12),transparent 60%)}
+  .C .ttl{background:transparent;border-bottom:none}
+  .C .log,.C .dock{background:transparent}
+  .C .greet{margin-bottom:4px}
+  .C .greet h2{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+  .C .greet p{font-size:13px;color:var(--textSoft);margin-top:4px}
+  .C .j{display:flex;gap:10px;align-items:flex-start}
+  .C .j-av{width:26px;height:26px;border-radius:50%;flex:none;background:linear-gradient(135deg,var(--core),var(--coreBright));display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;box-shadow:0 4px 12px var(--coreGlow)}
+  .C .j .body{flex:1;font-size:14px;line-height:1.62;color:var(--text);background:rgba(255,255,255,.7);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.8);border-radius:16px;border-top-left-radius:4px;padding:13px 15px;box-shadow:0 8px 26px rgba(92,46,145,.08)}
+  .C .bub-u{max-width:80%;background:linear-gradient(135deg,var(--core),var(--coreMid));color:#fff;border-radius:18px;border-bottom-right-radius:5px;padding:10px 15px;font-size:13.5px;line-height:1.5;box-shadow:0 8px 22px var(--coreGlow)}
+  .C .chip{font-size:13px;font-weight:600;color:var(--core);background:rgba(255,255,255,.8);border:1px solid transparent;background-clip:padding-box;border-radius:99px;padding:8px 14px;cursor:pointer;position:relative;box-shadow:0 0 0 1px rgba(92,46,145,.25)}
+  .C .chip:hover{box-shadow:0 0 0 1.5px var(--core)}
+  .C .inwrap{padding:2px;border-radius:28px;background:linear-gradient(135deg,var(--core),var(--coreBright));box-shadow:0 10px 30px var(--coreGlow)}
+  .C .inbar{display:flex;align-items:center;gap:10px;border-radius:26px;padding:8px 8px 8px 16px;background:var(--surface)}
+  .C .inbar input{flex:1;border:none;outline:none;font-family:var(--font);font-size:14px;background:none;color:var(--text)}
+  .C .send{width:38px;height:38px;border-radius:50%;flex:none;border:none;cursor:pointer;background:linear-gradient(135deg,var(--core),var(--coreBright));color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px}
+  .C .draft,.C .done{background:rgba(255,255,255,.75);backdrop-filter:blur(6px)}
+
+  .pick{display:block;text-align:center;font-size:12.5px;color:var(--textXsoft);margin-top:12px}
+  .pick b{color:var(--text)}
+  .replay{margin-top:10px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--textMid);background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 12px;cursor:pointer}
+  .replay:hover{border-color:var(--core);color:var(--core)}
+</style>
+</head>
+<body>
+  <svg style="display:none"><symbol id="ic-sparkle" viewBox="0 0 24 24"><path d="M12 2c.6 4.5 2.9 6.8 7.4 7.4-4.5.6-6.8 2.9-7.4 7.4-.6-4.5-2.9-6.8-7.4-7.4C9.1 8.8 11.4 6.5 12 2z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="ic-send" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="ic-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="ic-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="ic-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+  <symbol id="ic-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="ic-max" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></symbol></svg>
+
+  <div class="page-head">
+    <div class="eyebrow">Intent conversation · redesign</div>
+    <h1>Reimagining the chat, inspired by Gemini</h1>
+    <p>The same intent conversation (a PTO nudge) shown three ways — all using the pre-sign-in homepage's purple, glow and soft-rounded language, with Gemini-style suggestion chips and input. Pick one (or a mix) for the live app.</p>
+  </div>
+  <div class="toolbar"><button class="btn primary" id="all">↻ Replay all</button><a class="btn" href="/" target="_blank" rel="noopener">Open live app ↗</a></div>
+
+  <div class="lab">
+    <div>
+      <div class="col-head"><span class="col-name">Option A · Gemini Clean</span><span class="col-pill">Recommended</span>
+        <div class="col-desc">Bubble-free Jarvis responses with a sparkle avatar, soft grey user bubbles, outlined suggestion chips, and a rounded Gemini-style input capsule with a gradient send.</div></div>
+      <div class="panel A" id="pA"></div>
+      <span class="pick">say "<b>Option A</b>" to choose</span>
+    </div>
+    <div>
+      <div class="col-head"><span class="col-name">Option B · Soft Cards</span><span class="col-pill">Enterprise</span>
+        <div class="col-desc">Jarvis replies sit in soft homepage-style cards with a labelled header; structured, calm and very on-brand with the rest of the app.</div></div>
+      <div class="panel B" id="pB"></div>
+      <span class="pick">say "<b>Option B</b>" to choose</span>
+    </div>
+    <div>
+      <div class="col-head"><span class="col-name">Option C · Gemini Immersive</span><span class="col-pill">Expressive</span>
+        <div class="col-desc">A gradient greeting, an aurora wash, glassy messages, gradient user bubbles and a gradient-bordered floating input. The boldest, most "AI" feel.</div></div>
+      <div class="panel C" id="pC"></div>
+      <span class="pick">say "<b>Option C</b>" to choose</span>
+    </div>
+  </div>
+
+<script>
+  const ic = n => '<svg class="ic"><use href="#ic-'+n+'"/></svg>';
+  const AV = '/jarvis-icon-transparent.png';
+  const MSGS = [
+    { role:'j', html:'Your <b>PTO request for May 14–16</b> has been pending with Sarah for 3 days. Manager SLA is 2 business days, and there are no calendar conflicts that week — I can send a friendly nudge.',
+      chips:['Send a light nudge to Sarah','Wait until tomorrow','Show the request'] },
+    { role:'u', text:'Send a light nudge to Sarah' },
+    { role:'j', html:'Here\u2019s a draft — light touch:',
+      draft:{ to:'Sarah Chen', text:'Hi Sarah — quick nudge on my PTO request for May 14–16 whenever you get a moment. No rush, thanks!' } },
+    { role:'u', text:'Looks good — send it.' },
+    { role:'done', text:'Sent to Sarah. I\u2019ll let you know when she responds.' },
+  ];
+  const SUGG = ['What\u2019s my PTO balance?','Who else is out that week?','Draft an OOO note'];
+
+  const title = (variant) => {
+    if (variant==='C') return '';
+    const av = `<img class="av" src="${AV}" alt=""/>`;
+    return `<div class="ttl">${av}<div><h3>PTO request — nudge Sarah</h3><div class="sub">Jarvis</div></div><div class="sp"></div>
+      <button class="ico-btn">${ic('max')}</button><button class="ico-btn">${ic('x')}</button></div>`;
+  };
+  const sugg = () => `<div class="sugg">${SUGG.map(s=>`<button class="s">${s}</button>`).join('')}</div>`;
+  const draftCard = (d) => `<div class="draft"><div class="dh">${ic('chat')} Draft message · to ${d.to}</div>
+    <div class="db">${d.text}</div><div class="da"><button class="btn-sm pri">${ic('check')} Approve &amp; send</button><button class="btn-sm">${ic('pencil')} Edit</button></div></div>`;
+  const doneRow = (t) => `<div class="done">${ic('check')} ${t}<button class="u">${ic('undo')} Undo</button></div>`;
+
+  /* ---- Option A : Gemini Clean ---- */
+  function renderA(){
+    const body = MSGS.map((m,i)=>{
+      const d='d'+(i+1);
+      if(m.role==='u') return `<div class="msg ${d} row-u"><div class="bub-u">${m.text}</div></div>`;
+      if(m.role==='done') return `<div class="msg ${d}">${doneRow(m.text)}</div>`;
+      const chips = m.chips?`<div class="chips">${m.chips.map(c=>`<button class="chip">${c}</button>`).join('')}</div>`:'';
+      const draft = m.draft?draftCard(m.draft):'';
+      return `<div class="msg ${d} j"><img class="j-av" src="${AV}" alt=""/><div class="body">${m.html}${chips}${draft}</div></div>`;
+    }).join('');
+    return title('A')+`<div class="log">${body}</div>
+      <div class="dock">${sugg()}<div class="inbar"><button class="plus">${ic('plus')}</button>
+        <input placeholder="Ask Jarvis or reply…"/><button class="send">${ic('send')}</button></div></div>`;
+  }
+  /* ---- Option B : Soft Cards ---- */
+  function renderB(){
+    const body = MSGS.map((m,i)=>{
+      const d='d'+(i+1);
+      if(m.role==='u') return `<div class="msg ${d} row-u"><div class="bub-u">${m.text}</div></div>`;
+      if(m.role==='done') return `<div class="msg ${d}">${doneRow(m.text)}</div>`;
+      const chips = m.chips?`<div class="chips">${m.chips.map(c=>`<button class="chip">${c}</button>`).join('')}</div>`:'';
+      const draft = m.draft?draftCard(m.draft):'';
+      return `<div class="msg ${d}"><div class="j-card"><div class="j-head"><img class="av" src="${AV}" alt=""/><b>Jarvis</b></div>
+        <div class="j-body">${m.html}${chips}${draft}</div></div></div>`;
+    }).join('');
+    return title('B')+`<div class="log">${body}</div>
+      <div class="dock">${sugg()}<div class="inbar"><input placeholder="Reply to Jarvis…"/><button class="send">${ic('send')} Send</button></div></div>`;
+  }
+  /* ---- Option C : Gemini Immersive ---- */
+  function renderC(){
+    const body = MSGS.map((m,i)=>{
+      const d='d'+(i+1);
+      if(m.role==='u') return `<div class="msg ${d} row-u"><div class="bub-u">${m.text}</div></div>`;
+      if(m.role==='done') return `<div class="msg ${d}">${doneRow(m.text)}</div>`;
+      const chips = m.chips?`<div class="chips">${m.chips.map(c=>`<button class="chip">${c}</button>`).join('')}</div>`:'';
+      const draft = m.draft?draftCard(m.draft):'';
+      return `<div class="msg ${d} j"><div class="j-av">${ic('sparkle')}</div><div class="body">${m.html}${chips}${draft}</div></div>`;
+    }).join('');
+    const greet = `<div class="msg d1 greet"><h2>Hi Alex — <span class="grad">let\u2019s sort your PTO.</span></h2><p>Here\u2019s what I noticed and what I can do.</p></div>`;
+    return `<div class="panel-bg"></div>
+      <div class="ttl"><div class="sp"></div><button class="ico-btn">${ic('max')}</button><button class="ico-btn">${ic('x')}</button></div>
+      <div class="log">${greet}${body}</div>
+      <div class="dock">${sugg()}<div class="inwrap"><div class="inbar"><input placeholder="Ask Jarvis anything…"/><button class="send">${ic('send')}</button></div></div></div>`;
+  }
+
+  const panes = { pA:renderA, pB:renderB, pC:renderC };
+  Object.entries(panes).forEach(([id,fn])=>{ document.getElementById(id).innerHTML = fn(); });
+
+  function play(p){ p.classList.remove('playing'); void p.offsetWidth; p.classList.add('playing'); }
+  document.querySelectorAll('.panel').forEach(p=>{
+    // tiny replay affordance under each handled by global; auto play when in view
+  });
+  const io = new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ play(e.target); } }),{threshold:.25});
+  document.querySelectorAll('.panel').forEach(p=>io.observe(p));
+  document.getElementById('all').addEventListener('click',()=>document.querySelectorAll('.panel').forEach((p,i)=>setTimeout(()=>play(p),i*120)));
+</script>
+</body>
+</html>

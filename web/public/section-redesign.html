@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jarvis · Section Redesign Options</title>
+<style>
+  :root{
+    --appBg:#F5F5F5; --surface:#FFFFFF;
+    --core:#5C2E91; --coreMid:#7C4EAE; --coreBright:#9B6EC8;
+    --coreSoft:rgba(92,46,145,0.07); --coreGlow:rgba(92,46,145,0.16);
+    --text:#242424; --textMid:#424242; --textSoft:#616161; --textXsoft:#707070;
+    --border:#E6E6E6; --borderMid:#D7D7D7;
+    --green:#2E844A; --greenSoft:rgba(46,132,74,.10);
+    --amber:#9A6A00; --amberSoft:rgba(154,106,0,.10);
+    --blue:#0B5CAB;  --blueSoft:rgba(11,92,171,.10);
+    --font:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--appBg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;padding:36px 20px 100px}
+  .grad{background:linear-gradient(135deg,var(--core),var(--coreBright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  .page-head{max-width:1100px;margin:0 auto 6px;text-align:center}
+  .eyebrow{font-size:13px;font-weight:700;color:var(--core);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px}
+  .page-head h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+  .page-head p{font-size:15px;color:var(--textMid);line-height:1.6;max-width:660px;margin:0 auto}
+
+  .optwrap{max-width:1100px;margin:42px auto 0}
+  .opt-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .opt-name{font-size:18px;font-weight:800}
+  .opt-pill{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--core);background:var(--coreSoft);padding:4px 10px;border-radius:99px}
+  .opt-desc{font-size:13px;color:var(--textSoft);margin-left:auto;max-width:420px;text-align:right}
+  @media (max-width:760px){.opt-desc{text-align:left;margin-left:0;max-width:none}}
+  .screen{border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+
+  /* section scaffolding */
+  .sec{position:relative;padding:64px 48px}
+  .sec + .sec{border-top:1px solid var(--border)}
+  .sec-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 50% 0%,var(--coreGlow) 0%,transparent 65%)}
+  .sec-head{position:relative;text-align:center;max-width:560px;margin:0 auto 44px}
+  .sec-head h2{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:8px 0 12px}
+  .sec-head p{font-size:16px;color:var(--textMid);line-height:1.65}
+
+  /* reveal on scroll */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease);transition-delay:var(--d,0s)}
+  .in .reveal{opacity:1;transform:none}
+
+  /* ============ OPTION 1 — SOFT SPOTLIGHT ============ */
+  .o1-grid{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  @media (max-width:760px){.o1-grid{grid-template-columns:1fr}}
+  .o1-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:30px 26px;text-align:center;
+    box-shadow:0 14px 40px rgba(92,46,145,.06);transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
+  .o1-card:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(92,46,145,.12)}
+  .o1-badge{width:56px;height:56px;border-radius:16px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--core),var(--coreBright));color:#fff;font-size:24px;box-shadow:0 10px 24px var(--coreGlow)}
+  .o1-card h3{font-size:18px;font-weight:700;margin-bottom:10px}
+  .o1-card .d{font-size:14px;color:var(--textMid);line-height:1.65;margin-bottom:18px}
+  .o1-ex{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--core);background:var(--coreSoft);
+    border:1px solid rgba(92,46,145,.12);padding:8px 13px;border-radius:99px;font-weight:600}
+  .o1-ex .dot{width:6px;height:6px;border-radius:50%;background:var(--core)}
+  .o1-trust{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+  .o1-pill{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;max-width:300px;box-shadow:0 10px 30px rgba(92,46,145,.05)}
+  .o1-pill .chk{width:34px;height:34px;flex:none;border-radius:10px;background:var(--greenSoft);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:17px}
+  .o1-pill b{font-size:14px;display:block}
+  .o1-pill span{font-size:12.5px;color:var(--textSoft)}
+
+  /* ============ OPTION 2 — EDITORIAL ROWS ============ */
+  .o2-row{display:flex;align-items:center;gap:56px;max-width:880px;margin:0 auto}
+  .o2-row + .o2-row{margin-top:44px}
+  .o2-row.alt{flex-direction:row-reverse}
+  @media (max-width:760px){.o2-row,.o2-row.alt{flex-direction:column;gap:20px;text-align:center;align-items:center}}
+  .o2-copy{flex:1}
+  .o2-num{font-size:14px;font-weight:800;letter-spacing:.1em}
+  .o2-copy h3{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:8px 0 12px}
+  .o2-copy .d{font-size:15px;color:var(--textMid);line-height:1.7}
+  .o2-prev{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:0 16px 44px rgba(92,46,145,.08)}
+  .o2-msg{display:flex;gap:10px;align-items:flex-start}
+  .o2-ava{width:30px;height:30px;border-radius:9px;flex:none;background:linear-gradient(135deg,var(--core),var(--coreBright));display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
+  .o2-bubble{background:var(--coreSoft);border:1px solid rgba(92,46,145,.10);border-radius:12px;border-top-left-radius:3px;padding:11px 14px;font-size:13.5px;color:var(--text);line-height:1.55}
+  .o2-trust{position:relative;max-width:920px;margin:0 auto;border-radius:20px;padding:40px;text-align:center;
+    background:linear-gradient(135deg,rgba(92,46,145,.10),rgba(155,110,200,.05));border:1px solid rgba(92,46,145,.14)}
+  .o2-points{display:flex;justify-content:center;gap:30px;flex-wrap:wrap;margin-top:26px}
+  .o2-point{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:var(--text)}
+  .o2-point .chk{color:var(--green);font-size:17px;display:inline-flex}
+
+  /* ============ OPTION 3 — BENTO ============ */
+  .o3-bento{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:16px}
+  @media (max-width:760px){.o3-bento{grid-template-columns:1fr}}
+  .o3-tile{position:relative;overflow:hidden;border-radius:20px;border:1px solid var(--border);background:var(--surface);padding:26px;box-shadow:0 12px 34px rgba(0,0,0,.05)}
+  .o3-tile.big{grid-column:span 2}
+  @media (max-width:760px){.o3-tile.big{grid-column:span 1}}
+  .o3-cglow{position:absolute;width:200px;height:200px;border-radius:50%;top:-70px;right:-50px;filter:blur(8px);opacity:.5;pointer-events:none}
+  .o3-badge{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:16px;position:relative;z-index:1}
+  .o3-tile h3{font-size:17px;font-weight:700;margin-bottom:8px;position:relative;z-index:1}
+  .o3-tile .d{font-size:13.5px;color:var(--textMid);line-height:1.6;position:relative;z-index:1}
+  .o3-ex{position:relative;z-index:1;margin-top:16px;font-size:12.5px;font-weight:600;padding:9px 12px;border-radius:10px}
+  .o3-trust{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+  @media (max-width:760px){.o3-trust{grid-template-columns:1fr}}
+  .o3-tt{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:20px;box-shadow:0 10px 28px rgba(0,0,0,.04)}
+  .o3-tt .chk{width:32px;height:32px;border-radius:9px;background:var(--greenSoft);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:12px}
+  .o3-tt b{font-size:14px;display:block;margin-bottom:3px}
+  .o3-tt span{font-size:12.5px;color:var(--textSoft)}
+
+  .cta{display:inline-flex;align-items:center;gap:8px;margin-top:40px;padding:13px 28px;border-radius:9px;border:none;
+    background:var(--core);color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 10px 26px var(--coreGlow)}
+  .cta-wrap{text-align:center}
+
+  .pick{display:block;text-align:center;font-size:13px;color:var(--textXsoft);margin-top:14px}
+  .pick b{color:var(--text)}
+</style>
+</head>
+<body>
+  <!-- icon symbols -->
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="ic-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="ic-bolt" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="ic-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+    <symbol id="ic-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+  </svg>
+
+  <div class="page-head">
+    <div class="eyebrow">Section redesign</div>
+    <h1>Make "How I work" + "Built on trust" match the new hero</h1>
+    <p>The hero is now centered, soft, and glowing. Here are three directions for the two sections below it — all in the live brand colours, with scroll-reveal. Scroll through, then tell me which one (or a mix) to build into the app.</p>
+  </div>
+
+  <div class="optwrap">
+    <div class="opt-head"><span class="opt-name">Option 1 · Soft Spotlight</span><span class="opt-pill">Calm · centered</span>
+      <span class="opt-desc">Closest to the hero: everything centered, soft glassy cards, unified purple gradient badges, gentle glow. Premium and quiet.</span></div>
+    <div class="screen" data-opt><div id="o1"></div></div>
+  </div>
+
+  <div class="optwrap">
+    <div class="opt-head"><span class="opt-name">Option 2 · Editorial Rows</span><span class="opt-pill">Storytelling</span>
+      <span class="opt-desc">Each point is a full-width alternating row with a live "message" preview. Airy, editorial, lets Jarvis show real output. Trust becomes a soft gradient band.</span></div>
+    <div class="screen" data-opt><div id="o2"></div></div>
+  </div>
+
+  <div class="optwrap">
+    <div class="opt-head"><span class="opt-name">Option 3 · Bento Grid</span><span class="opt-pill">Modern · dynamic</span>
+      <span class="opt-desc">A modern bento layout of rounded tiles in varied sizes with coloured corner-glows. More vibrant and contemporary SaaS feel.</span></div>
+    <div class="screen" data-opt><div id="o3"></div></div>
+  </div>
+
+<script>
+  const ic = n => '<svg class="ic"><use href="#ic-'+n+'"/></svg>';
+  const C = { core:'var(--core)', green:'var(--green)', amber:'var(--amber)', blue:'var(--blue)' };
+  const Csoft = { core:'var(--coreSoft)', green:'var(--greenSoft)', amber:'var(--amberSoft)', blue:'var(--blueSoft)' };
+
+  const HOW = {
+    eyebrow:'How I help', h2a:'Three things. ', h2b:'Done before you ask.',
+    sub:"I'm not a chatbot — I'm a proactive teammate that connects your tools and acts for you.",
+    items:[
+      {icon:'eye',   color:'core',  title:'I watch what matters',     d:'I keep an eye on your inbox, calendar and team tools, then pull together one short brief of what needs you today.', ex:'Your benefits enrolment closes Thursday.'},
+      {icon:'bolt',  color:'green', title:'I handle the small stuff',  d:'Reminders, prep, filings, nudges — I just do them, always with one-click Undo.', ex:'Prepped your 10 AM. Sent the training nudge.'},
+      {icon:'shield',color:'amber', title:'I ask before anything bigger', d:'Anything that affects other people, I prepare and wait for your OK.', ex:'Drafted your reply to Priya — send when ready.'},
+    ]
+  };
+  const TRUST = {
+    eyebrow:'Built on trust', h2a:'I see a lot. ', h2b:'I never overstep.',
+    sub:'Every action I take is logged with one-click Undo, and anything that touches other people waits for your OK. I read signals, not secrets.',
+    points:[
+      {icon:'shield',label:'No raw DMs or emails read', sub:'Aggregated metadata only.'},
+      {icon:'undo',  label:'Every action is reversible', sub:'Full audit trail, one-click Undo.'},
+      {icon:'lock',  label:'Zero passwords stored',      sub:'OAuth 2.0 · SSO · SOC 2 aligned.'},
+    ]
+  };
+  const head = (o) => `<div class="sec-head reveal"><div class="eyebrow">${o.eyebrow}</div>
+    <h2>${o.h2a}<span class="grad">${o.h2b}</span></h2><p>${o.sub}</p></div>`;
+  const cta = `<div class="cta-wrap reveal" style="--d:.15s"><button class="cta">Sign in to get started</button></div>`;
+
+  /* ---------- OPTION 1 ---------- */
+  function opt1(){
+    const cards = HOW.items.map((it,i)=>`
+      <div class="o1-card reveal" style="--d:${i*.1}s">
+        <div class="o1-badge">${ic(it.icon)}</div>
+        <h3>${it.title}</h3>
+        <div class="d">${it.d}</div>
+        <span class="o1-ex"><span class="dot"></span>${it.ex}</span>
+      </div>`).join('');
+    const pills = TRUST.points.map((p,i)=>`
+      <div class="o1-pill reveal" style="--d:${i*.1}s">
+        <div class="chk">${ic('check')}</div>
+        <div><b>${p.label}</b><span>${p.sub}</span></div>
+      </div>`).join('');
+    return `
+      <div class="sec"><div class="sec-glow"></div>${head(HOW)}<div class="o1-grid">${cards}</div></div>
+      <div class="sec">${head(TRUST)}<div class="o1-trust">${pills}</div>${cta}</div>`;
+  }
+
+  /* ---------- OPTION 2 ---------- */
+  function opt2(){
+    const rows = HOW.items.map((it,i)=>`
+      <div class="o2-row ${i%2?'alt':''}">
+        <div class="o2-copy reveal">
+          <div class="o2-num grad">0${i+1}</div>
+          <h3>${it.title}</h3>
+          <div class="d">${it.d}</div>
+        </div>
+        <div class="o2-prev reveal" style="--d:.1s">
+          <div class="o2-msg"><div class="o2-ava">${ic(it.icon)}</div>
+            <div class="o2-bubble">${it.ex}</div></div>
+        </div>
+      </div>`).join('');
+    const points = TRUST.points.map(p=>`<div class="o2-point"><span class="chk">${ic('check')}</span>${p.label}</div>`).join('');
+    return `
+      <div class="sec"><div class="sec-glow"></div>${head(HOW)}${rows}</div>
+      <div class="sec"><div class="o2-trust reveal">
+        <div class="eyebrow">${TRUST.eyebrow}</div>
+        <h2 style="font-size:28px;font-weight:800;letter-spacing:-.02em;margin:6px 0 12px">${TRUST.h2a}<span class="grad">${TRUST.h2b}</span></h2>
+        <p style="font-size:15px;color:var(--textMid);line-height:1.65;max-width:600px;margin:0 auto">${TRUST.sub}</p>
+        <div class="o2-points">${points}</div>
+      </div>${cta}</div>`;
+  }
+
+  /* ---------- OPTION 3 ---------- */
+  function opt3(){
+    const tiles = HOW.items.map((it,i)=>`
+      <div class="o3-tile ${i===0?'big':''} reveal" style="--d:${i*.08}s">
+        <div class="o3-cglow" style="background:${C[it.color]}"></div>
+        <div class="o3-badge" style="background:${Csoft[it.color]};color:${C[it.color]}">${ic(it.icon)}</div>
+        <h3>${it.title}</h3>
+        <div class="d">${it.d}</div>
+        <div class="o3-ex" style="background:${Csoft[it.color]};color:${C[it.color]}">→ ${it.ex}</div>
+      </div>`).join('');
+    const tt = TRUST.points.map((p,i)=>`
+      <div class="o3-tt reveal" style="--d:${i*.08}s">
+        <div class="chk">${ic('check')}</div><b>${p.label}</b><span>${p.sub}</span>
+      </div>`).join('');
+    return `
+      <div class="sec"><div class="sec-glow"></div>${head(HOW)}<div class="o3-bento">${tiles}</div></div>
+      <div class="sec">${head(TRUST)}<div class="o3-trust">${tt}</div>${cta}</div>`;
+  }
+
+  document.getElementById('o1').innerHTML = opt1();
+  document.getElementById('o2').innerHTML = opt2();
+  document.getElementById('o3').innerHTML = opt3();
+
+  // scroll reveal: add .in to each .sec when it enters view
+  const io = new IntersectionObserver((es)=>{
+    es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  }, { threshold:.18 });
+  document.querySelectorAll('.sec, .o2-trust').forEach(s=>io.observe(s));
+  // o2 rows reveal individually
+  const io2 = new IntersectionObserver((es)=>{
+    es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io2.unobserve(e.target);} });
+  }, { threshold:.3 });
+  document.querySelectorAll('.o2-row').forEach(s=>io2.observe(s));
+</script>
+</body>
+</html>
