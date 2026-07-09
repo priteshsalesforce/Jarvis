@@ -7,9 +7,9 @@ import {
   AlertTriangle, Calendar, Clock, ArrowRight, Send, Mic, X, Check,
   Loader2, LogOut, ChevronLeft, Sparkles, Activity, ShieldCheck,
   Zap, TrendingUp, FileText, MessageSquare, Lock,
-  Database, LayoutDashboard, History, Sliders, ChevronRight,
+  Database, History, Sliders, ChevronRight,
   ChevronDown, Hash, Moon, Sun, MapPin, Video, UserCircle2,
-  Maximize2, Bot, Tag, Folder, Search, Filter, Star,
+  Maximize2, Tag, Folder, Search, Filter, Star,
   Wifi, WifiOff, Power, Edit2, Trash2, Copy, Globe,
   ThumbsUp, ThumbsDown, Info, Flag,
   Coffee, Brain, Leaf, Dumbbell, BookOpen,
@@ -364,19 +364,19 @@ const TODAY_EVENTS = [
 ]
 
 const FEED_ITEMS = [
-  { id:'fd0', time:'11:41', status:'done', emoji:'🗓️', title:'Cleared your afternoon for Marc\'s review',
+  { id:'fd0', time:'11:41', day:'today', status:'done', emoji:'🗓️', title:'Cleared your afternoon for Marc\'s review',
     body:'Marc (SVP) made the 2 PM mandatory. Ranked the sender, reshuffled 3 conflicts, and sent 7 messages in your name — after your approval.',
     steps:['Ranked sender: SVP, outranks the afternoon','Drafted 4 Teams messages + 3 emails','You approved all in one tap','Sent ✓ · 1:1 moved to 4 PM, Acme rescheduled, calendar cleared, Salesforce case noted'] },
-  { id:'fd1', time:'08:47', status:'done', emoji:'🧠', title:'Morning brief compiled',
+  { id:'fd1', time:'08:47', day:'today', status:'done', emoji:'🧠', title:'Morning brief compiled',
     body:'Ranked 8 items from Workday, Outlook, Jira by deadline × impact.',
     steps:['Fetch Outlook flagged emails → 4 surfaced','Fetch Workday approvals → 3 items','Fetch Jira overdue → 3/9 surfaced','Score and rank'] },
-  { id:'fd2', time:'08:51', status:'done', emoji:'⚠️', title:'Proactive nudge — security cert',
+  { id:'fd2', time:'08:51', day:'today', status:'done', emoji:'⚠️', title:'Proactive nudge — security cert',
     body:'Detected 3-day expiry. Sent Teams notification with LMS deep link.',
     steps:['Workday compliance check','Training: Not started, deadline Apr 30','Composed nudge','Delivered via Teams ✓'] },
-  { id:'fd3', time:'09:02', status:'running', emoji:'📋', title:'Meeting prep: QBR 10:00 AM',
+  { id:'fd3', time:'09:02', day:'today', status:'running', emoji:'📋', title:'Meeting prep: QBR 10:00 AM',
     body:'Gathering deck, last meeting notes, SVP context.',
     steps:['Located QBR-H2-2026.pptx ✓','Apr 14 notes — 3 open actions ✓','Fetching SVP briefing history…','Draft bundle (pending)'] },
-  { id:'fd4', time:'Yesterday', status:'done', emoji:'✅', title:'PTO requests auto-verified',
+  { id:'fd4', time:'16:20', day:'yesterday', status:'done', emoji:'✅', title:'PTO requests auto-verified',
     body:'Checked 3 requests against calendar and policy. All clear.',
     steps:['Fetch Workday queue','Calendar conflict check','Policy validation','Surfaced in dashboard ✓'] },
 ]
@@ -1610,11 +1610,26 @@ function AddMeetingModal({ onClose }) {
 
 // ─── Shared message renderer ─────────────────────────────────────────────────
 function renderMsgText(text, T) {
-  return text.split('\n').map((line, li) => {
-    if (!line) return <br key={li} />
+  // Blank lines are paragraph separators — don't emit an empty <br> (which,
+  // combined with the container's line-height + the <p> margin, double-counts
+  // and leaves a large gap). Instead render only non-empty lines and vary the
+  // top margin: a paragraph break (after a blank line) gets more space, while
+  // consecutive lines stay tight.
+  const lines = text.split('\n')
+  const out = []
+  let prevBlank = false
+  lines.forEach((line, li) => {
+    if (!line) { prevBlank = true; return }
     const parts = line.split(/\*\*(.*?)\*\*/)
-    return <p key={li} style={{ marginTop:li>0?4:0 }}>{parts.map((p,pi) => pi%2===1 ? <strong key={pi}>{p}</strong> : p)}</p>
+    const marginTop = out.length === 0 ? 0 : (prevBlank ? 10 : 2)
+    out.push(
+      <p key={li} style={{ marginTop }}>
+        {parts.map((p, pi) => pi % 2 === 1 ? <strong key={pi}>{p}</strong> : p)}
+      </p>
+    )
+    prevBlank = false
   })
+  return out
 }
 
 // ─── ActionChips ─────────────────────────────────────────────────────────────
@@ -1649,7 +1664,8 @@ function ActionChips({ actions, onChipClick, onTieredClick }) {
 
 // ─── Tier-aware in-thread blocks (preview, confirm, modal, Done-with-Undo) ─
 // Each block is rendered as a plain chat message with role='block'.
-// Done confirmation rendered as a regular Jarvis chat bubble (not a banner/alert).
+// Done confirmation rendered as a regular borderless Jarvis reply (matching the
+// standard j-msg layout — avatar + content, no bubble), not a banner/alert.
 function DoneWithUndo({ msg, rule, onUndo }) {
   const T = window.__T
   const [visible, setVisible] = useState(true)
@@ -1657,16 +1673,10 @@ function DoneWithUndo({ msg, rule, onUndo }) {
     const t = setTimeout(() => setVisible(false), 8000)
     return () => clearTimeout(t)
   }, [])
-  const now = new Date().toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })
   return (
-    <div className="enter" style={{ display:'flex', alignItems:'flex-start', gap:8 }}>
-      <JarvisMark size={26} radius={6} style={{ marginTop:2 }} />
-      <div style={{ maxWidth:'84%', padding:'10px 13px', background:T.surfaceMid,
-        border:`1px solid ${T.border}`, borderRadius:8, borderBottomLeftRadius:2, fontSize:14 }}>
-        <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:4 }}>
-          <span style={{ fontSize:12, fontWeight:800, color:T.text }}>Jarvis</span>
-          <span style={{ fontSize:11, color:T.textSoft }}>{now}</span>
-        </div>
+    <div className="enter j-msg" style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+      <JarvisMark size={24} radius={7} style={{ flexShrink:0, marginTop:1 }} />
+      <div style={{ flex:1, minWidth:0, fontSize:14, lineHeight:1.65, color:T.text }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           <div style={{ width:20, height:20, borderRadius:'50%', flexShrink:0,
             background:T.greenSoft, display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -1803,7 +1813,7 @@ function AgentTrace({ trace, sourcesCount = 0 }) {
     ? `Show thinking · ${sourcesCount} ${sourcesCount === 1 ? 'source' : 'sources'}`
     : `Show thinking · ${stepCount} ${stepCount === 1 ? 'step' : 'steps'}`
   return (
-    <div style={{ marginTop:10, marginBottom:6 }}>
+    <div style={{ marginBottom:6 }}>
       {/* Header row — borderless. Label first, chevron after. 12 px. */}
       <button type="button" onClick={() => { SFX.tap(); setOpen(o=>!o) }}
         style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 0',
@@ -2330,9 +2340,6 @@ function ChatPanel({ item, scenario, preselect, onClose, setCoreState, activeTab
       : { width:400, flexShrink:0, position:'relative', display:'flex', flexDirection:'column',
           background:T.surface, borderLeft:`1px solid ${T.border}`, overflow:'hidden',
           boxShadow:`-4px 0 12px rgba(0,0,0,0.06)` }}>
-      {/* Ambient gradient wash (Gemini-style) behind the conversation */}
-      <div aria-hidden="true" style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:0,
-        background:`radial-gradient(46% 26% at 10% 0%, ${T.coreGlow} 0%, transparent 60%), radial-gradient(40% 24% at 100% 5%, ${T.coreSoft} 0%, transparent 58%)` }} />
       {/* Chat view — sticky title (with Related + maximize + close) and a max-800 reading column.
           Mirrors the Conversations chat pane exactly. */}
       {activeTab === 'chat' && (
@@ -3639,8 +3646,8 @@ function ConversationRail({ collapsed, onToggle, activeTab, activeConvId, onNav,
     background:'none', display:'inline-flex', alignItems:'center', justifyContent:'center',
     cursor:'pointer', color:T.textSoft, flexShrink:0, transition:'color .12s' }
   const NAV = [
-    { id:'today',  label:'Today',  Icon:LayoutDashboard },
-    { id:'agents', label:'Skills', Icon:Bot },
+    { id:'today',  label:'Today',  Icon:Sun },
+    { id:'agents', label:'Skills', Icon:Lightbulb },
   ]
   const today = conversations.filter(c => c.date === 'Today')
   const earlier = conversations.filter(c => c.date !== 'Today')
@@ -3666,7 +3673,7 @@ function ConversationRail({ collapsed, onToggle, activeTab, activeConvId, onNav,
         <button type="button" title="New conversation" onClick={onNew}
           style={{ ...plainIconBtn, color:T.core }}
           onMouseEnter={e => { e.currentTarget.style.color = T.coreMid || T.core }}
-          onMouseLeave={e => { e.currentTarget.style.color = T.core }}><PenSquare size={18} /></button>
+          onMouseLeave={e => { e.currentTarget.style.color = T.core }}><Plus size={18} /></button>
       </div>
     )
   }
@@ -3709,7 +3716,7 @@ function ConversationRail({ collapsed, onToggle, activeTab, activeConvId, onNav,
           background:'transparent', color:T.text, fontWeight:600, fontSize:14 }}
         onMouseEnter={e => { e.currentTarget.style.background = T.surfaceMid }}
         onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
-        <PenSquare size={16} /> New conversation
+        <Plus size={16} /> New conversation
       </button>
       <p style={{ fontSize:10, fontWeight:800, letterSpacing:'0.08em', textTransform:'uppercase', color:T.textXsoft, margin:'0 6px 4px' }}>Recents</p>
       {today.length > 0 && <p style={{ fontSize:10, fontWeight:700, color:T.textXsoft, margin:'8px 6px 4px' }}>Today</p>}
@@ -3744,14 +3751,51 @@ function MeetingsPanel({ collapsed, onToggle, onEventClick, onAddMeeting }) {
   )
 
   if (collapsed) {
+    // Short label for the next meeting (first meaningful word), e.g. "QBR".
+    const nextShort = next ? next.title.split(/[\s—–-]+/).filter(Boolean)[0] : ''
+    const cap = { fontSize:9, fontWeight:800, letterSpacing:'0.05em', textTransform:'uppercase', color:T.textXsoft, lineHeight:1 }
     return (
       <div style={{ width:60, flexShrink:0, background:T.surface,
         display:'flex', flexDirection:'column', alignItems:'center', gap:12, padding:'12px 0' }}>
-        <button type="button" aria-label="Expand meetings" onClick={onToggle} style={iconBtn}><ChevronLeft size={16} /></button>
-        <Ring size={40} />
-        <button type="button" aria-label="Join next meeting" onClick={() => { SFX.tap(); next && onEventClick?.(next) }}
-          style={{ ...iconBtn, color:'#fff', background:T.core, border:'none', width:32, height:32 }}><Video size={15} /></button>
-        <div style={{ fontSize:11, fontWeight:800, color:T.textSoft }}>{evs.length}</div>
+        {/* Expand — calendar icon (opens the full day calendar) */}
+        <button type="button" aria-label="Expand calendar" title="Open calendar" onClick={onToggle}
+          style={{ width:34, height:34, borderRadius:9, border:`1px solid ${T.border}`, background:T.surface,
+            display:'inline-flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:T.textSoft, flexShrink:0, transition:'all .12s' }}
+          onMouseEnter={e => { e.currentTarget.style.color = T.core; e.currentTarget.style.borderColor = T.borderMid; e.currentTarget.style.background = T.surfaceMid }}
+          onMouseLeave={e => { e.currentTarget.style.color = T.textSoft; e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = T.surface }}>
+          <Calendar size={16} />
+        </button>
+
+        <div style={{ width:26, height:1, background:T.border }} />
+
+        {/* Countdown ring to the next meeting */}
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+          <Ring size={44} />
+          <span style={cap}>next</span>
+        </div>
+
+        {/* Join the next meeting + its short name */}
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+          <button type="button" aria-label={next ? `Join ${next.title}` : 'Join next meeting'}
+            title={next ? `Join ${next.title}` : 'Join next meeting'}
+            onClick={() => { SFX.tap(); next && onEventClick?.(next) }}
+            style={{ width:36, height:36, borderRadius:'50%', background:T.coreGrad, color:'#fff', border:'none',
+              display:'inline-flex', alignItems:'center', justifyContent:'center', cursor:'pointer',
+              boxShadow:T.shadowPurple, flexShrink:0, transition:'filter .12s' }}
+            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.06)' }}
+            onMouseLeave={e => { e.currentTarget.style.filter = 'none' }}>
+            <Video size={15} />
+          </button>
+          {next && <span style={{ ...cap, color:T.core }}>Join {nextShort}</span>}
+        </div>
+
+        <div style={{ width:26, height:1, background:T.border }} />
+
+        {/* Today's meeting count */}
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+          <span style={{ fontSize:15, fontWeight:800, color:T.text, lineHeight:1 }}>{evs.length}</span>
+          <span style={cap}>mtgs</span>
+        </div>
       </div>
     )
   }
@@ -3968,13 +4012,10 @@ function FeedView() {
   const [expanded, setExpanded] = useState(null)
   const [filter, setFilter] = useState('all') // 'all' | 'today' | 'yesterday' | 'running'
 
-  const isToday     = (t) => !/yesterday/i.test(t)
-  const isYesterday = (t) =>  /yesterday/i.test(t)
-
   const filtered = FEED_ITEMS.filter(item => {
     if (filter === 'all') return true
-    if (filter === 'today')     return isToday(item.time)
-    if (filter === 'yesterday') return isYesterday(item.time)
+    if (filter === 'today')     return item.day === 'today'
+    if (filter === 'yesterday') return item.day === 'yesterday'
     if (filter === 'running')   return item.status === 'running'
     return true
   })
@@ -3982,10 +4023,29 @@ function FeedView() {
   const doneCount    = FEED_ITEMS.filter(i => i.status === 'done').length
   const runningCount = FEED_ITEMS.filter(i => i.status === 'running').length
 
+  // Split a "HH:MM" (24h) string into a 12-hour clock + AM/PM meridiem for the
+  // timeline's left gutter. Falls back gracefully if the time isn't a clock.
+  const fmtTime = (t) => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(t || '')
+    if (!m) return { clock: t, meridiem: '' }
+    let h = Number(m[1])
+    const meridiem = h < 12 ? 'AM' : 'PM'
+    h = ((h + 11) % 12) + 1
+    return { clock: `${h}:${m[2]}`, meridiem }
+  }
+
+  // Group the (filtered) items by day, preserving day order + earliest-first.
+  const dayGroups = [
+    { key:'today',     label:'Today' },
+    { key:'yesterday', label:'Yesterday' },
+  ]
+    .map(g => ({ ...g, items: filtered.filter(i => i.day === g.key) }))
+    .filter(g => g.items.length > 0)
+
   const filterPills = [
     { key:'all',       label:'All',         count:FEED_ITEMS.length, color:T.text,   dot:T.textXsoft },
-    { key:'today',     label:'Today',       count:FEED_ITEMS.filter(i => isToday(i.time)).length, color:T.blue, dot:T.blue },
-    { key:'yesterday', label:'Yesterday',   count:FEED_ITEMS.filter(i => isYesterday(i.time)).length, color:T.amber, dot:T.amber },
+    { key:'today',     label:'Today',       count:FEED_ITEMS.filter(i => i.day === 'today').length, color:T.blue, dot:T.blue },
+    { key:'yesterday', label:'Yesterday',   count:FEED_ITEMS.filter(i => i.day === 'yesterday').length, color:T.amber, dot:T.amber },
     { key:'running',   label:'Running now', count:runningCount, color:T.core, dot:T.core },
   ]
 
@@ -4045,94 +4105,117 @@ function FeedView() {
         })}
       </div>
 
-      {/* Card grid — single column, full width, consistent with intent cards */}
-      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-        {filtered.map((item, i) => {
-          const isOpen = expanded === item.id
-          const running = item.status === 'running'
-          return (
-            <div key={item.id} className="enter" style={{ animationDelay:`${i*.05}s` }}>
-              <button type="button"
-                onClick={() => { SFX.tap(); setExpanded(isOpen ? null : item.id) }}
-                aria-expanded={isOpen}
-                style={{ width:'100%', textAlign:'left', cursor:'pointer',
-                  background:T.surface, border:`1px solid ${T.border}`,
-                  borderRadius:10, padding:0, fontFamily:T.font,
-                  boxShadow:T.shadowSm, transition:'box-shadow .15s, border-color .15s' }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = T.shadowMd; e.currentTarget.style.borderColor = T.borderMid }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = T.shadowSm; e.currentTarget.style.borderColor = T.border }}>
-                <div style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 16px' }}>
-                  {/* Status orb — replaces left rail */}
-                  <div style={{ width:36, height:36, borderRadius:8, flexShrink:0,
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                    background: running ? T.coreSoft : T.greenSoft,
-                    border: `1px solid ${running ? T.core+'30' : T.green+'30'}` }}>
-                    <span style={{ fontSize:16 }}>{item.emoji}</span>
-                  </div>
-
-                  {/* Body */}
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3, flexWrap:'wrap' }}>
-                      <span style={{ fontSize:14, fontWeight:700, color:T.text }}>{item.title}</span>
-                      <span style={{ display:'inline-flex', alignItems:'center', gap:5,
-                        fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:99,
-                        background: running ? T.coreSoft : T.greenSoft,
-                        color: running ? T.core : T.green }}>
-                        <span style={{ width:5, height:5, borderRadius:'50%',
-                          background: running ? T.core : T.green,
-                          animation: running ? 'breathe 1.4s ease-in-out infinite' : 'none' }} />
-                        {running ? 'Running' : 'Done'}
-                      </span>
-                    </div>
-                    <p style={{ fontSize:13, color:T.textSoft, margin:0, lineHeight:1.5 }}>{item.body}</p>
-                  </div>
-
-                  {/* Time + chevron */}
-                  <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-                    <span style={{ fontSize:12, fontWeight:600, color:T.textSoft }}>{item.time}</span>
-                    <ChevronDown size={14} color={T.textSoft}
-                      style={{ transition:'transform .2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
-                  </div>
-                </div>
-
-                {/* Expanded steps */}
-                {isOpen && (
-                  <div className="expand-down" style={{ padding:'4px 16px 14px 66px', borderTop:`1px solid ${T.border}` }}>
-                    <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase',
-                      letterSpacing:'0.12em', color:T.textSoft, marginTop:12, marginBottom:8 }}>Steps taken</p>
-                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                      {item.steps.map((step, si) => {
-                        const stepDone = item.status === 'done' || si < item.steps.length - 1
-                        return (
-                          <div key={si} style={{ display:'flex', alignItems:'center', gap:10 }}>
-                            <div style={{ width:18, height:18, borderRadius:'50%', flexShrink:0,
-                              display:'flex', alignItems:'center', justifyContent:'center',
-                              background: stepDone ? T.greenSoft : T.coreSoft }}>
-                              {stepDone
-                                ? <Check size={9} color={T.green} />
-                                : <Loader2 size={9} color={T.core} style={{ animation:'spin 1s linear infinite' }} />}
-                            </div>
-                            <p style={{ fontSize:13, color: stepDone ? T.textMid : T.core, margin:0 }}>{step}</p>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </button>
-            </div>
-          )
-        })}
-
-        {/* Empty state */}
-        {filtered.length === 0 && (
-          <div style={{ padding:'40px 20px', textAlign:'center',
-            background:T.surface, border:`1px dashed ${T.border}`, borderRadius:10 }}>
-            <p style={{ fontSize:14, fontWeight:700, color:T.text, margin:0 }}>Nothing here yet.</p>
-            <p style={{ fontSize:13, color:T.textSoft, margin:'4px 0 0' }}>Try a different filter — Jarvis logs every action it takes.</p>
+      {/* Rail timeline — grouped by day, time (+ AM/PM) on the left rail */}
+      {dayGroups.map((group, gi) => (
+        <div key={group.key} style={{ marginTop: gi === 0 ? 4 : 28 }}>
+          {/* Day header */}
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <span style={{ fontSize:12, fontWeight:800, textTransform:'uppercase',
+              letterSpacing:'0.12em', color:T.textSoft }}>{group.label}</span>
+            <span style={{ fontSize:11, fontWeight:700, color:T.textXsoft,
+              background:T.surfaceMid, border:`1px solid ${T.border}`, borderRadius:99, padding:'1px 8px' }}>
+              {group.items.length}
+            </span>
+            <span style={{ flex:1, height:1, background:T.border }} />
           </div>
-        )}
-      </div>
+
+          {/* Rail + rows */}
+          <div style={{ position:'relative', paddingLeft:78 }}>
+            {/* the vertical rail line */}
+            <div aria-hidden="true" style={{ position:'absolute', left:63, top:8, bottom:8, width:2, background:T.border }} />
+
+            {group.items.map((item, i) => {
+              const isOpen = expanded === item.id
+              const running = item.status === 'running'
+              const ft = fmtTime(item.time)
+              const accent = running ? T.core : T.green
+              const accentSoft = running ? T.coreSoft : T.greenSoft
+              return (
+                <div key={item.id} className="enter" style={{ position:'relative', marginBottom:12, animationDelay:`${i*.05}s` }}>
+                  {/* Time gutter — clock + AM/PM meridiem */}
+                  <div style={{ position:'absolute', left:-78, top:15, width:52, textAlign:'right' }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:T.textMid, lineHeight:1.1, fontVariantNumeric:'tabular-nums' }}>{ft.clock}</div>
+                    {ft.meridiem && (
+                      <div style={{ fontSize:10, fontWeight:700, color:T.textXsoft, letterSpacing:'0.06em' }}>{ft.meridiem}</div>
+                    )}
+                  </div>
+
+                  {/* Node on the rail */}
+                  <div aria-hidden="true" style={{ position:'absolute', left:-21, top:16, width:14, height:14, borderRadius:'50%',
+                    background:T.surface, border:`2px solid ${accent}`, zIndex:2,
+                    boxShadow: running ? `0 0 0 4px ${accentSoft}` : 'none' }} />
+
+                  {/* Accordion card */}
+                  <button type="button"
+                    onClick={() => { SFX.tap(); setExpanded(isOpen ? null : item.id) }}
+                    aria-expanded={isOpen}
+                    style={{ width:'100%', textAlign:'left', cursor:'pointer',
+                      background:T.surface, border:`1px solid ${T.border}`,
+                      borderRadius:10, padding:0, fontFamily:T.font,
+                      boxShadow:T.shadowSm, transition:'box-shadow .15s, border-color .15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = T.shadowMd; e.currentTarget.style.borderColor = T.borderMid }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = T.shadowSm; e.currentTarget.style.borderColor = T.border }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'13px 14px 13px 16px' }}>
+                      {/* Body */}
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:3, flexWrap:'wrap' }}>
+                          <span style={{ fontSize:14, fontWeight:700, color:T.text }}>{item.title}</span>
+                          <span style={{ display:'inline-flex', alignItems:'center', gap:5,
+                            fontSize:11, fontWeight:700, padding:'2px 8px', borderRadius:99,
+                            background: accentSoft, color: accent }}>
+                            <span style={{ width:5, height:5, borderRadius:'50%', background: accent,
+                              animation: running ? 'breathe 1.4s ease-in-out infinite' : 'none' }} />
+                            {running ? 'Running' : 'Done'}
+                          </span>
+                        </div>
+                        <p style={{ fontSize:13, color:T.textSoft, margin:0, lineHeight:1.5 }}>{item.body}</p>
+                      </div>
+
+                      {/* Accordion chevron */}
+                      <ChevronDown size={16} color={T.textSoft} style={{ flexShrink:0,
+                        transition:'transform .2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                    </div>
+
+                    {/* Expanded steps */}
+                    {isOpen && (
+                      <div className="expand-down" style={{ padding:'4px 16px 14px', borderTop:`1px solid ${T.border}` }}>
+                        <p style={{ fontSize:11, fontWeight:800, textTransform:'uppercase',
+                          letterSpacing:'0.12em', color:T.textSoft, marginTop:12, marginBottom:8 }}>Steps taken</p>
+                        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                          {item.steps.map((step, si) => {
+                            const stepDone = item.status === 'done' || si < item.steps.length - 1
+                            return (
+                              <div key={si} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                                <div style={{ width:18, height:18, borderRadius:'50%', flexShrink:0,
+                                  display:'flex', alignItems:'center', justifyContent:'center',
+                                  background: stepDone ? T.greenSoft : T.coreSoft }}>
+                                  {stepDone
+                                    ? <Check size={9} color={T.green} />
+                                    : <Loader2 size={9} color={T.core} style={{ animation:'spin 1s linear infinite' }} />}
+                                </div>
+                                <p style={{ fontSize:13, color: stepDone ? T.textMid : T.core, margin:0 }}>{step}</p>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Empty state */}
+      {filtered.length === 0 && (
+        <div style={{ padding:'40px 20px', textAlign:'center',
+          background:T.surface, border:`1px dashed ${T.border}`, borderRadius:10 }}>
+          <p style={{ fontSize:14, fontWeight:700, color:T.text, margin:0 }}>Nothing here yet.</p>
+          <p style={{ fontSize:13, color:T.textSoft, margin:'4px 0 0' }}>Try a different filter — Jarvis logs every action it takes.</p>
+        </div>
+      )}
     </PageLayout>
   )
 }
@@ -5825,9 +5908,7 @@ export default function App() {
                         <p style={{ fontSize:24, fontWeight:800, color:T.text, letterSpacing:'-0.02em', lineHeight:1.2, margin:0 }}>Good morning, Alex.</p>
                         <p style={{ fontSize:24, fontWeight:800, letterSpacing:'-0.02em', lineHeight:1.2, margin:'2px 0 0',
                           background:`linear-gradient(135deg, ${T.core}, ${T.coreBright})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
-                          {persona==='manager'
-                            ? `Your team needs ${visibleIntents.length} ${visibleIntents.length===1?'thing':'things'}.`
-                            : `I handled ${overnightHandled} things overnight.`}
+                          What can I do for you?
                         </p>
                       </div>
 

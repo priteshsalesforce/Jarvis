@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Collapsed meetings panel — variations</title>
+<style>
+  :root{
+    --appBg:#F5F5F5; --surface:#FFFFFF; --surfaceMid:#FAFAFA;
+    --core:#5C2E91; --coreMid:#7C4EAE; --coreBright:#9B6EC8; --coreSoft:rgba(92,46,145,0.08);
+    --coreGrad:linear-gradient(135deg,#5C2E91,#7C4EAE);
+    --blue:#0F6CBD; --green:#107C41; --greenSoft:rgba(16,124,65,0.1);
+    --text:#242424; --textMid:#424242; --textSoft:#616161; --textXsoft:#707070;
+    --border:#D1D1D1; --borderMid:#C7C7C7;
+    --shadowSm:0 0.3px 0.9px 0 rgba(0,0,0,0.07), 0 1.6px 3.6px 0 rgba(0,0,0,0.11);
+    --shadowMd:0 0.3px 0.9px 0 rgba(0,0,0,0.10), 0 3.2px 7.2px 0 rgba(0,0,0,0.13);
+    --shadowPurple:0 2px 8px rgba(92,46,145,0.18), 0 1px 2px rgba(92,46,145,0.10);
+    --font:"Segoe UI Variable","Segoe UI",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--appBg);font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 90px}
+  .eyebrow{font-size:13px;font-weight:700;color:var(--core);text-transform:uppercase;letter-spacing:.15em;margin:0 0 6px}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px}
+  .lede{font-size:14px;color:var(--textSoft);margin:0 0 6px;max-width:720px}
+  .note{font-size:12px;color:var(--textXsoft);margin:0 0 28px}
+
+  .grid{display:flex;flex-wrap:wrap;gap:20px}
+  .cell{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;width:250px;box-shadow:var(--shadowSm)}
+  .cell h2{font-size:14px;font-weight:800;margin:0 0 2px}
+  .cell p{font-size:12px;color:var(--textSoft);margin:0 0 16px;line-height:1.5;min-height:66px}
+  .stage{background:var(--appBg);border-radius:12px;padding:16px 0;display:flex;justify-content:center}
+
+  .rail{width:60px;background:var(--surface);border-radius:12px;box-shadow:var(--shadowSm);
+    display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0}
+  svg{display:block}
+
+  /* calendar toggle (shared) */
+  .calBtn{position:relative;width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--textSoft);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.12s}
+  .calBtn:hover{background:var(--surfaceMid);color:var(--core);border-color:var(--borderMid)}
+  .calBtn .badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--core);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--surface)}
+
+  .join{width:36px;height:36px;border-radius:50%;background:var(--coreGrad);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadowPurple);transition:.12s}
+  .join:hover{filter:brightness(1.06)}
+  .joinSq{width:38px;height:38px;border-radius:10px}
+  .cap{font-size:8px;font-weight:800;letter-spacing:.06em;color:var(--textXsoft);text-transform:uppercase}
+  .sep{width:26px;height:1px;background:var(--border)}
+
+  /* countdown ring */
+  .ring{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:conic-gradient(var(--core) 0 83%, var(--border) 83% 100%)}
+  .ring .inner{width:38px;height:38px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+  .ring .n{font-size:13px;font-weight:800;color:var(--core)}
+  .ring .u{font-size:7px;font-weight:700;color:var(--textXsoft)}
+
+  /* V2 dots */
+  .dots{position:relative;display:flex;flex-direction:column;align-items:center;gap:0;padding:2px 0}
+  .dots::before{content:"";position:absolute;top:6px;bottom:6px;width:2px;background:var(--border)}
+  .dot{position:relative;width:11px;height:11px;border-radius:50%;margin:6px 0;z-index:1}
+  .dot.past{background:var(--borderMid)}
+  .dot.future{background:var(--surface);border:2px solid var(--borderMid)}
+  .dot.next{background:var(--core);box-shadow:0 0 0 4px var(--coreSoft);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px var(--coreSoft)}50%{box-shadow:0 0 0 6px rgba(92,46,145,0.04)}}
+  .nextlab{font-size:9px;font-weight:800;color:var(--core)}
+
+  /* V3 time chips */
+  .chip{width:44px;padding:5px 0;border-radius:8px;text-align:center;font-size:11px;font-weight:700;background:var(--surfaceMid);color:var(--textMid);border:1px solid var(--border);line-height:1.15}
+  .chip.now{background:var(--coreSoft);color:var(--core);border-color:rgba(92,46,145,.25)}
+  .chip .sm{display:block;font-size:8px;font-weight:800;color:var(--core)}
+  .chip.more{background:none;border:none;color:var(--textXsoft);font-size:10px;padding:2px 0}
+
+  /* V4 date badge */
+  .dateBadge{position:relative;width:42px;height:44px;border-radius:10px;border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;background:var(--surface)}
+  .dateBadge .hd{background:var(--core);color:#fff;font-size:7px;font-weight:800;letter-spacing:.1em;text-align:center;padding:2px 0}
+  .dateBadge .dd{flex:1;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--text)}
+  .dateBadge .ct{position:absolute;bottom:2px;right:3px;font-size:8px;font-weight:800;color:var(--core)}
+
+  .mini{display:flex;flex-direction:column;align-items:center;gap:1px}
+  .mini .big{font-size:15px;font-weight:800;color:var(--text);line-height:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Meetings panel · collapsed</p>
+  <h1>Collapsed calendar rail — redesigns</h1>
+  <p class="lede">Each keeps the 60px footprint and the same info (time to next meeting, a Join action, today's count) but the <b>expand control is now a calendar icon</b> instead of the chevron. Live data: next is <b>QBR at 10:00, 15 min away</b>, 6 meetings today.</p>
+  <p class="note">Pick a letter (V1–V4). I'll wire it into <code>MeetingsPanel</code> — hover shows the interactions.</p>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+  const I = {
+    cal:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+    calDays:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/>',
+    video:'<rect width="14" height="12" x="2" y="6" rx="2"/><path d="m22 8-6 4 6 4V8Z"/>',
+  };
+  const svg = (p,s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const calBtn = (icon=I.cal, badge)=>`<button class="calBtn" title="Expand calendar">${svg(icon,17)}${badge!=null?`<span class="badge">${badge}</span>`:''}</button>`;
+  const joinBtn = (sq)=>`<button class="join ${sq?'joinSq':''}" title="Join QBR (10:00)">${svg(I.video,16)}</button>`;
+  const ring = ()=>`<div class="ring"><div class="inner"><span class="n">15</span><span class="u">MIN</span></div></div>`;
+
+  const V = [
+    { id:'V1', name:'V1 · Countdown ring', desc:'Closest to today but cleaner: calendar toggle up top, a crisp countdown ring to the next meeting, a round Join button, and the day’s count with a label.',
+      html:`<div class="rail">
+        ${calBtn(I.cal)}
+        <div class="sep"></div>
+        <div class="mini">${ring()}<span class="cap">next</span></div>
+        ${joinBtn()}
+        <div class="sep"></div>
+        <div class="mini"><span class="big">6</span><span class="cap">mtgs</span></div>
+      </div>` },
+    { id:'V2', name:'V2 · Day timeline dots', desc:'Shows the shape of your day: one dot per meeting on a vertical rail — past dimmed, the next one pulsing with a time-to-go label, later ones hollow. Most glanceable schedule.',
+      html:`<div class="rail">
+        ${calBtn(I.calDays)}
+        <div class="sep"></div>
+        <div class="dots">
+          <span class="dot past"></span>
+          <span class="dot next"></span>
+          <span class="dot future"></span>
+          <span class="dot future"></span>
+          <span class="dot future"></span>
+          <span class="dot future"></span>
+        </div>
+        <span class="nextlab">15m</span>
+        ${joinBtn()}
+      </div>` },
+    { id:'V3', name:'V3 · Next-up time chips', desc:'Stacks the upcoming start times as small chips — the imminent one highlighted with a countdown — so you see what’s next without expanding. Join sits below.',
+      html:`<div class="rail" style="gap:8px">
+        ${calBtn(I.cal)}
+        <div class="sep"></div>
+        <div class="chip now">10:00<span class="sm">in 15m</span></div>
+        <div class="chip">11:30</div>
+        <div class="chip">1:00</div>
+        <div class="chip more">+3</div>
+        ${joinBtn(true)}
+      </div>` },
+    { id:'V4', name:'V4 · Date badge + ring', desc:'A tear-off calendar badge shows today’s date with a meeting-count corner, then the countdown ring and Join. Compact and unmistakably “calendar”.',
+      html:`<div class="rail">
+        <div class="dateBadge" title="Thursday, Jul 9"><div class="hd">JUL</div><div class="dd">9</div><span class="ct">6</span></div>
+        <div class="sep"></div>
+        ${ring()}
+        ${joinBtn()}
+        <span class="cap">join qbr</span>
+      </div>` },
+  ];
+
+  document.getElementById('grid').innerHTML = V.map(v=>`
+    <div class="cell">
+      <h2>${v.name}</h2>
+      <p>${v.desc}</p>
+      <div class="stage">${v.html}</div>
+    </div>`).join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Activity feed — timeline variations</title>
+<style>
+  :root{
+    --appBg:#F5F5F5; --surface:#FFFFFF; --surfaceMid:#FAFAFA;
+    --core:#5C2E91; --coreMid:#7C4EAE; --coreBright:#9B6EC8; --coreSoft:rgba(92,46,145,0.08);
+    --blue:#0F6CBD; --blueSoft:rgba(15,108,189,0.1);
+    --amber:#835B00; --amberSoft:rgba(131,91,0,0.1);
+    --green:#107C41; --greenSoft:rgba(16,124,65,0.1);
+    --text:#242424; --textMid:#424242; --textSoft:#616161; --textXsoft:#707070;
+    --border:#D1D1D1; --borderMid:#C7C7C7;
+    --shadowSm:0 0.3px 0.9px 0 rgba(0,0,0,0.07), 0 1.6px 3.6px 0 rgba(0,0,0,0.11);
+    --shadowMd:0 0.3px 0.9px 0 rgba(0,0,0,0.10), 0 3.2px 7.2px 0 rgba(0,0,0,0.13);
+    --font:"Segoe UI Variable","Segoe UI",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--appBg);font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:940px;margin:0 auto;padding:28px 24px 80px}
+
+  /* ---- shared header + pills (unchanged from product) ---- */
+  .eyebrow{font-size:13px;font-weight:700;color:var(--core);text-transform:uppercase;letter-spacing:.15em;margin:0 0 6px}
+  h1.page{font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin:0}
+  h1.page .grad{background:linear-gradient(135deg,var(--core),var(--coreBright));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{font-size:15px;color:var(--textSoft);margin:6px 0 0}
+  .chip{display:inline-flex;align-items:center;gap:5px;margin-left:10px;padding:2px 9px;border-radius:99px;background:var(--greenSoft);color:var(--green);font-size:13px;font-weight:700}
+  .pills{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:99px;background:var(--surface);border:1px solid var(--border);color:var(--textMid);font-size:13px;font-weight:600;cursor:pointer}
+  .pill.on{background:var(--text);color:var(--appBg);border-color:var(--text)}
+  .pill .n{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 6px;border-radius:99px;background:var(--surfaceMid);color:var(--textSoft);font-size:11px;font-weight:700}
+  .pill.on .n{background:rgba(0,0,0,.12);color:var(--text)}
+
+  /* ---- variation switcher ---- */
+  .switch{position:sticky;top:0;z-index:20;background:var(--appBg);padding:16px 0 12px;border-bottom:1px solid var(--border);margin-bottom:22px}
+  .switch .row{display:flex;gap:8px;flex-wrap:wrap}
+  .vbtn{padding:9px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--textMid);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:.12s}
+  .vbtn.on{background:var(--core);border-color:var(--core);color:#fff;box-shadow:var(--shadowSm)}
+  .switch .hint{font-size:12px;color:var(--textXsoft);margin:10px 0 0}
+
+  .variant{display:none}
+  .variant.on{display:block}
+  .vhead{font-size:13px;font-weight:800;color:var(--textSoft);text-transform:uppercase;letter-spacing:.1em;margin:0 0 4px}
+  .vdesc{font-size:13px;color:var(--textSoft);margin:0 0 20px;max-width:620px}
+
+  /* ---- day header (shared) ---- */
+  .day{display:flex;align-items:center;gap:10px;margin:26px 0 12px}
+  .day:first-of-type{margin-top:8px}
+  .day .lbl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--textSoft)}
+  .day .ct{font-size:11px;font-weight:700;color:var(--textXsoft);background:var(--surfaceMid);border:1px solid var(--border);border-radius:99px;padding:1px 8px}
+  .day .rule{flex:1;height:1px;background:var(--border)}
+
+  .status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+  .status.done{background:var(--greenSoft);color:var(--green)}
+  .status.run{background:var(--coreSoft);color:var(--core)}
+  .status .d{width:5px;height:5px;border-radius:50%}
+  .status.done .d{background:var(--green)}
+  .status.run .d{background:var(--core);animation:breathe 1.4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.6)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .body{font-size:13px;color:var(--textSoft);line-height:1.5;margin:3px 0 0}
+  .ttl{font-size:14px;font-weight:700;color:var(--text)}
+  .steps{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+  .steps .sh{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--textSoft);margin:0 0 8px}
+  .step{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .step .k{width:18px;height:18px;border-radius:50%;background:var(--greenSoft);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+  .step .k.r{background:var(--coreSoft);color:var(--core)}
+  .step p{font-size:13px;color:var(--textMid);margin:0}
+
+  /* ============ VARIATION A — Rail timeline ============ */
+  .A .tl{position:relative;padding-left:78px}
+  .A .tl::before{content:"";position:absolute;left:63px;top:6px;bottom:6px;width:2px;background:var(--border)}
+  .A .row{position:relative;margin-bottom:12px}
+  .A .time{position:absolute;left:-78px;top:14px;width:52px;text-align:right;font-size:12px;font-weight:700;color:var(--textMid);font-variant-numeric:tabular-nums}
+  .A .node{position:absolute;left:-21px;top:16px;width:14px;height:14px;border-radius:50%;background:var(--surface);border:2px solid var(--green);z-index:2}
+  .A .node.run{border-color:var(--core);box-shadow:0 0 0 4px var(--coreSoft)}
+  .A .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;box-shadow:var(--shadowSm);cursor:pointer}
+  .A .card:hover{box-shadow:var(--shadowMd);border-color:var(--borderMid)}
+  .A .cardtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+  /* ============ VARIATION B — Time gutter ============ */
+  .B .tl{position:relative}
+  .B .row{display:grid;grid-template-columns:84px 1fr;gap:0;position:relative;margin-bottom:14px}
+  .B .gutter{position:relative;padding-right:22px;text-align:right}
+  .B .gutter .hh{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+  .B .gutter .ap{font-size:11px;font-weight:700;color:var(--textXsoft);text-transform:uppercase;letter-spacing:.08em}
+  .B .gutter::after{content:"";position:absolute;right:0;top:4px;width:11px;height:11px;border-radius:50%;background:var(--green);border:2px solid var(--surface);box-shadow:0 0 0 1.5px var(--green)}
+  .B .row.run .gutter::after{background:var(--core);box-shadow:0 0 0 1.5px var(--core)}
+  .B .tl::before{content:"";position:absolute;left:83px;top:8px;bottom:8px;width:2px;background:var(--border);z-index:0}
+  .B .card{margin-left:22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;box-shadow:var(--shadowSm);cursor:pointer}
+  .B .card:hover{box-shadow:var(--shadowMd);border-color:var(--borderMid)}
+  .B .cardtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .B .emoji{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--greenSoft)}
+  .B .row.run .emoji{background:var(--coreSoft)}
+
+  /* ============ VARIATION C — Compact agenda log ============ */
+  .C .tl{background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadowSm);overflow:hidden}
+  .C .daybar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surfaceMid);border-bottom:1px solid var(--border)}
+  .C .daybar .lbl{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--textSoft)}
+  .C .daybar .ct{font-size:11px;font-weight:700;color:var(--textXsoft)}
+  .C .row{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;align-items:start}
+  .C .row:last-child{border-bottom:none}
+  .C .row:hover{background:var(--surfaceMid)}
+  .C .time{font-size:12px;font-weight:700;color:var(--textMid);font-variant-numeric:tabular-nums;padding-top:1px;position:relative}
+  .C .time::before{content:"";position:absolute;right:-8px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--green)}
+  .C .row.run .time::before{background:var(--core)}
+  .C .cardtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .C .body{margin-top:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- shared page header -->
+  <p class="eyebrow">Activity feed</p>
+  <h1 class="page">Every action Jarvis took, <span class="grad">fully traceable.</span></h1>
+  <p class="sub">Click an entry to see the steps. Anything Jarvis did automatically is reversible.
+    <span class="chip">4 completed · 1 running</span></p>
+
+  <div class="pills">
+    <span class="pill on">All <span class="n">5</span></span>
+    <span class="pill">Today <span class="n">4</span></span>
+    <span class="pill">Yesterday <span class="n">1</span></span>
+    <span class="pill">Running now <span class="n">1</span></span>
+  </div>
+
+  <!-- variation switcher -->
+  <div class="switch">
+    <div class="row">
+      <button class="vbtn on" data-v="A">A · Rail timeline</button>
+      <button class="vbtn" data-v="B">B · Time gutter</button>
+      <button class="vbtn" data-v="C">C · Compact agenda</button>
+    </div>
+    <p class="hint" id="hint"></p>
+  </div>
+
+  <div id="mount"></div>
+</div>
+
+<script>
+  const ITEMS = [
+    {id:'fd1',time:'08:47',day:'Today',status:'done',emoji:'🧠',title:'Morning brief compiled',body:'Ranked 8 items from Workday, Outlook, Jira by deadline × impact.',steps:['Fetch Outlook flagged emails → 4 surfaced','Fetch Workday approvals → 3 items','Fetch Jira overdue → 3/9 surfaced','Score and rank']},
+    {id:'fd2',time:'08:51',day:'Today',status:'done',emoji:'⚠️',title:'Proactive nudge — security cert',body:'Detected 3-day expiry. Sent Teams notification with LMS deep link.',steps:['Workday compliance check','Training: Not started, deadline Apr 30','Composed nudge','Delivered via Teams ✓']},
+    {id:'fd3',time:'09:02',day:'Today',status:'running',emoji:'📋',title:'Meeting prep: QBR 10:00 AM',body:'Gathering deck, last meeting notes, SVP context.',steps:['Located QBR-H2-2026.pptx ✓','Apr 14 notes — 3 open actions ✓','Fetching SVP briefing history…','Draft bundle (pending)']},
+    {id:'fd0',time:'11:41',day:'Today',status:'done',emoji:'🗓️',title:"Cleared your afternoon for Marc's review",body:'Marc (SVP) made the 2 PM mandatory. Ranked the sender, reshuffled 3 conflicts, and sent 7 messages in your name — after your approval.',steps:['Ranked sender: SVP, outranks the afternoon','Drafted 4 Teams messages + 3 emails','You approved all in one tap','Sent ✓ · 1:1 moved to 4 PM, Acme rescheduled']},
+    {id:'fd4',time:'16:20',day:'Yesterday',status:'done',emoji:'✅',title:'PTO requests auto-verified',body:'Checked 3 requests against calendar and policy. All clear.',steps:['Fetch Workday queue','Calendar conflict check','Policy validation','Surfaced in dashboard ✓']},
+  ];
+  const HINTS = {
+    A:'Single vertical rail. Time sits in a left gutter, a colored node marks each entry on the line, cards float to the right. Cleanest “story of the day” read.',
+    B:'Bold time gutter (like a calendar). Large HH:MM on the left with AM/PM, connector line, roomy cards with a small status tile. Most scannable by time.',
+    C:'Dense agenda log inside one framed panel. Day rows as sticky bars, compact one-line entries with a left time column. Best when there are many events.',
+  };
+  const DAYS = ['Today','Yesterday'];
+
+  function stepsHTML(it){
+    return `<div class="steps"><p class="sh">Steps taken</p>${
+      it.steps.map((s,i)=>{const run = it.status==='running' && i===it.steps.length-1;
+      return `<div class="step"><span class="k ${run?'r':''}">${run?'◴':'✓'}</span><p>${s}</p></div>`}).join('')
+    }</div>`;
+  }
+  function statusHTML(it){return `<span class="status ${it.status==='running'?'run':'done'}"><span class="d"></span>${it.status==='running'?'Running':'Done'}</span>`;}
+  function to12(t){const [h,m]=t.split(':').map(Number);const ap=h<12?'AM':'PM';const hh=((h+11)%12)+1;return {hh:hh+':'+String(m).padStart(2,'0'),ap};}
+  const byDay = d => ITEMS.filter(i=>i.day===d);
+
+  function renderA(){
+    return DAYS.map(d=>{const g=byDay(d);return `
+      <div class="day"><span class="lbl">${d}</span><span class="ct">${g.length}</span><span class="rule"></span></div>
+      <div class="tl">${g.map(it=>`
+        <div class="row ${it.status}">
+          <span class="time">${it.time}</span>
+          <span class="node ${it.status==='running'?'run':''}"></span>
+          <div class="card" data-id="${it.id}">
+            <div class="cardtop"><span class="ttl">${it.title}</span>${statusHTML(it)}</div>
+            <p class="body">${it.body}</p>
+            <div class="det" style="display:none">${stepsHTML(it)}</div>
+          </div>
+        </div>`).join('')}</div>`;}).join('');
+  }
+  function renderB(){
+    return DAYS.map(d=>{const g=byDay(d);return `
+      <div class="day"><span class="lbl">${d}</span><span class="ct">${g.length}</span><span class="rule"></span></div>
+      <div class="tl">${g.map(it=>{const t=to12(it.time);return `
+        <div class="row ${it.status}">
+          <div class="gutter"><div class="hh">${t.hh}</div><div class="ap">${t.ap}</div></div>
+          <div class="card" data-id="${it.id}">
+            <div class="cardtop"><span class="emoji">${it.emoji}</span><span class="ttl">${it.title}</span>${statusHTML(it)}</div>
+            <p class="body">${it.body}</p>
+            <div class="det" style="display:none">${stepsHTML(it)}</div>
+          </div>
+        </div>`}).join('')}</div>`;}).join('');
+  }
+  function renderC(){
+    return `<div class="tl">${DAYS.map(d=>{const g=byDay(d);return `
+      <div class="daybar"><span class="lbl">${d}</span><span class="ct">· ${g.length} actions</span></div>
+      ${g.map(it=>`
+        <div class="row ${it.status}" data-id="${it.id}">
+          <div class="time">${it.time}</div>
+          <div>
+            <div class="cardtop"><span class="ttl">${it.title}</span>${statusHTML(it)}</div>
+            <p class="body">${it.body}</p>
+            <div class="det" style="display:none">${stepsHTML(it)}</div>
+          </div>
+        </div>`).join('')}`;}).join('')}</div>`;
+  }
+  const R = {A:renderA,B:renderB,C:renderC};
+
+  const mount = document.getElementById('mount');
+  const hint = document.getElementById('hint');
+  function show(v){
+    document.querySelectorAll('.vbtn').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+    mount.className = 'variant on '+v;
+    mount.innerHTML = R[v]();
+    hint.textContent = HINTS[v];
+    mount.querySelectorAll('[data-id]').forEach(el=>{
+      el.addEventListener('click',()=>{const det=el.querySelector('.det');if(det)det.style.display = det.style.display==='none'?'block':'none';});
+    });
+  }
+  document.querySelectorAll('.vbtn').forEach(b=>b.addEventListener('click',()=>show(b.dataset.v)));
+  show('A');
+</script>
+</body>
+</html>

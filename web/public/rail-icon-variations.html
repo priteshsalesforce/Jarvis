@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Collapsed rail — icon design variations</title>
+<style>
+  :root{
+    --appBg:#F5F5F5; --surface:#FFFFFF; --surfaceMid:#FAFAFA;
+    --core:#5C2E91; --coreMid:#7C4EAE; --coreBright:#9B6EC8; --coreSoft:rgba(92,46,145,0.08);
+    --coreGrad:linear-gradient(135deg,#5C2E91,#7C4EAE);
+    --text:#242424; --textMid:#424242; --textSoft:#616161; --textXsoft:#707070;
+    --border:#D1D1D1; --borderMid:#C7C7C7;
+    --shadowSm:0 0.3px 0.9px 0 rgba(0,0,0,0.07), 0 1.6px 3.6px 0 rgba(0,0,0,0.11);
+    --shadowMd:0 0.3px 0.9px 0 rgba(0,0,0,0.10), 0 3.2px 7.2px 0 rgba(0,0,0,0.13);
+    --shadowPurple:0 2px 8px rgba(92,46,145,0.18), 0 1px 2px rgba(92,46,145,0.10);
+    --font:"Segoe UI Variable","Segoe UI",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--appBg);font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 90px}
+  .eyebrow{font-size:13px;font-weight:700;color:var(--core);text-transform:uppercase;letter-spacing:.15em;margin:0 0 6px}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 6px}
+  .lede{font-size:14px;color:var(--textSoft);margin:0 0 6px;max-width:680px}
+  .note{font-size:12px;color:var(--textXsoft);margin:0 0 28px}
+
+  .grid{display:flex;flex-wrap:wrap;gap:20px}
+  .cell{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px 20px;width:236px;box-shadow:var(--shadowSm)}
+  .cell h2{font-size:14px;font-weight:800;margin:0 0 2px}
+  .cell p{font-size:12px;color:var(--textSoft);margin:0 0 16px;line-height:1.5;min-height:52px}
+  .stage{background:var(--appBg);border-radius:12px;padding:14px 0;display:flex;justify-content:center}
+
+  /* the rail frame (mirrors product: 56px, white) */
+  .rail{width:56px;background:var(--surface);border-radius:12px;box-shadow:var(--shadowSm);
+    display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 0}
+  .rail.wide{width:64px}
+  .sep{width:24px;height:1px;background:var(--border);margin:4px 0}
+  .spacer{height:2px}
+  svg{display:block}
+
+  /* base button shapes */
+  .btn{width:32px;height:32px;border-radius:8px;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--textSoft);transition:.12s;position:relative}
+  .btn:hover{background:var(--surfaceMid);color:var(--text)}
+  .toggle{width:28px;height:28px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--textSoft)}
+  .toggle:hover{background:var(--surfaceMid)}
+
+  /* ---- V1 soft pill ---- */
+  .v1 .btn{width:38px;height:38px;border-radius:10px}
+  .v1 .btn.on{background:var(--coreSoft);color:var(--core)}
+  .v1 .new{color:var(--core)}
+  .v1 .new:hover{background:var(--coreSoft)}
+
+  /* ---- V2 left accent bar ---- */
+  .v2 .btn{width:40px;height:38px;border-radius:9px}
+  .v2 .btn.on{color:var(--core);background:var(--coreSoft)}
+  .v2 .btn.on::before{content:"";position:absolute;left:-8px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--core)}
+  .v2 .new{color:var(--core)}
+
+  /* ---- V3 filled brand tile + FAB ---- */
+  .v3 .btn{width:38px;height:38px;border-radius:11px}
+  .v3 .btn.on{background:var(--coreGrad);color:#fff;box-shadow:var(--shadowPurple)}
+  .v3 .fab{width:40px;height:40px;border-radius:50%;background:var(--coreGrad);color:#fff;box-shadow:var(--shadowPurple)}
+  .v3 .fab:hover{filter:brightness(1.05);background:var(--coreGrad)}
+
+  /* ---- V4 labeled stack ---- */
+  .v4 .item{display:flex;flex-direction:column;align-items:center;gap:3px;width:52px;padding:7px 0;border-radius:10px;cursor:pointer;color:var(--textSoft);border:none;background:none;transition:.12s}
+  .v4 .item:hover{background:var(--surfaceMid);color:var(--text)}
+  .v4 .item.on{background:var(--coreSoft);color:var(--core)}
+  .v4 .item .lab{font-size:9px;font-weight:700;letter-spacing:.02em}
+  .v4 .new{color:var(--core)}
+
+  /* ---- V5 grouped segment + dot ---- */
+  .v5 .group{background:var(--surfaceMid);border:1px solid var(--border);border-radius:12px;padding:5px;display:flex;flex-direction:column;gap:4px}
+  .v5 .btn{width:36px;height:36px;border-radius:9px}
+  .v5 .btn.on{background:var(--surface);color:var(--core);box-shadow:var(--shadowSm)}
+  .v5 .btn.on::after{content:"";position:absolute;right:3px;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;background:var(--core)}
+  .v5 .fab{width:38px;height:38px;border-radius:10px;background:var(--core);color:#fff;box-shadow:var(--shadowPurple)}
+
+  .legend{margin-top:28px;font-size:12px;color:var(--textSoft);display:flex;gap:18px;flex-wrap:wrap}
+  .legend b{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Conversation rail · collapsed</p>
+  <h1>Left icon rail — design variations</h1>
+  <p class="lede">Same icons and order as today (Expand · Today · Skills · New conversation), each showing <b>Today</b> as the active tab. The difference is how the selected state, button shape, and the “New conversation” action are treated.</p>
+  <p class="note">Hover the icons to feel the states. Pick a letter (V1–V5) and I'll wire it into <code>ConversationRail</code>.</p>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="legend">
+    <span><b>Icons:</b> ⌂ Expand · ▦ Today (LayoutDashboard) · ◉ Skills (Bot) · ✎ New conversation (SquarePen)</span>
+  </div>
+</div>
+
+<script>
+  const I = {
+    chevR:'<path d="m9 18 6-6-6-6"/>',
+    dash:'<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+    bot:'<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+    pen:'<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>',
+    sparkles:'<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/>',
+  };
+  const svg = (p,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+
+  const VARIANTS = [
+    { id:'V1', name:'V1 · Soft pill', desc:'Rounded-square buttons; the active tab fills with a soft purple wash. Calm, Fluent-native, low visual noise.',
+      html:`<div class="rail v1">
+        <button class="btn toggle" title="Expand">${svg(I.chevR,16)}</button>
+        <div class="spacer"></div>
+        <button class="btn on" title="Today">${svg(I.dash)}</button>
+        <button class="btn" title="Skills">${svg(I.bot)}</button>
+        <div class="sep"></div>
+        <button class="btn new" title="New conversation">${svg(I.pen)}</button>
+      </div>` },
+    { id:'V2', name:'V2 · Left accent bar', desc:'A purple bar marks the active tab on the left edge (VS Code / Teams activity-bar pattern). Strongest “you are here” signal.',
+      html:`<div class="rail v2">
+        <button class="btn toggle" title="Expand">${svg(I.chevR,16)}</button>
+        <div class="spacer"></div>
+        <button class="btn on" title="Today">${svg(I.dash)}</button>
+        <button class="btn" title="Skills">${svg(I.bot)}</button>
+        <div class="sep"></div>
+        <button class="btn new" title="New conversation">${svg(I.pen)}</button>
+      </div>` },
+    { id:'V3', name:'V3 · Brand tile + FAB', desc:'Active tab is a solid gradient tile with a white icon; “New” becomes an elevated round FAB. Boldest, most app-like.',
+      html:`<div class="rail v3">
+        <button class="btn toggle" title="Expand">${svg(I.chevR,16)}</button>
+        <div class="spacer"></div>
+        <button class="btn on" title="Today">${svg(I.dash)}</button>
+        <button class="btn" title="Skills">${svg(I.bot)}</button>
+        <div class="sep"></div>
+        <button class="btn fab" title="New conversation">${svg(I.pen)}</button>
+      </div>` },
+    { id:'V4', name:'V4 · Labeled stack', desc:'Tiny caption under each icon (Today / Skills / New). Best clarity in a narrow rail; slightly taller items.',
+      html:`<div class="rail wide v4">
+        <button class="btn toggle" title="Expand">${svg(I.chevR,16)}</button>
+        <div class="spacer"></div>
+        <button class="item on" title="Today">${svg(I.dash,20)}<span class="lab">Today</span></button>
+        <button class="item" title="Skills">${svg(I.bot,20)}<span class="lab">Skills</span></button>
+        <div class="sep"></div>
+        <button class="item new" title="New conversation">${svg(I.pen,20)}<span class="lab">New</span></button>
+      </div>` },
+    { id:'V5', name:'V5 · Grouped segment', desc:'Nav icons live in one inset segmented card; active lifts to white with a small dot. “New” sits apart as a filled tile.',
+      html:`<div class="rail v5">
+        <button class="btn toggle" title="Expand">${svg(I.chevR,16)}</button>
+        <div class="spacer"></div>
+        <div class="group">
+          <button class="btn on" title="Today">${svg(I.dash)}</button>
+          <button class="btn" title="Skills">${svg(I.bot)}</button>
+        </div>
+        <div class="sep"></div>
+        <button class="btn fab" title="New conversation">${svg(I.pen)}</button>
+      </div>` },
+  ];
+
+  document.getElementById('grid').innerHTML = VARIANTS.map(v=>`
+    <div class="cell">
+      <h2>${v.name}</h2>
+      <p>${v.desc}</p>
+      <div class="stage">${v.html}</div>
+    </div>`).join('');
+</script>
+</body>
+</html>
