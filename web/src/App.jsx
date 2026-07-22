@@ -5546,7 +5546,15 @@ export default function App() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [handledOpen])
-  const handleNotifAct = () => { setShowNotif(false); setNotifDone(true); openChat(null,'reschedule') }
+  const handleNotifAct = () => {
+    setShowNotif(false); setNotifDone(true)
+    // Open the reschedule plan in the full-screen intent view (center), the same
+    // way clicking the "Marc's 2 PM" card on Today does — not the right side panel.
+    setTab('today')
+    const reschIntent = allIntents.find(i => i.id === 'resch')
+    if (reschIntent) openIntent(reschIntent)
+    else openTodayConv(null, 'reschedule')
+  }
   const handleEventClick = ev => openChat({
     headline:ev.title, tier:'L2', source:ev.location,
     evidence:`${ev.time}–${ev.end} · ${ev.attendees.join(', ')}`,
