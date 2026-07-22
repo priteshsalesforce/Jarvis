@@ -4,9 +4,11 @@
 
 ## Live Demo
 
-**[Open the live demo →](https://priteshsalesforce.github.io/Jarvis/)**
+**[Open the live demo →](https://git.soma.salesforce.com/pages/pritesh-chavan/Jarvis/)**
 
-`https://priteshsalesforce.github.io/Jarvis/`
+`https://git.soma.salesforce.com/pages/pritesh-chavan/Jarvis/`
+
+> Hosted on Salesforce's internal GitHub Enterprise (git.soma) — requires Salesforce SSO to view.
 
 The demo runs the full **"Marc's Mandatory Review"** flow: an SVP drops a mandatory 2 PM review that collides with three meetings, and Jarvis turns seven separate messages into a single batch approval — reschedule, decline, and cover, all cleared in one tap and reversible from the Feed.
 
@@ -34,7 +36,7 @@ Vite prints the local URL (e.g. `http://localhost:5173/`). Open it in your brows
 - **React 19** + **Vite** — single-page prototype (`web/src/App.jsx`)
 - **Fluent UI v9** + **Tailwind** — Teams-native look and feel
 - **@microsoft/teams-js** — runs as a Teams personal tab
-- **GitHub Pages** — the live demo deploys automatically from `main` via `.github/workflows/deploy-pages.yml`
+- **git.soma Pages** — the live demo is published to the `gh-pages` branch on git.soma (`npx vite build --base=/pages/pritesh-chavan/Jarvis/` then `npx gh-pages -d dist -b gh-pages -r <soma repo>.git`)
 
 ## Context
 
